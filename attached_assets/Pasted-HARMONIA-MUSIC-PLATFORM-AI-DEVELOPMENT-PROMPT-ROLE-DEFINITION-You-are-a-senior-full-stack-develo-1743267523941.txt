@@ -1,0 +1,276 @@
+HARMONIA MUSIC PLATFORM - AI DEVELOPMENT PROMPT
+ROLE DEFINITION
+You are a senior full-stack developer tasked with building Harmonia, a premium music streaming platform combining subscription streaming, digital purchases, and artist social media integration. Take a methodical approach, implementing one component at a time in the specified sequence. Build for quality, not speed.
+
+PROJECT OVERVIEW
+Harmonia is a Spotify/Apple Music competitor with three key differentiators:
+
+Both subscription streaming and à la carte purchases in one platform
+Direct integration of artists' social media (YouTube, Instagram, Twitter)
+Three-tiered premium subscription model with increasing benefits
+TECH STACK REQUIREMENTS
+Frontend: React + TypeScript + Tailwind CSS + Shadcn UI components
+State Management: Zustand
+Backend: FastAPI (Python)
+Audio: HTML5 Audio API with custom controls
+Styling: Dark theme primary with consistent premium aesthetic
+Internationalization: English + French using i18next
+Data Storage: RESTful API with proper models and type safety
+DEVELOPMENT SEQUENCE (STRICTLY FOLLOW THIS ORDER)
+PHASE 1: FOUNDATION (Complete each step before proceeding)
+Define all data models and TypeScript interfaces
+Create basic FastAPI endpoints for data access
+Implement authentication system (login/registration)
+Build core Zustand stores for global state
+Create base UI components needed across multiple pages
+PHASE 2: CORE MUSIC FUNCTIONALITY
+Implement music catalog browsing (API + UI)
+Build music player component with basic controls
+Create artist and album detail pages
+Implement library management for users
+Add playlist creation and management
+PHASE 3: MONETIZATION
+Implement subscription tier management
+Build music store/marketplace for purchases
+Create checkout and payment flow
+Implement owned vs streamed content distinction
+Add user purchase history and digital library
+PHASE 4: SOCIAL AND ADVANCED FEATURES
+Integrate social media feeds for artists
+Implement social interaction (comments, likes)
+Build recommendation engine
+Add offline listening capabilities
+Create settings and preference management
+PROJECT ARCHITECTURE
+DATA MODELS
+Copy snippet
+// USER-RELATED MODELS
+interface User {
+  id: string;
+  email: string;
+  displayName: string;
+  profileImage?: string;
+  subscriptionTier: 'free' | 'premium' | 'ultimate';
+  subscriptionEndDate?: Date;
+  preferences: UserPreferences;
+  createdAt: Date;
+}
+
+interface UserPreferences {
+  language: 'en' | 'fr';
+  theme: 'dark' | 'light';
+  audioQuality: 'standard' | 'high' | 'lossless';
+  autoplay: boolean;
+  notifications: NotificationSettings;
+}
+
+// MUSIC-RELATED MODELS
+interface Artist {
+  id: string;
+  name: string;
+  image: string;
+  bio: string;
+  genres: string[];
+  socialLinks: {
+    youtube?: string;
+    instagram?: string;
+    twitter?: string;
+  };
+  verified: boolean;
+}
+
+interface Album {
+  id: string;
+  title: string;
+  artistId: string;
+  artistName: string;
+  coverImage: string;
+  releaseDate: Date;
+  genres: string[];
+  tracks: Track[];
+}
+
+interface Track {
+  id: string;
+  title: string;
+  artistId: string;
+  artistName: string;
+  albumId: string;
+  albumTitle: string;
+  duration: number; // in seconds
+  audioUrl: string;
+  purchasePrice?: number; // null/undefined if streaming only
+  purchaseAvailable: boolean;
+  explicit: boolean;
+  trackNumber: number;
+}
+
+// PURCHASE-RELATED MODELS
+interface Purchase {
+  id: string;
+  userId: string;
+  items: PurchaseItem[];
+  totalAmount: number;
+  paymentMethod: string;
+  purchaseDate: Date;
+  receiptUrl: string;
+}
+
+interface PurchaseItem {
+  id: string;
+  trackId?: string;
+  albumId?: string;
+  itemType: 'track' | 'album';
+  price: number;
+  title: string;
+  artistName: string;
+}
+
+// SUBSCRIPTION-RELATED MODELS
+interface SubscriptionPlan {
+  id: string;
+  name: string; // 'Free', 'Premium', 'Ultimate'
+  price: number;
+  interval: 'month' | 'year';
+  features: string[];
+}
+
+interface UserSubscription {
+  id: string;
+  userId: string;
+  planId: string;
+  startDate: Date;
+  endDate: Date;
+  autoRenew: boolean;
+  paymentMethod: string;
+}
+STATE MANAGEMENT
+Implement these Zustand stores in order:
+
+useAuthStore - Authentication state
+usePlayerStore - Music player state
+useLibraryStore - User's library
+useCartStore - Purchase cart
+useSettingsStore - User preferences
+PAGE IMPLEMENTATION PRIORITY
+Implement these 28 pages in the following order:
+
+CRITICAL PATH (Implement first):
+Home/Landing Page
+Login/Signup Pages
+Library Page
+Artist Profile Page
+Album Detail Page
+Track Detail Page
+Music Player Component
+Subscription Management Page
+SECOND PRIORITY:
+Music Store/Marketplace Page
+Discover/Explore Page
+Search Results Page
+User Profile Page
+Playlist Management Page
+Playlist Detail Page
+Purchase History Page
+Settings Page
+THIRD PRIORITY:
+Social Feed Page
+Payment & Billing Page
+Offline Listening Page
+Notification Center
+Help & Support Page
+About Page
+Admin Dashboard
+Checkout/Purchase Confirmation
+FINAL PRIORITY:
+Onboarding Tutorial Page
+Terms of Service Page
+Privacy Policy Page
+404/Error Page
+IMPLEMENTATION STANDARDS
+COMPONENT ARCHITECTURE
+Each component must have a clear, single responsibility
+Document props with TypeScript interfaces
+Handle loading, error, and empty states
+Implement proper unsubscribe/cleanup
+Use React.memo for performance where appropriate
+CODE QUALITY REQUIREMENTS
+Strong typing throughout the application (no 'any' types)
+Unit tests for all utility functions
+Component tests for complex UI elements
+Proper error handling at all levels
+Accessibility compliance (WCAG AA)
+MUSIC PLAYER IMPLEMENTATION
+The music player should:
+
+Support continuous playback while navigating
+Handle queue management
+Support playlists and album playback
+Show now playing information
+Include mini-player when user scrolls away
+Handle audio playback errors gracefully
+Support background playback
+Indicate streaming vs owned content
+DESIGN SPECIFICATIONS
+Dark theme with rich, deep backgrounds
+Vibrant accent colors for CTAs and highlights
+Bold typography for artist/track names
+Clean sans-serif for interface elements
+Rounded corners on interactive elements
+Premium visual indicators for paid content
+Consistent spacing and layout grid
+High-quality image display for artist/album artwork
+CRITICAL REQUIREMENTS FOR ERROR PREVENTION
+NEVER mix concerns between components
+ALWAYS complete one functionality before starting the next
+TEST each component in isolation before integration
+IMPLEMENT proper loading states for all asynchronous operations
+HANDLE all edge cases in form validation
+CHECK user authentication state before protected operations
+VERIFY all API responses include proper error handling
+IMPLEMENT proper TypeScript interfaces for all data structures
+FOLLOW the exact implementation order specified above
+DOCUMENT all functions and complex logic
+EXPECTED BEHAVIOR FOR KEY FEATURES
+AUTHENTICATION FLOW
+User enters credentials
+Validate input client-side
+Submit to authentication API
+Store tokens securely
+Redirect to appropriate page
+Handle session expiration
+Provide logout functionality
+MUSIC PLAYBACK
+Load track metadata
+Initialize audio element
+Show loading state during buffering
+Update progress in real-time
+Handle play/pause/skip actions
+Manage playback queue
+Support playlist/album context
+Handle playback errors
+PURCHASE FLOW
+Display item with clear pricing
+Add to cart functionality
+Show cart summary
+Collect payment information
+Process payment securely
+Show confirmation
+Add to user's library
+Provide download options
+TESTING REQUIREMENTS
+Before considering any component complete:
+
+Verify all specified functionality works
+Test across different viewport sizes
+Verify accessibility compliance
+Test error states and recovery
+Validate correct state management
+Ensure clean console (no errors/warnings)
+ADDITIONAL NOTES
+Implement one feature at a time, following the exact sequence provided
+Focus on reliability over additional features
+Maintain consistent design language across all components
+Document any assumptions or decisions
+Handle errors gracefully at all levels
+Begin by implementing the foundation phase, starting with data models and TypeScript interfaces. Do not proceed to the next component until the current one is fully functional and tested.
