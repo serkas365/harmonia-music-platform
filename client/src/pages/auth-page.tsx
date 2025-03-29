@@ -112,10 +112,8 @@ const AuthPage = () => {
                         {t('auth.rememberMe')}
                       </label>
                     </div>
-                    <Link href="/forgot-password">
-                      <a className="text-sm text-primary hover:underline">
-                        {t('auth.forgotPassword')}
-                      </a>
+                    <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+                      {t('auth.forgotPassword')}
                     </Link>
                   </div>
 
@@ -250,16 +248,12 @@ const AuthPage = () => {
             <p className="text-sm text-muted-foreground">
               {t('auth.termsAndPrivacy')}
               {' '}
-              <Link href="/terms">
-                <a className="text-primary hover:underline">
-                  {t('auth.terms')}
-                </a>
+              <Link href="/terms" className="text-primary hover:underline">
+                {t('auth.terms')}
               </Link>
               {' '}{t('common.and')}{' '}
-              <Link href="/privacy">
-                <a className="text-primary hover:underline">
-                  {t('auth.privacy')}
-                </a>
+              <Link href="/privacy" className="text-primary hover:underline">
+                {t('auth.privacy')}
               </Link>
             </p>
           </div>

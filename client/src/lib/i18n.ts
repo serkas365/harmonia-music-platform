@@ -150,8 +150,12 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: enTranslations,
-      fr: frTranslations,
+      en: {
+        translation: enTranslations
+      },
+      fr: {
+        translation: frTranslations
+      },
     },
     lng: "en",
     fallbackLng: "en",
