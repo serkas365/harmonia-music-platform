@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harmonia Music Platform</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --scrollbar-color: rgba(255, 255, 255, 0.2);
+      }
+    }
+    
+    @media (prefers-color-scheme: light) {
+      :root {
+        --scrollbar-color: rgba(0, 0, 0, 0.2);
+      }
+    }
+    
+    /* Custom scrollbar styles */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--scrollbar-color);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--scrollbar-color);
+    }
+    
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    /* Audio player progress styles */
+    .audio-player-progress {
+      background: linear-gradient(90deg, #9333EA 0%, #EC4899 100%);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>
