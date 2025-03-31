@@ -575,9 +575,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Artist Dashboard Routes
+  // Artist Profile and Dashboard Routes
   
-  // Artist analytics - requires artist role
+  // Artist profile management
+  app.get("/api/me/artist-profile", ensureAuthenticated, async (req, res) => {
+    try {
+      // Check if user is an artist
+      if (!req.user!.role || (req.user!.role !== 'artist' && req.user!.role !== 'admin')) {
+        return res.status(403).json({ message: "Access denied - Artist role required" });
+      }
+      
+      // Verify the user has an artist profile
+      if (!req.user!.artistId) {
+        return res.status(404).json({ message: "Artist profile not found" });
+      }
+      
+      const artist = await storage.getArtist(req.user!.artistId);
+      if (!artist) {
+        return res.status(404).json({ message: "Artist profile not found" });
+      }
+      
+      res.json(artist);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch artist profile" });
+    }
+  });
+  
+  app.patch("/api/me/artist-profile", ensureAuthenticated, async (req, res) => {
+    try {
+      // Check if user is an artist
+      if (!req.user!.role || (req.user!.role !== 'artist' && req.user!.role !== 'admin')) {
+        return res.status(403).json({ message: "Access denied - Artist role required" });
+      }
+      
+      // Verify the user has an artist profile
+      if (!req.user!.artistId) {
+        return res.status(404).json({ message: "Artist profile not found" });
+      }
+      
+      const artistId = req.user!.artistId;
+      const updates = req.body;
+      
+      // Validate updates
+      if (!updates) {
+        return res.status(400).json({ message: "No updates provided" });
+      }
+      
+      // Get current artist data
+      const currentArtist = await storage.getArtist(artistId);
+      if (!currentArtist) {
+        return res.status(404).json({ message: "Artist profile not found" });
+      }
+      
+      // Prepare updates while maintaining data integrity
+      const updatedArtist = {
+        ...currentArtist,
+        ...updates,
+        // Handle socialLinks specially, as it's an object
+        socialLinks: {
+          ...currentArtist.socialLinks,
+          ...(updates.socialLinks || {})
+        }
+      };
+      
+      // If genre property is being set, make sure genres array is updated too
+      if (updates.genre && typeof updates.genre === 'string') {
+        // If it's the first genre or replacing empty genres
+        if (!updatedArtist.genres || updatedArtist.genres.length === 0) {
+          updatedArtist.genres = [updates.genre];
+        } 
+        // Otherwise, update the first genre in the array
+        else if (updatedArtist.genres.length > 0) {
+          updatedArtist.genres[0] = updates.genre;
+        }
+      }
+      
+      const result = await storage.updateArtist(artistId, updatedArtist);
+      
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update artist profile" });
+    }
+  });
+  
+  // Artist dashboard analytics - requires artist role
   const ensureArtistRole = (req: Request, res: Response, next: NextFunction) => {
     if (req.isAuthenticated() && req.user && (req.user.role === 'artist' || req.user.role === 'admin')) {
       return next();

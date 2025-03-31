@@ -51,6 +51,7 @@ export interface IStorage {
   getAlbum(id: number): Promise<Album | undefined>;
   getArtists(limit?: number, offset?: number): Promise<Artist[]>;
   getArtist(id: number): Promise<Artist | undefined>;
+  updateArtist(id: number, updates: Partial<Artist>): Promise<Artist | undefined>;
   getNewReleases(limit?: number): Promise<Track[]>;
   getArtistTracks(artistId: number): Promise<Track[]>;
   getArtistAlbums(artistId: number): Promise<Album[]>;
@@ -423,6 +424,15 @@ export class MemStorage implements IStorage {
   
   async getArtist(id: number): Promise<Artist | undefined> {
     return this.artists.get(id);
+  }
+  
+  async updateArtist(id: number, updates: Partial<Artist>): Promise<Artist | undefined> {
+    const artist = await this.getArtist(id);
+    if (!artist) return undefined;
+    
+    const updatedArtist = { ...artist, ...updates };
+    this.artists.set(id, updatedArtist);
+    return updatedArtist;
   }
   
   async getNewReleases(limit: number = 10): Promise<Track[]> {
