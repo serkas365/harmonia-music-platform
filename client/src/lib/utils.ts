@@ -18,3 +18,20 @@ export function formatTime(seconds: number): string {
   
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
+
+/**
+ * Format a date to a readable string
+ * @param date Date to format
+ * @returns Formatted date string (e.g., "January 1, 2023")
+ */
+export function formatDate(date: Date | string): string {
+  if (!date) return '';
+  
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(dateObj);
+}

@@ -30,6 +30,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch track" });
     }
   });
+  
+  app.get("/api/tracks/:id/similar", async (req, res) => {
+    try {
+      const trackId = parseInt(req.params.id);
+      const track = await storage.getTrack(trackId);
+      
+      if (!track) {
+        return res.status(404).json({ message: "Track not found" });
+      }
+      
+      // For now, just fetch some tracks from the same artist
+      // or with similar genres in a real app
+      const artistTracks = await storage.getArtistTracks(track.artistId);
+      
+      // Filter out the original track and return up to 5 similar tracks
+      const similarTracks = artistTracks
+        .filter(t => t.id !== trackId)
+        .slice(0, 5);
+      
+      res.json(similarTracks);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch similar tracks" });
+    }
+  });
 
   app.get("/api/albums", async (req, res) => {
     try {
@@ -77,13 +101,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Artist not found" });
       }
       
-      // Fetch artist albums
-      const albums = await storage.getArtistAlbums(artist.id);
-      const artistWithAlbums = { ...artist, albums };
-      
-      res.json(artistWithAlbums);
+      res.json(artist);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch artist" });
+    }
+  });
+  
+  app.get("/api/artists/:id/albums", async (req, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const albums = await storage.getArtistAlbums(artistId);
+      res.json(albums);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch artist albums" });
+    }
+  });
+  
+  app.get("/api/artists/:id/tracks", async (req, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const tracks = await storage.getArtistTracks(artistId);
+      res.json(tracks);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch artist tracks" });
     }
   });
 

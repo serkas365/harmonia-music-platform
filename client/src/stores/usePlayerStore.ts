@@ -19,7 +19,7 @@ export interface PlayerState {
   pause: () => void;
   togglePlay: () => void;
   playTrack: (track: Track) => void;
-  playTracks: (tracks: Track[], startIndex: number) => void;
+  playTracks: (tracks: Track[], startIndex: number, shuffle?: boolean) => void;
   nextTrack: () => void;
   prevTrack: () => void;
   setVolume: (volume: number) => void;
@@ -63,14 +63,21 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     set({ currentTrack: track, isPlaying: true, progress: 0 });
   },
   
-  playTracks: (tracks, startIndex) => {
+  playTracks: (tracks, startIndex, shuffle = false) => {
     const currentTrack = tracks[startIndex];
-    const remainingTracks = [...tracks.slice(startIndex + 1), ...tracks.slice(0, startIndex)];
+    let remainingTracks = [...tracks.slice(startIndex + 1), ...tracks.slice(0, startIndex)];
+    
+    // If shuffle is enabled, randomize the queue order
+    if (shuffle) {
+      remainingTracks = remainingTracks.sort(() => Math.random() - 0.5);
+    }
+    
     set({ 
       currentTrack, 
       queue: remainingTracks, 
       isPlaying: true, 
-      progress: 0 
+      progress: 0,
+      isShuffled: shuffle 
     });
   },
   
