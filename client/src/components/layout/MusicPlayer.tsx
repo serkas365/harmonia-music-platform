@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import { useLibraryStore } from "@/stores/useLibraryStore";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { 
   Play, 
@@ -15,7 +16,8 @@ import {
   ListMusic, 
   Maximize, 
   Heart, 
-  Info 
+  Info,
+  ShoppingCart
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,7 @@ import QueueManagement from "@/components/player/QueueManagement";
 
 const MusicPlayer = () => {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isSeeking, setIsSeeking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -38,6 +41,8 @@ const MusicPlayer = () => {
     duration,
     repeatMode,
     isShuffled,
+    isPreviewMode,
+    previewDuration,
     togglePlay,
     nextTrack,
     prevTrack,
@@ -47,6 +52,7 @@ const MusicPlayer = () => {
     setDuration,
     toggleShuffle,
     setRepeatMode,
+    exitPreviewMode,
   } = usePlayerStore();
   
   const likedTracks = useLibraryStore((state) => state.likedTracks);
@@ -63,6 +69,32 @@ const MusicPlayer = () => {
     const onTimeUpdate = () => {
       if (!isSeeking && audio.currentTime) {
         setProgress(audio.currentTime);
+        
+        // If in preview mode and we've reached the preview limit, pause the audio
+        if (isPreviewMode && audio.currentTime >= previewDuration) {
+          audio.pause();
+          setIsLoading(false);
+          
+          // Show a toast notification with purchase option
+          if (currentTrack && currentTrack.purchaseAvailable) {
+            toast({
+              title: t('player.previewLimitReached'),
+              description: t('player.previewPurchaseMessage'),
+              action: (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => window.location.href = '/store'}
+                  className="mt-2"
+                >
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  {t('player.purchaseTrack')}
+                </Button>
+              ),
+              duration: 5000, // Show for 5 seconds
+            });
+          }
+        }
       }
     };
 
@@ -104,7 +136,18 @@ const MusicPlayer = () => {
       audio.removeEventListener('loadstart', onLoadStart);
       audio.removeEventListener('error', onError);
     };
-  }, [isSeeking, nextTrack, repeatMode, setDuration, setProgress]);
+  }, [
+    isSeeking, 
+    isPreviewMode, 
+    nextTrack, 
+    previewDuration, 
+    repeatMode, 
+    setDuration, 
+    setProgress, 
+    toast, 
+    t, 
+    currentTrack
+  ]);
 
   // Handle play/pause
   useEffect(() => {
@@ -187,6 +230,22 @@ const MusicPlayer = () => {
         open={isQueueOpen} 
         onClose={() => setIsQueueOpen(false)} 
       />
+      
+      {/* Preview Mode Banner */}
+      {isPreviewMode && currentTrack.purchaseAvailable && (
+        <div className="bg-accent text-accent-foreground px-4 py-1 text-center text-sm">
+          <span className="font-medium">{t('player.previewMode')}: {previewDuration} {t('player.previewSeconds')}</span>
+          <button 
+            className="underline font-semibold hover:text-primary transition-colors ml-2"
+            onClick={() => {
+              // Navigate to store page
+              window.location.href = '/store';
+            }}
+          >
+            {t('player.purchaseTrack')} ${(currentTrack.purchasePrice || 0) / 100}
+          </button>
+        </div>
+      )}
       
       <div className="max-w-screen-2xl mx-auto">
         <div className="flex items-center">

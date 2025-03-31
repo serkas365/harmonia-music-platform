@@ -32,7 +32,13 @@ const TrackCard = ({ track, className, compact = false, showBuyButton = false }:
   const handlePlay = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    playTrack(track);
+    
+    // If the track is available for purchase and we're in the store, play in preview mode
+    if (track.purchaseAvailable && showBuyButton) {
+      playTrack(track, true); // Play in preview mode
+    } else {
+      playTrack(track); // Play normally
+    }
   };
   
   const handleLike = (e: React.MouseEvent) => {

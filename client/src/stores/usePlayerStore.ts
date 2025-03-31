@@ -12,13 +12,15 @@ export interface PlayerState {
   isMuted: boolean;
   isShuffled: boolean;
   repeatMode: 'off' | 'all' | 'one';
+  isPreviewMode: boolean;
+  previewDuration: number;
   
   // Actions
   setCurrentTrack: (track: Track | null) => void;
   play: () => void;
   pause: () => void;
   togglePlay: () => void;
-  playTrack: (track: Track) => void;
+  playTrack: (track: Track, isPreview?: boolean) => void;
   playTracks: (tracks: Track[], startIndex: number, shuffle?: boolean) => void;
   nextTrack: () => void;
   prevTrack: () => void;
@@ -32,6 +34,7 @@ export interface PlayerState {
   addToQueue: (track: Track) => void;
   removeFromQueue: (index: number) => void;
   clearQueue: () => void;
+  exitPreviewMode: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -45,6 +48,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   isMuted: false,
   isShuffled: false,
   repeatMode: 'off',
+  isPreviewMode: false,
+  previewDuration: 15, // 15 seconds preview
   
   setCurrentTrack: (track) => set({ currentTrack: track }),
   
@@ -54,13 +59,18 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   
   togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
   
-  playTrack: (track) => {
+  playTrack: (track, isPreview = false) => {
     const { currentTrack, history } = get();
     // Add current track to history if it exists
     if (currentTrack) {
       set({ history: [...history, currentTrack] });
     }
-    set({ currentTrack: track, isPlaying: true, progress: 0 });
+    set({ 
+      currentTrack: track, 
+      isPlaying: true, 
+      progress: 0,
+      isPreviewMode: isPreview
+    });
   },
   
   playTracks: (tracks, startIndex, shuffle = false) => {
@@ -180,5 +190,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     queue: state.queue.filter((_, i) => i !== index)
   })),
   
-  clearQueue: () => set({ queue: [] })
+  clearQueue: () => set({ queue: [] }),
+  
+  exitPreviewMode: () => set({ isPreviewMode: false })
 }));
