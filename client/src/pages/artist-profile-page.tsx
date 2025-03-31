@@ -25,7 +25,7 @@ const ArtistProfilePage = () => {
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [image, setImage] = useState('');
-  const [genre, setGenre] = useState('');
+  const [genres, setGenres] = useState<string[]>([]);
   const [website, setWebsite] = useState('');
   const [instagram, setInstagram] = useState('');
   const [twitter, setTwitter] = useState('');
@@ -57,7 +57,7 @@ const ArtistProfilePage = () => {
       setName(artistProfile.name || '');
       setBio(artistProfile.bio || '');
       setImage(artistProfile.image || '');
-      setGenre(artistProfile.genre || '');
+      setGenres(artistProfile.genres || []);
       setWebsite(artistProfile.socialLinks?.website || '');
       setInstagram(artistProfile.socialLinks?.instagram || '');
       setTwitter(artistProfile.socialLinks?.twitter || '');
@@ -94,7 +94,7 @@ const ArtistProfilePage = () => {
       name,
       bio,
       image,
-      genre,
+      genres,
       socialLinks: {
         website,
         instagram,
@@ -184,13 +184,61 @@ const ArtistProfilePage = () => {
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (e) => {
-                            if (e.target?.result) {
-                              setImage(e.target.result as string);
-                            }
+                          // Resize and compress the image
+                          const resizeImage = (file: File): Promise<string> => {
+                            return new Promise((resolve) => {
+                              const reader = new FileReader();
+                              reader.onload = (e) => {
+                                if (!e.target?.result) {
+                                  return resolve('');
+                                }
+                                
+                                const img = new Image();
+                                img.onload = () => {
+                                  // Create a canvas to resize the image
+                                  const canvas = document.createElement('canvas');
+                                  let width = img.width;
+                                  let height = img.height;
+                                  
+                                  // Keep aspect ratio and resize if too large
+                                  const MAX_WIDTH = 800;
+                                  const MAX_HEIGHT = 800;
+                                  
+                                  if (width > height) {
+                                    if (width > MAX_WIDTH) {
+                                      height = Math.round(height * MAX_WIDTH / width);
+                                      width = MAX_WIDTH;
+                                    }
+                                  } else {
+                                    if (height > MAX_HEIGHT) {
+                                      width = Math.round(width * MAX_HEIGHT / height);
+                                      height = MAX_HEIGHT;
+                                    }
+                                  }
+                                  
+                                  canvas.width = width;
+                                  canvas.height = height;
+                                  
+                                  const ctx = canvas.getContext('2d');
+                                  ctx?.drawImage(img, 0, 0, width, height);
+                                  
+                                  // Get the data URL with reduced quality (0.7 = 70% quality)
+                                  const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                                  resolve(dataUrl);
+                                };
+                                
+                                img.src = e.target.result as string;
+                              };
+                              reader.readAsDataURL(file);
+                            });
                           };
-                          reader.readAsDataURL(file);
+                          
+                          // Resize and set the image
+                          resizeImage(file).then((resizedImage) => {
+                            if (resizedImage) {
+                              setImage(resizedImage);
+                            }
+                          });
                         }
                       }}
                     />
@@ -198,7 +246,7 @@ const ArtistProfilePage = () => {
                   {image && (
                     <div className="mt-2">
                       <p className="text-xs text-muted-foreground mb-1">{t('artistProfile.preview')}</p>
-                      <div className="w-20 h-20 rounded-full overflow-hidden border border-border">
+                      <div className="w-32 h-32 rounded-full overflow-hidden border border-border">
                         <img src={image} alt="Profile Preview" className="w-full h-full object-cover" />
                       </div>
                     </div>
@@ -207,35 +255,33 @@ const ArtistProfilePage = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="artist-genre">{t('artistProfile.genre')}</Label>
-                <select
-                  id="artist-genre"
-                  value={genre}
-                  onChange={(e) => setGenre(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="">{t('artistProfile.selectGenre')}</option>
-                  <option value="Pop">Pop</option>
-                  <option value="Rock">Rock</option>
-                  <option value="Hip Hop">Hip Hop</option>
-                  <option value="R&B">R&B</option>
-                  <option value="Electronic">Electronic</option>
-                  <option value="Jazz">Jazz</option>
-                  <option value="Classical">Classical</option>
-                  <option value="Country">Country</option>
-                  <option value="Folk">Folk</option>
-                  <option value="Reggae">Reggae</option>
-                  <option value="Latin">Latin</option>
-                  <option value="Metal">Metal</option>
-                  <option value="Blues">Blues</option>
-                  <option value="Indie">Indie</option>
-                  <option value="Dance">Dance</option>
-                  <option value="Soul">Soul</option>
-                  <option value="Punk">Punk</option>
-                  <option value="Ambient">Ambient</option>
-                  <option value="Afrobeat">Afrobeat</option>
-                  <option value="K-Pop">K-Pop</option>
-                </select>
+                <Label htmlFor="artist-genres">{t('artistProfile.genre')}</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-3 border rounded-md border-input">
+                  {[
+                    "Pop", "Rock", "Hip Hop", "R&B", "Electronic", "Jazz", "Classical",
+                    "Country", "Folk", "Reggae", "Latin", "Metal", "Blues", "Indie",
+                    "Dance", "Soul", "Punk", "Ambient", "Afrobeat", "K-Pop"
+                  ].map((genreOption) => (
+                    <div key={genreOption} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`genre-${genreOption}`}
+                        checked={genres.includes(genreOption)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setGenres([...genres, genreOption]);
+                          } else {
+                            setGenres(genres.filter(g => g !== genreOption));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <label htmlFor={`genre-${genreOption}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        {genreOption}
+                      </label>
+                    </div>
+                  ))}
+                </div>
               </div>
             </CardContent>
             <CardFooter>
@@ -371,7 +417,9 @@ const ArtistProfilePage = () => {
                 <div className="flex-grow space-y-4">
                   <div>
                     <h2 className="text-2xl font-bold">{name || t('artistProfile.artistNamePlaceholder')}</h2>
-                    <p className="text-sm text-muted-foreground">{genre || t('artistProfile.genrePlaceholder')}</p>
+                    <div className="text-sm text-muted-foreground">
+                      {genres.length > 0 ? genres.join(', ') : t('artistProfile.genrePlaceholder')}
+                    </div>
                   </div>
                   
                   <p className="text-sm">

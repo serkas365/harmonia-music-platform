@@ -191,7 +191,6 @@ export interface Artist {
   name: string;
   image: string;
   bio: string;
-  genre?: string;
   genres: string[];
   socialLinks: {
     website?: string;
