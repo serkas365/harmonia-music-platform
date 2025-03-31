@@ -8,6 +8,7 @@ import { useLibraryStore } from "@/stores/useLibraryStore";
 import { useCartStore } from "@/stores/useCartStore";
 import { CartIndicator } from "@/components/cart/CartIndicator";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { useQuery } from "@tanstack/react-query";
 import { 
   Home, 
   Search, 
@@ -203,19 +204,49 @@ const Sidebar = ({ className }: SidebarProps) => {
           </div>
           
           {/* Subscription upgrade prompt */}
-          {user && (
-            <div className="px-4 py-3 bg-primary/10 rounded-lg">
-              <p className="text-sm font-medium text-primary">{t('common.premium')}</p>
-              <p className="text-xs text-muted-foreground mt-1">{t('common.upgrade')}</p>
-              <Button 
-                variant="default"
-                className="mt-2 w-full py-2 px-3 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg"
-                onClick={() => window.location.href = '/subscriptions'}
-              >
-                {t('common.upgradeNow')}
-              </Button>
-            </div>
-          )}
+          {user && (() => {
+            // Check if user has a premium or ultimate subscription
+            const { data: userSubscription } = useQuery({
+              queryKey: ['/api/me/subscription'],
+              enabled: !!user,
+            });
+            
+            const hasPremiumPlan = userSubscription?.planId === 2 || userSubscription?.planId === 3;
+            
+            // Don't show upgrade prompt for premium users
+            if (hasPremiumPlan) {
+              return (
+                <div className="px-4 py-3 bg-primary/10 rounded-lg">
+                  <p className="text-sm font-medium text-primary">{t('subscription.subscribed')}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {userSubscription?.planId === 2 ? 'Premium' : 'Ultimate'}
+                  </p>
+                  <Button 
+                    variant="outline"
+                    className="mt-2 w-full py-2 px-3 text-sm font-medium rounded-lg"
+                    onClick={() => window.location.href = '/subscriptions'}
+                  >
+                    {t('subscription.manageSubscriptions')}
+                  </Button>
+                </div>
+              );
+            }
+            
+            // Show upgrade prompt for free tier users
+            return (
+              <div className="px-4 py-3 bg-primary/10 rounded-lg">
+                <p className="text-sm font-medium text-primary">{t('common.premium')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('common.upgrade')}</p>
+                <Button 
+                  variant="default"
+                  className="mt-2 w-full py-2 px-3 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg"
+                  onClick={() => window.location.href = '/subscriptions'}
+                >
+                  {t('common.upgradeNow')}
+                </Button>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </aside>

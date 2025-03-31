@@ -171,9 +171,16 @@ const SubscriptionPage = () => {
   const handleSelectPlan = (plan: SubscriptionPlan) => {
     setSelectedPlan(plan);
     
-    // If it's not a free plan and Stripe setup is required, redirect to checkout
+    // If it's not a free plan, redirect to payment page
     if (plan.price > 0) {
-      subscriptionMutation.mutate(plan.id);
+      // Navigate to payment page with plan details as URL parameters
+      const params = new URLSearchParams({
+        planId: plan.id.toString(),
+        planName: plan.name,
+        planPrice: plan.price.toString()
+      });
+      
+      setLocation(`/subscription-payment?${params.toString()}`);
     } else {
       // For the free plan, just update the subscription directly
       subscriptionMutation.mutate(plan.id);
