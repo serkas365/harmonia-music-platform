@@ -581,6 +581,154 @@ export class MemStorage implements IStorage {
   // Sample data initialization - this would be removed in a real application
   // but is useful for development purposes
   private initializeSampleData() {
+    // Create sample users
+    const sampleUsers = [
+      {
+        id: this.currentUserId++,
+        username: 'niki23',
+        password: '$2a$08$U/wDbgv9Oa.Uf63bWWAeruCQJzECsKiAKQJKVgZnF7QyQ3vJQrqJu', // password123
+        email: 'niki23@gmail.com',
+        role: 'user',
+        profileImage: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100&h=100',
+        createdAt: new Date('2023-01-01'),
+        preferences: {
+          language: 'en',
+          theme: 'dark',
+          audioQuality: 'standard',
+          autoplay: true,
+          notifications: {
+            email: true,
+            push: true,
+            newReleases: true,
+            playlists: true
+          }
+        },
+        subscriptionTier: 'free'
+      },
+      {
+        id: this.currentUserId++,
+        username: 'melodycreator',
+        password: '$2a$08$U/wDbgv9Oa.Uf63bWWAeruCQJzECsKiAKQJKVgZnF7QyQ3vJQrqJu', // password123
+        email: 'melodycreator@artistmail.com',
+        role: 'artist',
+        artistId: 1, // Electric Dreams
+        profileImage: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=100&h=100',
+        createdAt: new Date('2023-01-01'),
+        preferences: {
+          language: 'en',
+          theme: 'dark',
+          audioQuality: 'high',
+          autoplay: true,
+          notifications: {
+            email: true,
+            push: true,
+            newReleases: true,
+            playlists: true
+          }
+        },
+        subscriptionTier: 'premium'
+      },
+      {
+        id: this.currentUserId++,
+        username: 'beatsmith',
+        password: '$2a$08$U/wDbgv9Oa.Uf63bWWAeruCQJzECsKiAKQJKVgZnF7QyQ3vJQrqJu', // password123
+        email: 'beatsmith@artistmail.com', 
+        role: 'artist',
+        artistId: 3, // Quantum Beats
+        profileImage: 'https://images.unsplash.com/photo-1573497161161-c3e73707e25c?auto=format&fit=crop&q=80&w=100&h=100',
+        createdAt: new Date('2023-01-01'),
+        preferences: {
+          language: 'en',
+          theme: 'dark',
+          audioQuality: 'high',
+          autoplay: true,
+          notifications: {
+            email: true,
+            push: true,
+            newReleases: true,
+            playlists: true
+          }
+        },
+        subscriptionTier: 'premium'
+      }
+    ];
+    
+    // Add users to storage and initialize their collections
+    sampleUsers.forEach(user => {
+      this.users.set(user.id, user);
+      
+      // Initialize empty collections for the user
+      this.userLikedTracks.set(user.id, new Set());
+      this.userLikedAlbums.set(user.id, new Set());
+      this.userDownloadedTracks.set(user.id, new Set());
+      this.userPurchasedTracks.set(user.id, new Set());
+      this.userPurchasedAlbums.set(user.id, new Set());
+      
+      // Create default playlists for the user
+      if (this.defaultPlaylists) {
+        for (const template of this.defaultPlaylists) {
+          const playlistId = this.currentPlaylistId++;
+          const playlist: Playlist = {
+            id: playlistId,
+            name: template.name,
+            userId: user.id,
+            coverImage: template.coverImage,
+            isPublic: template.isPublic,
+            tracks: template.tracks,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+          this.playlists.set(playlistId, playlist);
+        }
+      }
+    });
+    
+    // Create artist analytics samples
+    const analyticsData = [
+      // Electric Dreams (artistId: 1)
+      {
+        artistId: 1,
+        date: new Date('2023-10-01'),
+        period: 'day',
+        streamCount: 120,
+        purchaseCount: 15,
+        revenue: 2500, // $25.00
+        followerCount: 350
+      },
+      {
+        artistId: 1,
+        date: new Date('2023-10-02'),
+        period: 'day',
+        streamCount: 135,
+        purchaseCount: 18,
+        revenue: 2800, // $28.00
+        followerCount: 358
+      },
+      // Quantum Beats (artistId: 3)
+      {
+        artistId: 3,
+        date: new Date('2023-10-01'),
+        period: 'day',
+        streamCount: 95,
+        purchaseCount: 12,
+        revenue: 1800, // $18.00
+        followerCount: 280
+      },
+      {
+        artistId: 3,
+        date: new Date('2023-10-02'),
+        period: 'day',
+        streamCount: 105,
+        purchaseCount: 14,
+        revenue: 2100, // $21.00
+        followerCount: 285
+      }
+    ];
+    
+    analyticsData.forEach(analytics => {
+      this.createArtistAnalytics(analytics);
+    });
+    
     // Create subscription plans
     const freePlan: SubscriptionPlan = {
       id: this.currentSubscriptionPlanId++,
