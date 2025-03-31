@@ -8,10 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useMutation } from '@tanstack/react-query';
-import { Shield, LockKeyhole, CreditCard, Loader2 } from 'lucide-react';
+import { Shield, LockKeyhole, CreditCard, Smartphone, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const SubscriptionPaymentPage = () => {
   const { t } = useTranslation();
@@ -24,6 +26,10 @@ const SubscriptionPaymentPage = () => {
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvc, setCvc] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Mobile payment state
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [mobileProvider, setMobileProvider] = useState('');
   
   // Read subscription plan from URL query parameters
   const params = new URLSearchParams(window.location.search);
@@ -63,6 +69,14 @@ const SubscriptionPaymentPage = () => {
     const value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
     if (value.length <= 3) {
       setCvc(value);
+    }
+  };
+  
+  // Handle mobile number formatting
+  const handleMobileNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\s+/g, '').replace(/[^0-9+]/gi, '');
+    if (value.length <= 15) {
+      setMobileNumber(value);
     }
   };
   
@@ -107,44 +121,84 @@ const SubscriptionPaymentPage = () => {
     }
     
     setIsProcessing(true);
+    
+    // For both payment methods, we'll use the same subscription mutation
+    // In a real application, we would handle the different payment methods differently
+    // and pass the payment method to the API
+    
+    // For mobile payment, we would include the mobile payment details
+    const paymentMethod = activeTab === 'mobile-payment' 
+      ? { type: 'mobile', provider: mobileProvider, number: mobileNumber }
+      : { type: 'credit_card', name: cardName, number: cardNumber };
+    
+    toast({
+      title: activeTab === 'mobile-payment' 
+        ? 'Mobile Payment Processing' 
+        : 'Credit Card Processing',
+      description: 'Processing your payment...',
+    });
+    
+    // We're using a simplified demo without actual payment processing
     subscriptionMutation.mutate();
   };
   
+  const [activeTab, setActiveTab] = useState<string>('credit-card');
+  
   const validateForm = () => {
-    if (!cardName) {
-      toast({
-        title: t('checkout.errorTitle'),
-        description: t('checkout.nameRequired'),
-        variant: 'destructive',
-      });
-      return false;
-    }
-    
-    if (cardNumber.replace(/\s/g, '').length !== 16) {
-      toast({
-        title: t('checkout.errorTitle'),
-        description: t('checkout.cardNumberInvalid'),
-        variant: 'destructive',
-      });
-      return false;
-    }
-    
-    if (cardExpiry.length !== 5) {
-      toast({
-        title: t('checkout.errorTitle'),
-        description: t('checkout.expiryInvalid'),
-        variant: 'destructive',
-      });
-      return false;
-    }
-    
-    if (cardCvc.length !== 3) {
-      toast({
-        title: t('checkout.errorTitle'),
-        description: t('checkout.cvcInvalid'),
-        variant: 'destructive',
-      });
-      return false;
+    if (activeTab === 'credit-card') {
+      if (!cardName) {
+        toast({
+          title: t('checkout.errorTitle'),
+          description: t('checkout.nameRequired'),
+          variant: 'destructive',
+        });
+        return false;
+      }
+      
+      if (cardNumber.replace(/\s/g, '').length !== 16) {
+        toast({
+          title: t('checkout.errorTitle'),
+          description: t('checkout.cardNumberInvalid'),
+          variant: 'destructive',
+        });
+        return false;
+      }
+      
+      if (cardExpiry.length !== 5) {
+        toast({
+          title: t('checkout.errorTitle'),
+          description: t('checkout.expiryInvalid'),
+          variant: 'destructive',
+        });
+        return false;
+      }
+      
+      if (cardCvc.length !== 3) {
+        toast({
+          title: t('checkout.errorTitle'),
+          description: t('checkout.cvcInvalid'),
+          variant: 'destructive',
+        });
+        return false;
+      }
+    } else if (activeTab === 'mobile-payment') {
+      if (mobileNumber.length < 10) {
+        toast({
+          title: t('checkout.errorTitle'),
+          description: t('cart.mobileNumber') + ' ' + t('checkout.errorTitle').toLowerCase(),
+          variant: 'destructive',
+        });
+        return false;
+      }
+      
+      if (!mobileProvider) {
+        toast({
+          title: t('checkout.errorTitle'),
+          description: t('cart.provider') + ' ' + t('checkout.errorTitle').toLowerCase(),
+          variant: 'destructive',
+        });
+        return false;
+      }
     }
     
     return true;
@@ -176,55 +230,118 @@ const SubscriptionPaymentPage = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit}>
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="cardName">{t('checkout.nameOnCard')}</Label>
-                    <Input
-                      id="cardName"
-                      placeholder={t('checkout.namePlaceholder')}
-                      value={cardName}
-                      onChange={(e) => setCardName(e.target.value)}
-                      disabled={isProcessing}
-                      className="max-w-lg"
-                    />
-                  </div>
+                <Tabs 
+                  defaultValue="credit-card" 
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="w-full mb-6"
+                >
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="credit-card" className="flex items-center">
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      {t('cart.creditCard')}
+                    </TabsTrigger>
+                    <TabsTrigger value="mobile-payment" className="flex items-center">
+                      <Smartphone className="mr-2 h-4 w-4" />
+                      {t('cart.mobilePayment')}
+                    </TabsTrigger>
+                  </TabsList>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="cardNumber">{t('checkout.cardNumber')}</Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="4242 4242 4242 4242"
-                      value={cardNumber}
-                      onChange={handleCardNumberChange}
-                      disabled={isProcessing}
-                      className="max-w-lg"
-                    />
-                  </div>
+                  {/* Credit Card Payment Form */}
+                  <TabsContent value="credit-card" className="mt-4">
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="cardName">{t('checkout.nameOnCard')}</Label>
+                        <Input
+                          id="cardName"
+                          placeholder={t('checkout.namePlaceholder')}
+                          value={cardName}
+                          onChange={(e) => setCardName(e.target.value)}
+                          disabled={isProcessing}
+                          className="max-w-lg"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="cardNumber">{t('checkout.cardNumber')}</Label>
+                        <Input
+                          id="cardNumber"
+                          placeholder="4242 4242 4242 4242"
+                          value={cardNumber}
+                          onChange={handleCardNumberChange}
+                          disabled={isProcessing}
+                          className="max-w-lg"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="cardExpiry">{t('checkout.expiryDate')}</Label>
+                          <Input
+                            id="cardExpiry"
+                            placeholder="MM/YY"
+                            value={cardExpiry}
+                            onChange={handleExpiryChange}
+                            disabled={isProcessing}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="cardCvc">{t('checkout.cvc')}</Label>
+                          <Input
+                            id="cardCvc"
+                            placeholder="123"
+                            value={cardCvc}
+                            onChange={handleCvcChange}
+                            disabled={isProcessing}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="cardExpiry">{t('checkout.expiryDate')}</Label>
-                      <Input
-                        id="cardExpiry"
-                        placeholder="MM/YY"
-                        value={cardExpiry}
-                        onChange={handleExpiryChange}
-                        disabled={isProcessing}
-                      />
+                  {/* Mobile Payment Form */}
+                  <TabsContent value="mobile-payment" className="mt-4">
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="mobileNumber">{t('cart.mobileNumber')}</Label>
+                        <Input
+                          id="mobileNumber"
+                          placeholder={t('cart.mobilePlaceholder')}
+                          value={mobileNumber}
+                          onChange={handleMobileNumberChange}
+                          disabled={isProcessing}
+                          className="max-w-lg"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="mobileProvider">{t('cart.provider')}</Label>
+                        <Select
+                          disabled={isProcessing}
+                          value={mobileProvider}
+                          onValueChange={setMobileProvider}
+                        >
+                          <SelectTrigger className="max-w-lg">
+                            <SelectValue placeholder={t('cart.provider')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="mpesa">{t('cart.mPesa')}</SelectItem>
+                            <SelectItem value="airtel">{t('cart.airtelMoney')}</SelectItem>
+                            <SelectItem value="mtn">{t('cart.mtnMoney')}</SelectItem>
+                            <SelectItem value="orange">{t('cart.orangeMoney')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="bg-muted p-4 rounded-lg mt-4">
+                        <p className="text-sm text-muted-foreground">
+                          {t('cart.mobilePaymentProcessing')}
+                        </p>
+                      </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="cardCvc">{t('checkout.cvc')}</Label>
-                      <Input
-                        id="cardCvc"
-                        placeholder="123"
-                        value={cardCvc}
-                        onChange={handleCvcChange}
-                        disabled={isProcessing}
-                      />
-                    </div>
-                  </div>
-                </div>
+                  </TabsContent>
+                </Tabs>
                 
                 <div className="flex items-center mt-8">
                   <Button

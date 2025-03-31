@@ -206,7 +206,17 @@ const Sidebar = ({ className }: SidebarProps) => {
           {/* Subscription upgrade prompt */}
           {user && (() => {
             // Check if user has a premium or ultimate subscription
-            const { data: userSubscription } = useQuery({
+            interface SubscriptionData {
+              active: boolean;
+              planId?: number;
+              userId?: number;
+              startDate?: string;
+              endDate?: string;
+              autoRenew?: boolean;
+              paymentMethod?: string;
+            }
+            
+            const { data: userSubscription } = useQuery<SubscriptionData>({
               queryKey: ['/api/me/subscription'],
               enabled: !!user,
             });
