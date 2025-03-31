@@ -1,7 +1,7 @@
-import { ReactNode } from "react";
-import { cn } from "@/lib/utils";
+import { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
-interface PageHeaderProps {
+export interface PageHeaderProps {
   title: string;
   subtitle?: string;
   icon?: ReactNode;
@@ -9,23 +9,19 @@ interface PageHeaderProps {
   className?: string;
 }
 
-const PageHeader = ({ title, subtitle, icon, children, className }: PageHeaderProps) => {
+export const PageHeader = ({ title, subtitle, icon, children, className }: PageHeaderProps) => {
   return (
-    <div className={cn("flex justify-between items-center mb-6", className)}>
-      <div className="flex items-center gap-3">
-        {icon && (
-          <div className="p-2 bg-primary/10 rounded-lg text-primary">
-            {icon}
-          </div>
-        )}
+    <div className={cn('flex flex-col space-y-2', className)}>
+      <div className="flex items-center space-x-3">
+        {icon && <div className="text-primary">{icon}</div>}
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
           {subtitle && (
-            <p className="text-sm text-muted-foreground">{subtitle}</p>
+            <p className="text-muted-foreground">{subtitle}</p>
           )}
         </div>
       </div>
-      {children}
+      {children && <div>{children}</div>}
     </div>
   );
 };

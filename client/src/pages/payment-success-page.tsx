@@ -1,61 +1,93 @@
 import { useEffect } from 'react';
-import { Link } from 'wouter';
+import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/hooks/use-auth';
-import { ShieldCheck, ArrowRight } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CheckCircle, Music, Home, Package } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
-const PaymentSuccessPage = () => {
+export default function PaymentSuccessPage() {
   const { t } = useTranslation();
+  const [, navigate] = useLocation();
   const { user } = useAuth();
-
-  // Use a useEffect to handle any post-payment operations
-  // For example, you might want to refresh user data to update subscription status
+  
   useEffect(() => {
-    // Any post-payment cleanup or data refresh
-  }, []);
-
+    // If someone navigates directly to this page, redirect to home
+    const hasNavigatedFromCheckout = document.referrer.includes('/checkout');
+    if (!hasNavigatedFromCheckout && typeof window !== 'undefined') {
+      const timeoutId = setTimeout(() => {
+        navigate('/');
+      }, 3000);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [navigate]);
+  
+  const handleContinueShopping = () => {
+    navigate('/store');
+  };
+  
+  const handleGoToLibrary = () => {
+    navigate('/library/purchased');
+  };
+  
+  const handleGoHome = () => {
+    navigate('/');
+  };
+  
   return (
-    <div className="container mx-auto px-4 py-12 max-w-md">
-      <Card className="bg-background-elevated border-border">
-        <CardHeader className="text-center pb-8">
-          <div className="mx-auto bg-primary/10 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-4">
-            <ShieldCheck className="h-8 w-8 text-primary" />
+    <div className="container mx-auto px-4 py-16 flex flex-col items-center text-center">
+      <div className="w-full max-w-md flex flex-col items-center">
+        <div className="bg-primary/10 p-6 rounded-full mb-6">
+          <CheckCircle className="h-16 w-16 text-primary" />
+        </div>
+        
+        <h1 className="text-3xl font-bold mb-4">{t('payment.thankYou')}</h1>
+        <p className="text-xl mb-2">{t('payment.orderConfirmed')}</p>
+        <p className="text-muted-foreground mb-8">
+          {t('payment.confirmationEmail', { email: user?.email })}
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+          <div className="bg-card border rounded-lg p-5">
+            <Package className="h-8 w-8 text-primary mb-3" />
+            <h3 className="font-semibold text-lg mb-1">{t('payment.yourPurchase')}</h3>
+            <p className="text-sm text-muted-foreground">
+              {t('payment.availableLibrary')}
+            </p>
+            <Button
+              onClick={handleGoToLibrary}
+              className="mt-4 w-full"
+              variant="outline"
+            >
+              <Music className="mr-2 h-4 w-4" />
+              {t('payment.viewLibrary')}
+            </Button>
           </div>
-          <CardTitle className="text-2xl">{t('cart.orderConfirmed')}</CardTitle>
-          <CardDescription>
-            {user?.email && t('cart.receiptSent') + ' ' + user.email}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 px-8">
-          <Alert variant="default" className="bg-background border-primary/20">
-            <AlertTitle>{t('cart.orderProcessing')}</AlertTitle>
-            <AlertDescription>
-              {t('cart.deliveredSoon')}
-            </AlertDescription>
-          </Alert>
           
-          <div className="space-y-1 pt-4">
-            <h3 className="font-medium">{t('cart.downloadInstructions')}</h3>
-            <p className="text-sm text-muted-foreground">{t('cart.accessLibrary')}</p>
+          <div className="bg-card border rounded-lg p-5">
+            <Home className="h-8 w-8 text-primary mb-3" />
+            <h3 className="font-semibold text-lg mb-1">{t('payment.whatNext')}</h3>
+            <p className="text-sm text-muted-foreground">
+              {t('payment.explorePlatform')}
+            </p>
+            <Button
+              onClick={handleGoHome}
+              className="mt-4 w-full"
+              variant="outline"
+            >
+              <Home className="mr-2 h-4 w-4" />
+              {t('payment.backToHome')}
+            </Button>
           </div>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4 pt-6">
-          <Button asChild className="w-full">
-            <Link href="/library/purchased">
-              {t('cart.viewPurchases')}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="w-full">
-            <Link href="/store">{t('cart.continueShopping')}</Link>
-          </Button>
-        </CardFooter>
-      </Card>
+        </div>
+        
+        <Button
+          onClick={handleContinueShopping}
+          className="mt-8 w-full"
+        >
+          {t('payment.continueShopping')}
+        </Button>
+      </div>
     </div>
   );
-};
-
-export default PaymentSuccessPage;
+}

@@ -1,206 +1,276 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useRouter } from 'wouter';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
+import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
-import { apiRequest } from '@/lib/queryClient';
-import { useAuth } from '@/hooks/use-auth';
 import { useCartStore } from '@/stores/useCartStore';
-import { StripeCheckoutForm } from '@/components/checkout/StripeCheckoutForm';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { 
-  ArrowLeft, 
-  CreditCard, 
-  ShieldCheck,
-  Loader2
-} from 'lucide-react';
+import PageHeader from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  CreditCard, 
+  Calendar, 
+  Lock, 
+  ArrowLeft, 
+  ChevronsRight 
+} from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
-// Initialize Stripe outside of the component to avoid recreating it on each render
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
-  : null;
-
-const CheckoutPage = () => {
+export default function CheckoutPage() {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [, navigate] = useLocation();
-  const { user } = useAuth();
   const { items, totalAmount, clearCart } = useCartStore();
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [isLoadingIntent, setIsLoadingIntent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [cardName, setCardName] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvc, setCardCvc] = useState('');
+  const [saveCard, setSaveCard] = useState(false);
 
   useEffect(() => {
-    // If cart is empty, redirect back to cart page
     if (items.length === 0) {
       navigate('/cart');
-      return;
     }
+  }, [items, navigate]);
 
-    // If user is not authenticated, redirect to login
-    if (!user) {
-      navigate('/auth?redirect=/checkout');
-      return;
-    }
-
-    // Create a payment intent as soon as the page loads
-    const createPaymentIntent = async () => {
-      setIsLoadingIntent(true);
-      setError(null);
-
-      try {
-        // Verify Stripe is configured
-        if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-          throw new Error('Stripe is not configured. Please add VITE_STRIPE_PUBLIC_KEY to your environment variables.');
-        }
-
-        // Create payment intent
-        const response = await apiRequest('POST', '/api/create-payment-intent', { 
-          items, 
-          amount: totalAmount 
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to create payment intent');
-        }
-
-        const data = await response.json();
-        setClientSecret(data.clientSecret);
-      } catch (err: any) {
-        console.error('Error creating payment intent:', err);
-        setError(err.message || 'Failed to create payment intent');
-      } finally {
-        setIsLoadingIntent(false);
-      }
-    };
-
-    createPaymentIntent();
-  }, [items, totalAmount, navigate, user]);
-
-  const handlePaymentSuccess = () => {
-    // Process successful payment
-    clearCart();
-    navigate('/payment-success');
+  const handleFormatCardNumber = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value.replace(/\D/g, '');
+    const formatted = input.replace(/(\d{4})/g, '$1 ').trim();
+    setCardNumber(formatted.substring(0, 19)); // limit to 16 digits + 3 spaces
   };
 
-  if (isLoadingIntent || !clientSecret) {
-    return (
-      <div className="flex items-center justify-center min-h-[70vh]">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 mx-auto animate-spin text-primary" />
-          <p className="mt-4 text-lg">{t('cart.preparingCheckout')}</p>
-        </div>
-      </div>
-    );
-  }
+  const handleFormatExpiry = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value.replace(/\D/g, '');
+    const formatted = input.replace(/(\d{2})(\d{0,2})/, '$1/$2');
+    setCardExpiry(formatted.substring(0, 5)); // limit to MM/YY format
+  };
 
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="bg-destructive/10 border border-destructive rounded-lg p-6 mb-8 text-center">
-          <div className="text-destructive font-medium mb-2">{t('cart.checkoutError')}</div>
-          <p className="text-sm">{error}</p>
-        </div>
-        <Button onClick={() => navigate('/cart')} className="w-full" variant="outline">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {t('cart.backToCart')}
-        </Button>
-      </div>
-    );
-  }
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    setIsProcessing(true);
+    
+    // Simulate payment processing
+    setTimeout(() => {
+      setIsProcessing(false);
+      clearCart();
+      navigate('/payment-success');
+    }, 2000);
+  };
+  
+  const validateForm = () => {
+    if (!cardName) {
+      toast({
+        title: t('checkout.errorTitle'),
+        description: t('checkout.nameRequired'),
+        variant: 'destructive',
+      });
+      return false;
+    }
+    
+    if (cardNumber.replace(/\s/g, '').length !== 16) {
+      toast({
+        title: t('checkout.errorTitle'),
+        description: t('checkout.cardNumberInvalid'),
+        variant: 'destructive',
+      });
+      return false;
+    }
+    
+    if (cardExpiry.length !== 5) {
+      toast({
+        title: t('checkout.errorTitle'),
+        description: t('checkout.expiryInvalid'),
+        variant: 'destructive',
+      });
+      return false;
+    }
+    
+    if (cardCvc.length !== 3) {
+      toast({
+        title: t('checkout.errorTitle'),
+        description: t('checkout.cvcInvalid'),
+        variant: 'destructive',
+      });
+      return false;
+    }
+    
+    return true;
+  };
+  
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <Button onClick={() => navigate('/cart')} className="mb-6" variant="ghost">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        {t('cart.backToCart')}
-      </Button>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="order-2 md:order-1">
-          <Card className="mb-8">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl flex items-center">
-                <CreditCard className="mr-2 h-5 w-5" />
-                {t('cart.paymentInformation')}
-              </CardTitle>
-              <CardDescription>
-                {t('cart.securePaymentDescription')}
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent>
-              {stripePromise ? (
-                <Elements stripe={stripePromise} options={{ clientSecret }}>
-                  <StripeCheckoutForm 
-                    clientSecret={clientSecret} 
-                    amount={totalAmount} 
-                    onSuccess={handlePaymentSuccess} 
+    <div className="container mx-auto px-4 py-6">
+      <PageHeader 
+        title={t('checkout.secureCheckout')} 
+        icon={<Lock className="h-6 w-6" />}
+        subtitle={t('checkout.enterDetails')}
+      />
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-6">
+        <div className="md:col-span-2">
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-1 mb-6">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <CreditCard className="mr-2 h-5 w-5 text-primary" />
+                  {t('checkout.paymentDetails')}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t('checkout.secureConnection')}
+                </p>
+              </div>
+              
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="cardName">{t('checkout.nameOnCard')}</Label>
+                  <Input
+                    id="cardName"
+                    value={cardName}
+                    onChange={(e) => setCardName(e.target.value)}
+                    placeholder={t('checkout.namePlaceholder')}
+                    disabled={isProcessing}
                   />
-                </Elements>
-              ) : (
-                <div className="p-4 border border-destructive rounded-md bg-destructive/10 text-center">
-                  <p className="text-destructive">
-                    {t('cart.stripeNotConfigured')}
-                  </p>
                 </div>
-              )}
+                
+                <div className="space-y-2">
+                  <Label htmlFor="cardNumber">{t('checkout.cardNumber')}</Label>
+                  <div className="relative">
+                    <Input
+                      id="cardNumber"
+                      value={cardNumber}
+                      onChange={handleFormatCardNumber}
+                      placeholder="4242 4242 4242 4242"
+                      maxLength={19}
+                      disabled={isProcessing}
+                    />
+                    <CreditCard className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="expiry">{t('checkout.expiryDate')}</Label>
+                    <div className="relative">
+                      <Input
+                        id="expiry"
+                        value={cardExpiry}
+                        onChange={handleFormatExpiry}
+                        placeholder="MM/YY"
+                        maxLength={5}
+                        disabled={isProcessing}
+                      />
+                      <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="cvc">{t('checkout.cvc')}</Label>
+                    <Input
+                      id="cvc"
+                      value={cardCvc}
+                      onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                      placeholder="123"
+                      maxLength={3}
+                      disabled={isProcessing}
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="saveCard" 
+                    checked={saveCard} 
+                    onCheckedChange={(checked) => setSaveCard(checked as boolean)}
+                    disabled={isProcessing}
+                  />
+                  <Label htmlFor="saveCard" className="text-sm">
+                    {t('checkout.saveCard')}
+                  </Label>
+                </div>
+                
+                <div className="flex justify-between pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate('/cart')}
+                    disabled={isProcessing}
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    {t('checkout.backToCart')}
+                  </Button>
+                  
+                  <Button 
+                    type="submit" 
+                    disabled={isProcessing}
+                    className="min-w-[150px]"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        {t('checkout.processing')}
+                      </>
+                    ) : (
+                      <>
+                        {t('checkout.placeOrder')}
+                        <ChevronsRight className="ml-2 h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
-          
-          <div className="flex items-center justify-center text-sm text-muted-foreground mb-6">
-            <ShieldCheck className="h-4 w-4 mr-2" />
-            {t('cart.secureTransaction')}
-          </div>
         </div>
-
-        <div className="order-1 md:order-2">
+        
+        <div>
           <Card>
-            <CardHeader>
-              <CardTitle>{t('cart.orderSummary')}</CardTitle>
-              <CardDescription>
-                {t('cart.itemCount', { count: items.length })}
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold mb-4">
+                {t('cart.orderSummary')}
+              </h3>
+              
               <div className="space-y-4">
-                {items.map((item) => (
-                  <div key={`${item.type}-${item.id}`} className="flex justify-between items-center text-sm">
-                    <div className="flex-1">
-                      <div className="font-medium">{item.title}</div>
-                      <div className="text-muted-foreground text-xs">{item.artistName}</div>
-                    </div>
-                    <div>${item.price.toFixed(2)}</div>
-                  </div>
-                ))}
-                
-                <Separator />
-                
-                <div className="flex justify-between items-center pt-2">
-                  <span className="font-medium">{t('cart.subtotal')}</span>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t('cart.subtotal')}</span>
                   <span>${totalAmount.toFixed(2)}</span>
                 </div>
                 
-                <div className="flex justify-between items-center text-sm text-muted-foreground">
-                  <span>{t('cart.tax')}</span>
-                  <span>{t('cart.includedInPrice')}</span>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t('cart.tax')}</span>
+                  <span className="text-muted-foreground text-sm">
+                    {t('cart.includedInPrice')}
+                  </span>
                 </div>
                 
                 <Separator />
                 
-                <div className="flex justify-between items-center font-bold">
+                <div className="flex justify-between font-semibold">
                   <span>{t('cart.total')}</span>
                   <span>${totalAmount.toFixed(2)}</span>
                 </div>
+              </div>
+              
+              <div className="mt-6 space-y-2">
+                <h4 className="font-medium text-sm">{t('checkout.orderContains')}</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  {items.map((item) => (
+                    <li key={`${item.type}-${item.id}`} className="flex justify-between">
+                      <span>{item.title}</span>
+                      <span>${item.price.toFixed(2)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className="mt-6 pt-4 border-t text-xs text-muted-foreground">
+                <p>{t('checkout.termsNotice')}</p>
               </div>
             </CardContent>
           </Card>
@@ -208,6 +278,4 @@ const CheckoutPage = () => {
       </div>
     </div>
   );
-};
-
-export default CheckoutPage;
+}

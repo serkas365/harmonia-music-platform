@@ -5,6 +5,7 @@ import { Playlist } from "@shared/schema";
 import { useState, useEffect } from "react";
 import { useLibraryStore } from "@/stores/useLibraryStore";
 import { useCartStore } from "@/stores/useCartStore";
+import { CartIndicator } from "@/components/cart/CartIndicator";
 import { 
   Home, 
   Search, 
@@ -69,14 +70,11 @@ const Sidebar = ({ className }: SidebarProps) => {
             )}
             onClick={() => window.location.href = item.path}
           >
-            <div className="relative">
+            {item.path === '/cart' ? (
+              <CartIndicator className="mb-1" />
+            ) : (
               <item.icon className="h-5 w-5 mb-1" />
-              {item.path === '/cart' && cartItems.length > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                  {cartItems.length}
-                </Badge>
-              )}
-            </div>
+            )}
             <span className="text-xs">{item.label}</span>
           </div>
         ))}
@@ -105,19 +103,16 @@ const Sidebar = ({ className }: SidebarProps) => {
                 )}
                 onClick={() => window.location.href = item.path}
               >
-                <div className="relative">
+                {item.path === '/cart' ? (
+                  <CartIndicator className="mr-3" />
+                ) : (
                   <item.icon className={cn(
                     "mr-3 h-5 w-5",
                     location === item.path
                       ? "text-primary"
                       : "group-hover:text-primary"
                   )} />
-                  {item.path === '/cart' && cartItems.length > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                      {cartItems.length}
-                    </Badge>
-                  )}
-                </div>
+                )}
                 <span className="font-medium">{item.label}</span>
               </div>
             ))}
