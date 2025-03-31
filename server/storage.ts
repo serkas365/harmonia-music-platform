@@ -4,6 +4,7 @@ import {
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { Store } from "express-session";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -62,7 +63,7 @@ export interface IStorage {
   updateUserSubscription(id: number, updates: Partial<UserSubscription>): Promise<UserSubscription | undefined>;
   
   // Session Store
-  sessionStore: session.SessionStore;
+  sessionStore: Store;
 }
 
 export class MemStorage implements IStorage {
@@ -88,7 +89,7 @@ export class MemStorage implements IStorage {
   currentSubscriptionPlanId: number;
   currentUserSubscriptionId: number;
   
-  sessionStore: session.SessionStore;
+  sessionStore: Store;
 
   constructor() {
     this.users = new Map();
@@ -505,6 +506,343 @@ export class MemStorage implements IStorage {
     this.subscriptionPlans.set(freePlan.id, freePlan);
     this.subscriptionPlans.set(premiumPlan.id, premiumPlan);
     this.subscriptionPlans.set(ultimatePlan.id, ultimatePlan);
+    
+    // Create artists
+    const artists = [
+      {
+        id: this.currentArtistId++,
+        name: 'Electric Dreams',
+        image: 'https://images.unsplash.com/photo-1511735111819-9a3f7709049c?auto=format&fit=crop&q=80&w=300&h=300',
+        bio: 'Electronic music duo known for their atmospheric soundscapes and innovative beats.',
+        genres: ['Electronic', 'Ambient', 'Downtempo'],
+        socialLinks: {
+          youtube: 'https://youtube.com/electricdreams',
+          instagram: 'https://instagram.com/electricdreams',
+          twitter: 'https://twitter.com/electricdreams'
+        },
+        verified: true
+      },
+      {
+        id: this.currentArtistId++,
+        name: 'Luna Shadows',
+        image: 'https://images.unsplash.com/photo-1593697821252-0c9137d9fc45?auto=format&fit=crop&q=80&w=300&h=300',
+        bio: 'Indie pop sensation with haunting vocals and ethereal melodies that captivate listeners.',
+        genres: ['Indie Pop', 'Dream Pop', 'Alternative'],
+        socialLinks: {
+          youtube: 'https://youtube.com/lunashadows',
+          instagram: 'https://instagram.com/lunashadows'
+        },
+        verified: true
+      },
+      {
+        id: this.currentArtistId++,
+        name: 'Quantum Beats',
+        image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=300&h=300',
+        bio: 'Hip-hop collective pushing the boundaries of the genre with futuristic production and intelligent lyrics.',
+        genres: ['Hip Hop', 'Electronic', 'Experimental'],
+        socialLinks: {
+          youtube: 'https://youtube.com/quantumbeats',
+          instagram: 'https://instagram.com/quantumbeats',
+          twitter: 'https://twitter.com/quantumbeats'
+        },
+        verified: true
+      },
+      {
+        id: this.currentArtistId++,
+        name: 'Aurora Skies',
+        image: 'https://images.unsplash.com/photo-1526218626217-dc65a29bb444?auto=format&fit=crop&q=80&w=300&h=300',
+        bio: 'Folk-inspired acoustic ensemble bringing heartfelt lyrics and lush harmonies to listeners worldwide.',
+        genres: ['Folk', 'Acoustic', 'Indie'],
+        socialLinks: {
+          youtube: 'https://youtube.com/auroraskies',
+          instagram: 'https://instagram.com/auroraskies'
+        },
+        verified: false
+      },
+      {
+        id: this.currentArtistId++,
+        name: 'Midnight Cruise',
+        image: 'https://images.unsplash.com/photo-1577375729152-4c8b5fcda381?auto=format&fit=crop&q=80&w=300&h=300',
+        bio: 'Synth-wave band creating nostalgia-infused tracks perfect for night drives and contemplation.',
+        genres: ['Synthwave', '80s', 'Electronic'],
+        socialLinks: {
+          youtube: 'https://youtube.com/midnightcruise',
+          instagram: 'https://instagram.com/midnightcruise',
+          twitter: 'https://twitter.com/midnightcruise'
+        },
+        verified: true
+      },
+      {
+        id: this.currentArtistId++,
+        name: 'Nova Flames',
+        image: 'https://images.unsplash.com/photo-1519892300165-cb5542fb47c7?auto=format&fit=crop&q=80&w=300&h=300',
+        bio: 'Rock band blending classic influences with modern production for an energetic, timeless sound.',
+        genres: ['Rock', 'Alternative', 'Indie Rock'],
+        socialLinks: {
+          youtube: 'https://youtube.com/novaflames',
+          instagram: 'https://instagram.com/novaflames'
+        },
+        verified: true
+      }
+    ];
+    
+    // Add artists to storage
+    artists.forEach(artist => {
+      this.artists.set(artist.id, artist);
+    });
+    
+    // Create albums
+    const albums = [
+      {
+        id: this.currentAlbumId++,
+        title: 'Digital Horizons',
+        artistId: 1,
+        artistName: 'Electric Dreams',
+        coverImage: 'https://images.unsplash.com/photo-1496293455970-f8581aae0e3b?auto=format&fit=crop&q=80&w=300&h=300',
+        releaseDate: new Date('2023-04-15'),
+        genres: ['Electronic', 'Ambient']
+      },
+      {
+        id: this.currentAlbumId++,
+        title: 'Moonlight Wanderer',
+        artistId: 2,
+        artistName: 'Luna Shadows',
+        coverImage: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?auto=format&fit=crop&q=80&w=300&h=300',
+        releaseDate: new Date('2023-06-21'),
+        genres: ['Indie Pop', 'Dream Pop']
+      },
+      {
+        id: this.currentAlbumId++,
+        title: 'Future State',
+        artistId: 3,
+        artistName: 'Quantum Beats',
+        coverImage: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?auto=format&fit=crop&q=80&w=300&h=300',
+        releaseDate: new Date('2023-02-10'),
+        genres: ['Hip Hop', 'Electronic']
+      },
+      {
+        id: this.currentAlbumId++,
+        title: 'Northern Whispers',
+        artistId: 4,
+        artistName: 'Aurora Skies',
+        coverImage: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&q=80&w=300&h=300',
+        releaseDate: new Date('2023-01-05'),
+        genres: ['Folk', 'Acoustic']
+      },
+      {
+        id: this.currentAlbumId++,
+        title: 'Neon Drive',
+        artistId: 5,
+        artistName: 'Midnight Cruise',
+        coverImage: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?auto=format&fit=crop&q=80&w=300&h=300',
+        releaseDate: new Date('2023-03-18'),
+        genres: ['Synthwave', 'Electronic']
+      },
+      {
+        id: this.currentAlbumId++,
+        title: 'Ember Rise',
+        artistId: 6,
+        artistName: 'Nova Flames',
+        coverImage: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=300&h=300',
+        releaseDate: new Date('2023-05-12'),
+        genres: ['Rock', 'Alternative']
+      }
+    ];
+    
+    // Add albums to storage
+    albums.forEach(album => {
+      this.albums.set(album.id, album);
+    });
+    
+    // Create tracks
+    let trackNumber = 1;
+    const tracks = [
+      // Electric Dreams - Digital Horizons
+      {
+        id: this.currentTrackId++,
+        title: 'Binary Sunset',
+        artistId: 1,
+        artistName: 'Electric Dreams',
+        albumId: 1,
+        albumTitle: 'Digital Horizons',
+        duration: 245, // 4:05
+        audioUrl: '/assets/audio/sample1.mp3',
+        purchasePrice: 129, // $1.29
+        purchaseAvailable: true,
+        explicit: false,
+        trackNumber: trackNumber++
+      },
+      {
+        id: this.currentTrackId++,
+        title: 'Neural Network',
+        artistId: 1,
+        artistName: 'Electric Dreams',
+        albumId: 1,
+        albumTitle: 'Digital Horizons',
+        duration: 218, // 3:38
+        audioUrl: '/assets/audio/sample2.mp3',
+        purchasePrice: 129, // $1.29
+        purchaseAvailable: true,
+        explicit: false,
+        trackNumber: trackNumber++
+      },
+      
+      // Reset track number for new album
+      ...(trackNumber = 1, []),
+      
+      // Luna Shadows - Moonlight Wanderer
+      {
+        id: this.currentTrackId++,
+        title: 'Silver Light',
+        artistId: 2,
+        artistName: 'Luna Shadows',
+        albumId: 2,
+        albumTitle: 'Moonlight Wanderer',
+        duration: 197, // 3:17
+        audioUrl: '/assets/audio/sample3.mp3',
+        purchasePrice: 129, // $1.29
+        purchaseAvailable: true,
+        explicit: false,
+        trackNumber: trackNumber++
+      },
+      {
+        id: this.currentTrackId++,
+        title: 'Ethereal',
+        artistId: 2,
+        artistName: 'Luna Shadows',
+        albumId: 2,
+        albumTitle: 'Moonlight Wanderer',
+        duration: 224, // 3:44
+        audioUrl: '/assets/audio/sample4.mp3',
+        purchasePrice: 129, // $1.29
+        purchaseAvailable: true,
+        explicit: false,
+        trackNumber: trackNumber++
+      },
+      
+      // Reset track number for new album
+      ...(trackNumber = 1, []),
+      
+      // Quantum Beats - Future State
+      {
+        id: this.currentTrackId++,
+        title: 'Time Traveler',
+        artistId: 3,
+        artistName: 'Quantum Beats',
+        albumId: 3,
+        albumTitle: 'Future State',
+        duration: 182, // 3:02
+        audioUrl: '/assets/audio/sample5.mp3',
+        purchasePrice: 129, // $1.29
+        purchaseAvailable: true,
+        explicit: true,
+        trackNumber: trackNumber++
+      },
+      {
+        id: this.currentTrackId++,
+        title: 'Particle Wave',
+        artistId: 3,
+        artistName: 'Quantum Beats',
+        albumId: 3,
+        albumTitle: 'Future State',
+        duration: 231, // 3:51
+        audioUrl: '/assets/audio/sample6.mp3',
+        purchasePrice: 129, // $1.29
+        purchaseAvailable: true,
+        explicit: true,
+        trackNumber: trackNumber++
+      },
+      
+      // More recent tracks (for new releases)
+      {
+        id: this.currentTrackId++,
+        title: 'Cosmic Dawn',
+        artistId: 1,
+        artistName: 'Electric Dreams',
+        albumId: 1,
+        albumTitle: 'Digital Horizons',
+        duration: 263, // 4:23
+        audioUrl: '/assets/audio/sample7.mp3',
+        purchasePrice: 129, // $1.29
+        purchaseAvailable: true,
+        explicit: false,
+        trackNumber: 3
+      },
+      {
+        id: this.currentTrackId++,
+        title: 'Midnight Echoes',
+        artistId: 2,
+        artistName: 'Luna Shadows',
+        albumId: 2,
+        albumTitle: 'Moonlight Wanderer',
+        duration: 205, // 3:25
+        audioUrl: '/assets/audio/sample8.mp3',
+        purchasePrice: 129, // $1.29
+        purchaseAvailable: true,
+        explicit: false,
+        trackNumber: 3
+      },
+      {
+        id: this.currentTrackId++,
+        title: 'Quantum Leap',
+        artistId: 3,
+        artistName: 'Quantum Beats',
+        albumId: 3,
+        albumTitle: 'Future State',
+        duration: 198, // 3:18
+        audioUrl: '/assets/audio/sample9.mp3',
+        purchasePrice: 129, // $1.29
+        purchaseAvailable: true,
+        explicit: true,
+        trackNumber: 3
+      },
+      {
+        id: this.currentTrackId++,
+        title: 'Aurora Borealis',
+        artistId: 4,
+        artistName: 'Aurora Skies',
+        albumId: 4,
+        albumTitle: 'Northern Whispers',
+        duration: 274, // 4:34
+        audioUrl: '/assets/audio/sample10.mp3',
+        purchasePrice: 129, // $1.29
+        purchaseAvailable: true,
+        explicit: false,
+        trackNumber: 1
+      }
+    ];
+    
+    // Add tracks to storage
+    tracks.forEach(track => {
+      this.tracks.set(track.id, track);
+    });
+    
+    // Create default playlists for new users
+    const playlists = [
+      {
+        id: this.currentPlaylistId++,
+        name: 'Chill Vibes',
+        userId: 0, // Will be assigned to the user when they register
+        coverImage: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&q=80&w=300&h=300',
+        isPublic: true,
+        createdAt: new Date(),
+        tracks: []
+      },
+      {
+        id: this.currentPlaylistId++,
+        name: 'Workout Mix',
+        userId: 0, // Will be assigned to the user when they register
+        coverImage: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&q=80&w=300&h=300',
+        isPublic: true,
+        createdAt: new Date(),
+        tracks: []
+      }
+    ];
+    
+    // Playlists will be assigned to users when they register
+    playlists.forEach(playlist => {
+      this.playlists.set(playlist.id, playlist);
+    });
   }
 }
 

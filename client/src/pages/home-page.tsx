@@ -58,7 +58,7 @@ const HomePage = () => {
   
   // Fetch all playlists (as a substitute for personalized playlists)
   const { data: madeForYou, isLoading: isLoadingPlaylists } = useQuery<Playlist[]>({
-    queryKey: ['/api/playlists'],
+    queryKey: ['/api/me/playlists'],
     queryFn: async () => {
       // For now, use the user's playlists if they're logged in, otherwise return an empty array
       if (!user) return [];
