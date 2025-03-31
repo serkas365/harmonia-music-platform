@@ -17,7 +17,9 @@ import {
   Heart, 
   Download, 
   ShoppingCart, 
-  Plus 
+  Plus,
+  Shield,
+  Smartphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,25 +64,47 @@ const Sidebar = ({ className }: SidebarProps) => {
     )}>
       {/* Mobile Bottom Navigation */}
       <div className="flex md:hidden w-full justify-around items-center bg-background/95 backdrop-blur-lg border-t border-gray-800">
-        {navItems.slice(0, 4).map((item) => (
-          <div 
-            key={item.path}
-            className={cn(
-              "flex flex-col items-center justify-center py-2 cursor-pointer",
-              location === item.path
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-            onClick={() => window.location.href = item.path}
-          >
-            {item.path === '/cart' ? (
-              <CartIndicator className="mb-1" />
-            ) : (
-              <item.icon className="h-5 w-5 mb-1" />
-            )}
-            <span className="text-xs">{item.label}</span>
-          </div>
-        ))}
+        {/* Home Button */}
+        <div 
+          className={cn(
+            "flex flex-col items-center justify-center py-2 cursor-pointer",
+            location === '/'
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => window.location.href = '/'}
+        >
+          <Home className="h-5 w-5 mb-1" />
+          <span className="text-xs">{t('common.home')}</span>
+        </div>
+        
+        {/* Library Button */}
+        <div 
+          className={cn(
+            "flex flex-col items-center justify-center py-2 cursor-pointer",
+            location.startsWith('/library')
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => window.location.href = '/library'}
+        >
+          <Library className="h-5 w-5 mb-1" />
+          <span className="text-xs">{t('common.library')}</span>
+        </div>
+        
+        {/* Store Button */}
+        <div 
+          className={cn(
+            "flex flex-col items-center justify-center py-2 cursor-pointer",
+            location === '/store'
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => window.location.href = '/store'}
+        >
+          <ShoppingBag className="h-5 w-5 mb-1" />
+          <span className="text-xs">{t('common.store')}</span>
+        </div>
         
         {/* Cart */}
         <div 
@@ -96,11 +120,47 @@ const Sidebar = ({ className }: SidebarProps) => {
           <span className="text-xs">{t('common.cart')}</span>
         </div>
         
-        {/* Language Toggle for Mobile */}
-        <div className="flex flex-col items-center justify-center py-2">
-          <LanguageToggle className="h-8 w-8 p-0 mb-1" />
-          <span className="text-xs">{i18n.language === 'fr' ? 'FR' : 'EN'}</span>
-        </div>
+        {/* Subscription/Account Menu Button */}
+        {user && (() => {
+          // Check if user has a premium or ultimate subscription
+          interface SubscriptionData {
+            active: boolean;
+            planId?: number;
+            userId?: number;
+            startDate?: string;
+            endDate?: string;
+            autoRenew?: boolean;
+            paymentMethod?: string;
+          }
+          
+          const { data: userSubscription } = useQuery<SubscriptionData>({
+            queryKey: ['/api/me/subscription'],
+            enabled: !!user,
+          });
+          
+          const hasPremiumPlan = userSubscription?.planId === 2 || userSubscription?.planId === 3;
+          
+          return (
+            <div
+              className={cn(
+                "flex flex-col items-center justify-center py-2 cursor-pointer",
+                location === '/subscriptions'
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+              onClick={() => window.location.href = '/subscriptions'}
+            >
+              {hasPremiumPlan ? (
+                <Shield className="h-5 w-5 mb-1 text-primary" />
+              ) : (
+                <Shield className="h-5 w-5 mb-1" />
+              )}
+              <span className="text-xs">
+                {hasPremiumPlan ? t('subscription.subscribed') : t('common.premium')}
+              </span>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Desktop Sidebar */}

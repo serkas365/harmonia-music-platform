@@ -30,6 +30,7 @@ const SubscriptionPaymentPage = () => {
   // Mobile payment state
   const [mobileNumber, setMobileNumber] = useState('');
   const [mobileProvider, setMobileProvider] = useState('');
+  const [activeTab, setActiveTab] = useState<string>('credit-card');
   
   // Read subscription plan from URL query parameters
   const params = new URLSearchParams(window.location.search);
@@ -141,8 +142,6 @@ const SubscriptionPaymentPage = () => {
     // We're using a simplified demo without actual payment processing
     subscriptionMutation.mutate();
   };
-  
-  const [activeTab, setActiveTab] = useState<string>('credit-card');
   
   const validateForm = () => {
     if (activeTab === 'credit-card') {
