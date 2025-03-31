@@ -44,7 +44,7 @@ const PlaylistCard = ({
             "absolute inset-0 flex items-center justify-center bg-gradient-to-r opacity-80 group-hover:opacity-90 transition-opacity",
             gradientColors
           )}>
-            <span className="text-white font-bold text-sm md:text-base">{overlayTitle}</span>
+            <span className="text-white font-bold text-sm md:text-base px-4 text-center drop-shadow-lg">{overlayTitle}</span>
           </div>
           
           {displayTracks.length > 0 ? (

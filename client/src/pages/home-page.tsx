@@ -231,7 +231,7 @@ const HomePage = () => {
               <PlaylistCard 
                 key={playlist.id} 
                 playlist={playlist} 
-                overlayTitle={playlist.name.includes("Weekly") ? "Weekly Mix" : "Daily Mix"}
+                overlayTitle={playlist.name}
                 tracks={[]} // Empty tracks array for now until we have proper playlist tracks
               />
             ))
