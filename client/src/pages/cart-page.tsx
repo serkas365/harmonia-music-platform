@@ -10,7 +10,8 @@ import {
   CreditCard, 
   AlertCircle,
   ArrowLeft,
-  ShieldCheck 
+  ShieldCheck,
+  Smartphone
 } from "lucide-react";
 import { 
   Card, 
@@ -28,7 +29,7 @@ import {
   FormField, 
   FormItem, 
   FormLabel, 
-  FormMessage 
+  FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -41,11 +42,24 @@ import { useToast } from "@/hooks/use-toast";
 
 // Form validation schema for checkout
 const checkoutSchema = z.object({
-  cardName: z.string().min(3, { message: "Name must be at least 3 characters." }),
-  cardNumber: z.string().regex(/^[0-9]{16}$/, { message: "Please enter a valid 16-digit credit card number." }),
-  cardExpiry: z.string().regex(/^(0[1-9]|1[0-2])\/[0-9]{2}$/, { message: "Please use MM/YY format." }),
-  cardCVC: z.string().regex(/^[0-9]{3,4}$/, { message: "Please enter a valid CVC code." }),
-  paymentMethod: z.enum(["card", "paypal"], { required_error: "Please select a payment method." }),
+  cardName: z.string().min(3, { message: "Name must be at least 3 characters." }).optional(),
+  cardNumber: z.string().regex(/^[0-9]{16}$/, { message: "Please enter a valid 16-digit credit card number." }).optional(),
+  cardExpiry: z.string().regex(/^(0[1-9]|1[0-2])\/[0-9]{2}$/, { message: "Please use MM/YY format." }).optional(),
+  cardCVC: z.string().regex(/^[0-9]{3,4}$/, { message: "Please enter a valid CVC code." }).optional(),
+  mobileNumber: z.string().regex(/^\+[0-9]{10,15}$/, { message: "Please enter a valid mobile number with country code." }).optional(),
+  mobileProvider: z.enum(["mpesa", "airtel", "mtn", "orange"]).optional(),
+  paymentMethod: z.enum(["card", "mobile", "paypal"], { required_error: "Please select a payment method." }),
+}).refine(data => {
+  if (data.paymentMethod === 'card') {
+    return !!data.cardName && !!data.cardNumber && !!data.cardExpiry && !!data.cardCVC;
+  }
+  if (data.paymentMethod === 'mobile') {
+    return !!data.mobileNumber && !!data.mobileProvider;
+  }
+  return true;
+}, {
+  message: "Please fill in all required fields for the selected payment method.",
+  path: ["paymentMethod"],
 });
 
 type CheckoutFormValues = z.infer<typeof checkoutSchema>;
@@ -69,6 +83,8 @@ const CartPage = () => {
       cardNumber: "",
       cardExpiry: "",
       cardCVC: "",
+      mobileNumber: "",
+      mobileProvider: "mpesa",
       paymentMethod: "card",
     },
   });
@@ -306,6 +322,15 @@ const CartPage = () => {
                               </div>
                             </Label>
                           </div>
+                          <div className="flex items-center space-x-2 border border-border rounded-lg p-4 cursor-pointer data-[state=checked]:border-primary">
+                            <RadioGroupItem value="mobile" id="mobile" />
+                            <Label htmlFor="mobile" className="flex-1 cursor-pointer">
+                              <div className="flex items-center">
+                                <Smartphone className="h-5 w-5 mr-2" />
+                                {t('cart.mobilePayment')}
+                              </div>
+                            </Label>
+                          </div>
                           <div className="flex items-center space-x-2 border border-border rounded-lg p-4 cursor-pointer data-[state=checked]:border-primary opacity-60">
                             <RadioGroupItem value="paypal" id="paypal" disabled />
                             <Label htmlFor="paypal" className="flex-1 cursor-pointer opacity-60">
@@ -382,6 +407,60 @@ const CartPage = () => {
                         )}
                       />
                     </div>
+                  </div>
+                )}
+                
+                {form.watch("paymentMethod") === "mobile" && (
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="mobileNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('cart.mobileNumber')}</FormLabel>
+                          <FormControl>
+                            <Input placeholder={t('cart.mobilePlaceholder')} {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="mobileProvider"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('cart.provider')}</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="grid grid-cols-2 gap-2 pt-2"
+                            >
+                              <div className="flex items-center space-x-2 border border-border rounded-lg p-3 cursor-pointer data-[state=checked]:border-primary">
+                                <RadioGroupItem value="mpesa" id="mpesa" />
+                                <Label htmlFor="mpesa" className="text-sm">{t('cart.mPesa')}</Label>
+                              </div>
+                              <div className="flex items-center space-x-2 border border-border rounded-lg p-3 cursor-pointer data-[state=checked]:border-primary">
+                                <RadioGroupItem value="airtel" id="airtel" />
+                                <Label htmlFor="airtel" className="text-sm">{t('cart.airtelMoney')}</Label>
+                              </div>
+                              <div className="flex items-center space-x-2 border border-border rounded-lg p-3 cursor-pointer data-[state=checked]:border-primary">
+                                <RadioGroupItem value="mtn" id="mtn" />
+                                <Label htmlFor="mtn" className="text-sm">{t('cart.mtnMoney')}</Label>
+                              </div>
+                              <div className="flex items-center space-x-2 border border-border rounded-lg p-3 cursor-pointer data-[state=checked]:border-primary">
+                                <RadioGroupItem value="orange" id="orange" />
+                                <Label htmlFor="orange" className="text-sm">{t('cart.orangeMoney')}</Label>
+                              </div>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                          <FormDescription className="text-xs mt-2">{t('cart.mobilePaymentProcessing')}</FormDescription>
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 )}
                 
