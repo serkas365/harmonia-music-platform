@@ -18,11 +18,6 @@ const AuthPage = () => {
   const { user, loginMutation, registerMutation, isLoading } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
-  // Redirect if already logged in
-  if (user) {
-    return <Redirect to="/" />;
-  }
-
   // Setup login form
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -44,6 +39,11 @@ const AuthPage = () => {
       subscriptionTier: "free",
     },
   });
+  
+  // Redirect if already logged in - IMPORTANT: must be after all hook calls
+  if (user) {
+    return <Redirect to="/" />;
+  }
 
   // Handle login submission
   const onLoginSubmit = async (data: LoginData) => {
