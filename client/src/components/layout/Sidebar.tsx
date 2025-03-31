@@ -20,6 +20,7 @@ import {
   Plus,
   Settings,
   Shield,
+  BarChart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ const Sidebar = ({ className }: SidebarProps) => {
   const { user } = useAuth();
   const playlists = useLibraryStore((state) => state.playlists);
 
-  const navItems = [
+  const baseNavItems = [
     { icon: Home, label: t('common.home'), path: '/' },
     { icon: Search, label: t('common.search'), path: '/search' },
     { icon: Library, label: t('common.library'), path: '/library' },
@@ -43,6 +44,11 @@ const Sidebar = ({ className }: SidebarProps) => {
     // Cart has special handling for the icon (CartIndicator)
     { icon: ShoppingCart, label: t('common.cart'), path: '/cart' },
   ];
+  
+  // Add Artist Dashboard link for users with artist role
+  const navItems = user?.role === 'artist' 
+    ? [...baseNavItems, { icon: BarChart, label: t('common.artistDashboard'), path: '/artist-dashboard' }]
+    : baseNavItems;
 
   const collectionItems = [
     { icon: Heart, label: t('common.liked'), path: '/library/liked' },
@@ -340,6 +346,22 @@ const Sidebar = ({ className }: SidebarProps) => {
             </div>
           );
         })()}
+        
+        {/* Artist Dashboard Button - Only for artists */}
+        {user?.role === 'artist' && (
+          <div 
+            className={cn(
+              "flex flex-col items-center justify-center py-2 cursor-pointer",
+              location === '/artist-dashboard'
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+            onClick={() => window.location.href = '/artist-dashboard'}
+          >
+            <BarChart className="h-5 w-5 mb-1" />
+            <span className="text-xs">{t('common.artistDashboard')}</span>
+          </div>
+        )}
       </div>
     </>
   );

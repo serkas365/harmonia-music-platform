@@ -575,6 +575,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Artist Dashboard Routes
+  
+  // Artist analytics - requires artist role
+  const ensureArtistRole = (req: Request, res: Response, next: NextFunction) => {
+    if (req.isAuthenticated() && req.user && (req.user.role === 'artist' || req.user.role === 'admin')) {
+      return next();
+    }
+    res.status(403).json({ message: "Access denied - Artist role required" });
+  };
+  
+  app.get("/api/artist-dashboard/analytics", ensureArtistRole, async (req, res) => {
+    try {
+      // Verify the user has an artist profile
+      if (!req.user!.artistId) {
+        return res.status(404).json({ message: "Artist profile not found" });
+      }
+      
+      const period = (req.query.period as 'day' | 'week' | 'month' | 'year' | 'all') || 'all';
+      const analytics = await storage.getArtistAnalytics(req.user!.artistId, period);
+      res.json(analytics);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch artist analytics" });
+    }
+  });
+  
+  app.get("/api/artist-dashboard/followers", ensureArtistRole, async (req, res) => {
+    try {
+      // Verify the user has an artist profile
+      if (!req.user!.artistId) {
+        return res.status(404).json({ message: "Artist profile not found" });
+      }
+      
+      const followers = await storage.getArtistFollowers(req.user!.artistId);
+      res.json(followers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch artist followers" });
+    }
+  });
+  
+  // Artist Follow/Unfollow
+  app.post("/api/artists/:id/follow", ensureAuthenticated, async (req, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      await storage.followArtist(req.user!.id, artistId);
+      res.status(200).json({ message: "Artist followed successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to follow artist" });
+    }
+  });
+  
+  app.delete("/api/artists/:id/follow", ensureAuthenticated, async (req, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      await storage.unfollowArtist(req.user!.id, artistId);
+      res.status(200).json({ message: "Artist unfollowed successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to unfollow artist" });
+    }
+  });
+  
+  app.get("/api/artists/:id/follow", ensureAuthenticated, async (req, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const isFollowing = await storage.isFollowingArtist(req.user!.id, artistId);
+      res.json({ following: isFollowing });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to check follow status" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

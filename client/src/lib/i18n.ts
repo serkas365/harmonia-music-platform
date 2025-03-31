@@ -32,6 +32,7 @@ const enTranslations = {
     retry: "Retry",
     cart: "Shopping Cart",
     subscriptions: "Subscriptions",
+    artistDashboard: "Artist Dashboard",
   },
   subscription: {
     title: "Subscription Plans",
@@ -271,6 +272,7 @@ const frTranslations = {
     retry: "Réessayer",
     cart: "Panier",
     subscriptions: "Abonnements",
+    artistDashboard: "Tableau de Bord d'Artiste",
   },
   subscription: {
     title: "Forfaits d'Abonnement",

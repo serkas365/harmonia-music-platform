@@ -1,6 +1,7 @@
 import { 
   User, InsertUser, Track, Album, Artist, Playlist, 
-  UserPreferences, UserSubscription, SubscriptionPlan
+  UserPreferences, UserSubscription, SubscriptionPlan,
+  ArtistAnalytics, ArtistFollower, InsertArtistAnalytics, InsertArtistFollower
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -62,6 +63,15 @@ export interface IStorage {
   createUserSubscription(subscription: Omit<UserSubscription, 'id'>): Promise<UserSubscription>;
   updateUserSubscription(id: number, updates: Partial<UserSubscription>): Promise<UserSubscription | undefined>;
   
+  // Artist Dashboard
+  getArtistAnalytics(artistId: number, period?: 'day' | 'week' | 'month' | 'year' | 'all'): Promise<ArtistAnalytics[]>;
+  createArtistAnalytics(analytics: InsertArtistAnalytics): Promise<ArtistAnalytics>;
+  updateArtistAnalytics(id: number, updates: Partial<ArtistAnalytics>): Promise<ArtistAnalytics | undefined>;
+  getArtistFollowers(artistId: number): Promise<ArtistFollower[]>;
+  followArtist(userId: number, artistId: number): Promise<void>;
+  unfollowArtist(userId: number, artistId: number): Promise<void>;
+  isFollowingArtist(userId: number, artistId: number): Promise<boolean>;
+  
   // Session Store
   sessionStore: Store;
 }
@@ -81,6 +91,8 @@ export class MemStorage implements IStorage {
   private subscriptionPlans: Map<number, SubscriptionPlan>;
   private userSubscriptions: Map<number, UserSubscription>;
   private defaultPlaylists: { name: string; coverImage: string; isPublic: boolean; tracks: any[] }[];
+  private artistAnalytics: Map<number, ArtistAnalytics>; // Analytics by ID
+  private artistFollowers: Map<number, Set<number>>; // artistId -> Set of userIds
   
   currentUserId: number;
   currentTrackId: number;
@@ -89,6 +101,7 @@ export class MemStorage implements IStorage {
   currentPlaylistId: number;
   currentSubscriptionPlanId: number;
   currentUserSubscriptionId: number;
+  currentAnalyticsId: number;
   
   sessionStore: Store;
 
@@ -107,6 +120,8 @@ export class MemStorage implements IStorage {
     this.subscriptionPlans = new Map();
     this.userSubscriptions = new Map();
     this.defaultPlaylists = [];
+    this.artistAnalytics = new Map();
+    this.artistFollowers = new Map();
     
     this.currentUserId = 1;
     this.currentTrackId = 1;
@@ -115,6 +130,7 @@ export class MemStorage implements IStorage {
     this.currentPlaylistId = 1;
     this.currentSubscriptionPlanId = 1;
     this.currentUserSubscriptionId = 1;
+    this.currentAnalyticsId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // prune expired entries every 24h
@@ -145,11 +161,16 @@ export class MemStorage implements IStorage {
     const now = new Date();
     // Ensure profileImage is undefined rather than null
     const { profileImage, ...restInsertUser } = insertUser;
+    // Make sure artistId is properly typed (null to undefined conversion)
+    const { artistId, ...otherProps } = restInsertUser;
+    
     const user: User = { 
-      ...restInsertUser,
+      ...otherProps,
       profileImage: profileImage || undefined, 
       id,
       createdAt: now,
+      role: (restInsertUser.role || 'user') as 'user' | 'artist' | 'admin',
+      artistId: typeof artistId === 'number' ? artistId : undefined,
       preferences: {
         language: 'en',
         theme: 'dark',
@@ -496,6 +517,65 @@ export class MemStorage implements IStorage {
     }
     
     return updatedSubscription;
+  }
+  
+  // Artist Dashboard
+  async getArtistAnalytics(artistId: number, period: 'day' | 'week' | 'month' | 'year' | 'all' = 'all'): Promise<ArtistAnalytics[]> {
+    return Array.from(this.artistAnalytics.values())
+      .filter(analytics => analytics.artistId === artistId && (period === 'all' || analytics.period === period))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+  }
+  
+  async createArtistAnalytics(analytics: InsertArtistAnalytics): Promise<ArtistAnalytics> {
+    const id = this.currentAnalyticsId++;
+    // Ensure all required fields have values
+    const newAnalytics: ArtistAnalytics = { 
+      ...analytics, 
+      id,
+      streamCount: analytics.streamCount || 0,
+      purchaseCount: analytics.purchaseCount || 0,
+      revenue: analytics.revenue || 0,
+      followerCount: analytics.followerCount || 0,
+      period: (analytics.period || 'day') as 'day' | 'week' | 'month' | 'year' | 'all'
+    };
+    this.artistAnalytics.set(id, newAnalytics);
+    return newAnalytics;
+  }
+  
+  async updateArtistAnalytics(id: number, updates: Partial<ArtistAnalytics>): Promise<ArtistAnalytics | undefined> {
+    const analytics = this.artistAnalytics.get(id);
+    if (!analytics) return undefined;
+    
+    const updatedAnalytics = { ...analytics, ...updates };
+    this.artistAnalytics.set(id, updatedAnalytics);
+    return updatedAnalytics;
+  }
+  
+  async getArtistFollowers(artistId: number): Promise<ArtistFollower[]> {
+    const followerIds = this.artistFollowers.get(artistId) || new Set();
+    return Array.from(followerIds).map(userId => ({
+      userId,
+      artistId,
+      followedAt: new Date() // In real app would store actual follow date
+    }));
+  }
+  
+  async followArtist(userId: number, artistId: number): Promise<void> {
+    const followers = this.artistFollowers.get(artistId) || new Set();
+    followers.add(userId);
+    this.artistFollowers.set(artistId, followers);
+  }
+  
+  async unfollowArtist(userId: number, artistId: number): Promise<void> {
+    const followers = this.artistFollowers.get(artistId);
+    if (followers) {
+      followers.delete(userId);
+    }
+  }
+  
+  async isFollowingArtist(userId: number, artistId: number): Promise<boolean> {
+    const followers = this.artistFollowers.get(artistId) || new Set();
+    return followers.has(userId);
   }
   
   // Sample data initialization - this would be removed in a real application

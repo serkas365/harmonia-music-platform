@@ -10,6 +10,8 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
   profileImage: text("profile_image"),
+  role: text("role").notNull().default("user"), // Can be 'user', 'artist', or 'admin'
+  artistId: integer("artist_id").references(() => artists.id), // Only for artist users
   subscriptionTier: text("subscription_tier").notNull().default("free"),
   subscriptionEndDate: timestamp("subscription_end_date"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -135,6 +137,24 @@ export const userLibraryAlbums = pgTable("user_library_albums", {
   isLiked: boolean("is_liked").notNull().default(false),
 });
 
+// Artist Dashboard tables
+export const artistAnalytics = pgTable("artist_analytics", {
+  id: serial("id").primaryKey(),
+  artistId: integer("artist_id").references(() => artists.id).notNull(),
+  streamCount: integer("stream_count").notNull().default(0),
+  purchaseCount: integer("purchase_count").notNull().default(0),
+  revenue: integer("revenue").notNull().default(0), // In cents
+  followerCount: integer("follower_count").notNull().default(0),
+  period: text("period").notNull(), // 'day', 'week', 'month', 'year', 'all'
+  date: timestamp("date").notNull(),
+});
+
+export const artistFollowers = pgTable("artist_followers", {
+  userId: integer("user_id").references(() => users.id).notNull(),
+  artistId: integer("artist_id").references(() => artists.id).notNull(),
+  followedAt: timestamp("followed_at").notNull().defaultNow(),
+});
+
 // TypeScript interfaces
 export interface User {
   id: number;
@@ -142,10 +162,13 @@ export interface User {
   username: string;
   displayName: string;
   profileImage?: string;
+  role: 'user' | 'artist' | 'admin';
+  artistId?: number;
   subscriptionTier: 'free' | 'premium' | 'ultimate';
   subscriptionEndDate?: Date;
   createdAt: Date;
   preferences?: UserPreferences;
+  artist?: Artist; // Associated artist profile if the user is an artist
 }
 
 export interface UserPreferences {
@@ -261,6 +284,23 @@ export interface PlaylistTrack {
   track?: Track;
 }
 
+export interface ArtistAnalytics {
+  id: number;
+  artistId: number;
+  streamCount: number;
+  purchaseCount: number;
+  revenue: number;
+  followerCount: number;
+  period: 'day' | 'week' | 'month' | 'year' | 'all';
+  date: Date;
+}
+
+export interface ArtistFollower {
+  userId: number;
+  artistId: number;
+  followedAt: Date;
+}
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -278,6 +318,8 @@ export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans
 export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions).omit({ id: true });
 export const insertPlaylistSchema = createInsertSchema(playlists).omit({ id: true, createdAt: true });
 export const insertPlaylistTrackSchema = createInsertSchema(playlistTracks).omit({ id: true, addedAt: true });
+export const insertArtistAnalyticsSchema = createInsertSchema(artistAnalytics).omit({ id: true });
+export const insertArtistFollowerSchema = createInsertSchema(artistFollowers).omit({ followedAt: true });
 
 // Insert types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -291,6 +333,8 @@ export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema
 export type InsertUserSubscription = z.infer<typeof insertUserSubscriptionSchema>;
 export type InsertPlaylist = z.infer<typeof insertPlaylistSchema>;
 export type InsertPlaylistTrack = z.infer<typeof insertPlaylistTrackSchema>;
+export type InsertArtistAnalytics = z.infer<typeof insertArtistAnalyticsSchema>;
+export type InsertArtistFollower = z.infer<typeof insertArtistFollowerSchema>;
 
 // Select types
 export type UserSelect = typeof users.$inferSelect;
@@ -304,6 +348,8 @@ export type SubscriptionPlanSelect = typeof subscriptionPlans.$inferSelect;
 export type UserSubscriptionSelect = typeof userSubscriptions.$inferSelect;
 export type PlaylistSelect = typeof playlists.$inferSelect;
 export type PlaylistTrackSelect = typeof playlistTracks.$inferSelect;
+export type ArtistAnalyticsSelect = typeof artistAnalytics.$inferSelect;
+export type ArtistFollowerSelect = typeof artistFollowers.$inferSelect;
 
 // Auth-specific schemas
 export const loginSchema = z.object({
