@@ -38,7 +38,7 @@ const CartItemRow = ({ item, onRemove }: { item: CartItem; onRemove: () => void 
       </div>
       <div className="flex items-center gap-4">
         <div className="text-base font-semibold tabular-nums">
-          ${item.price.toFixed(2)}
+          ${(item.price / 100).toFixed(2)}
         </div>
         <button
           onClick={onRemove}
@@ -145,7 +145,7 @@ export default function CartPage() {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('cart.subtotal')}</span>
-                  <span>${totalAmount.toFixed(2)}</span>
+                  <span>${(totalAmount / 100).toFixed(2)}</span>
                 </div>
                 
                 <div className="flex justify-between">
@@ -159,7 +159,7 @@ export default function CartPage() {
                 
                 <div className="flex justify-between font-semibold">
                   <span>{t('cart.total')}</span>
-                  <span>${totalAmount.toFixed(2)}</span>
+                  <span>${(totalAmount / 100).toFixed(2)}</span>
                 </div>
               </div>
               

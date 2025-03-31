@@ -239,7 +239,7 @@ export default function CheckoutPage() {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('cart.subtotal')}</span>
-                  <span>${totalAmount.toFixed(2)}</span>
+                  <span>${(totalAmount / 100).toFixed(2)}</span>
                 </div>
                 
                 <div className="flex justify-between">
@@ -253,7 +253,7 @@ export default function CheckoutPage() {
                 
                 <div className="flex justify-between font-semibold">
                   <span>{t('cart.total')}</span>
-                  <span>${totalAmount.toFixed(2)}</span>
+                  <span>${(totalAmount / 100).toFixed(2)}</span>
                 </div>
               </div>
               
@@ -263,7 +263,7 @@ export default function CheckoutPage() {
                   {items.map((item) => (
                     <li key={`${item.type}-${item.id}`} className="flex justify-between">
                       <span>{item.title}</span>
-                      <span>${item.price.toFixed(2)}</span>
+                      <span>${(item.price / 100).toFixed(2)}</span>
                     </li>
                   ))}
                 </ul>
