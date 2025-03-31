@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Play, ShoppingBag } from "lucide-react";
 import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
 
 // Mock hero data (would be fetched from API)
 const heroData = {
@@ -21,39 +22,53 @@ const heroData = {
 const HomePage = () => {
   const { t } = useTranslation();
   
-  // Fetch recently played albums
+  // Fetch albums (to display as recently played)
   const { data: recentlyPlayed, isLoading: isLoadingRecent } = useQuery<Album[]>({
-    queryKey: ['/api/me/recently-played'],
-    // This would typically come from the API, fallback for development
+    queryKey: ['/api/albums'],
+    // Set a smaller limit for the home page display
     queryFn: async () => {
-      return [];
+      const response = await fetch('/api/albums?limit=6');
+      if (!response.ok) throw new Error('Failed to fetch albums');
+      return await response.json();
     }
   });
   
-  // Fetch top artists
+  // Fetch artists
   const { data: topArtists, isLoading: isLoadingArtists } = useQuery<Artist[]>({
-    queryKey: ['/api/me/top-artists'],
-    // This would typically come from the API, fallback for development
+    queryKey: ['/api/artists'],
     queryFn: async () => {
-      return [];
+      const response = await fetch('/api/artists?limit=6');
+      if (!response.ok) throw new Error('Failed to fetch artists');
+      return await response.json();
     }
   });
   
   // Fetch new releases
   const { data: newReleases, isLoading: isLoadingReleases } = useQuery<Track[]>({
     queryKey: ['/api/new-releases'],
-    // This would typically come from the API, fallback for development
     queryFn: async () => {
-      return [];
+      const response = await fetch('/api/new-releases?limit=6');
+      if (!response.ok) throw new Error('Failed to fetch new releases');
+      return await response.json();
     }
   });
   
-  // Fetch personalized playlists
+  // Get auth context
+  const { user } = useAuth();
+  
+  // Fetch all playlists (as a substitute for personalized playlists)
   const { data: madeForYou, isLoading: isLoadingPlaylists } = useQuery<Playlist[]>({
-    queryKey: ['/api/me/made-for-you'],
-    // This would typically come from the API, fallback for development
+    queryKey: ['/api/playlists'],
     queryFn: async () => {
-      return [];
+      // For now, use the user's playlists if they're logged in, otherwise return an empty array
+      if (!user) return [];
+      
+      const response = await fetch('/api/me/playlists');
+      if (!response.ok) {
+        if (response.status === 401) return []; // Not authenticated
+        throw new Error('Failed to fetch playlists');
+      }
+      return await response.json();
     }
   });
 
@@ -92,8 +107,8 @@ const HomePage = () => {
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl md:text-2xl font-bold">{t('common.recentlyPlayed')}</h2>
-          <Link href="/recently-played">
-            <a className="text-sm text-muted-foreground hover:text-white">{t('common.seeAll')}</a>
+          <Link href="/recently-played" className="text-sm text-muted-foreground hover:text-white">
+            {t('common.seeAll')}
           </Link>
         </div>
         
@@ -125,8 +140,8 @@ const HomePage = () => {
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl md:text-2xl font-bold">{t('common.topArtists')}</h2>
-          <Link href="/top-artists">
-            <a className="text-sm text-muted-foreground hover:text-white">{t('common.seeAll')}</a>
+          <Link href="/top-artists" className="text-sm text-muted-foreground hover:text-white">
+            {t('common.seeAll')}
           </Link>
         </div>
         
@@ -160,8 +175,8 @@ const HomePage = () => {
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl md:text-2xl font-bold">{t('common.newReleases')}</h2>
-          <Link href="/new-releases">
-            <a className="text-sm text-muted-foreground hover:text-white">{t('common.seeAll')}</a>
+          <Link href="/new-releases" className="text-sm text-muted-foreground hover:text-white">
+            {t('common.seeAll')}
           </Link>
         </div>
         
@@ -194,8 +209,8 @@ const HomePage = () => {
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl md:text-2xl font-bold">{t('common.madeForYou')}</h2>
-          <Link href="/made-for-you">
-            <a className="text-sm text-muted-foreground hover:text-white">{t('common.seeAll')}</a>
+          <Link href="/made-for-you" className="text-sm text-muted-foreground hover:text-white">
+            {t('common.seeAll')}
           </Link>
         </div>
         
@@ -217,7 +232,7 @@ const HomePage = () => {
                 key={playlist.id} 
                 playlist={playlist} 
                 overlayTitle={playlist.name.includes("Weekly") ? "Weekly Mix" : "Daily Mix"}
-                tracks={playlist.tracks?.map(pt => pt.track).filter(Boolean)}
+                tracks={[]} // Empty tracks array for now until we have proper playlist tracks
               />
             ))
           ) : (
