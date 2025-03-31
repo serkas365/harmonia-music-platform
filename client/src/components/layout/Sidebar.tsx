@@ -149,7 +149,7 @@ const Sidebar = ({ className }: SidebarProps) => {
           <span className="text-xs">{t('common.store')}</span>
         </div>
         
-        {/* Subscription Button */}
+        {/* Premium Button */}
         {user && (() => {
           // Check if user has a premium or ultimate subscription
           interface SubscriptionData {
