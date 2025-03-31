@@ -55,6 +55,7 @@ const TrackCard = ({ track, className, compact = false, showBuyButton = false }:
     toast({
       title: t('player.addedToQueue'),
       description: `${track.title} - ${track.artistName}`,
+      duration: 2000, // 2 seconds instead of the default duration
     });
   };
 

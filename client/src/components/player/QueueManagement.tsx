@@ -143,7 +143,7 @@ const QueueManagement = ({ open, onClose }: QueueManagementProps) => {
         
         <AlertDialogFooter>
           <AlertDialogAction onClick={onClose} className="w-full">
-            {t('common.close')}
+            Close
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
