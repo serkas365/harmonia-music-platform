@@ -10,6 +10,8 @@ import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import LibraryPage from "@/pages/library-page";
 import CartPage from "@/pages/cart-page";
+import CheckoutPage from "@/pages/checkout-page";
+import PaymentSuccessPage from "@/pages/payment-success-page";
 import StorePage from "@/pages/store-page";
 import NotFound from "@/pages/not-found";
 
@@ -78,6 +80,18 @@ function Router() {
       <ProtectedRoute path="/store" component={() => (
         <AppLayout>
           <StorePage />
+        </AppLayout>
+      )} />
+
+      <ProtectedRoute path="/checkout" component={() => (
+        <AppLayout>
+          <CheckoutPage />
+        </AppLayout>
+      )} />
+
+      <ProtectedRoute path="/payment-success" component={() => (
+        <AppLayout>
+          <PaymentSuccessPage />
         </AppLayout>
       )} />
       

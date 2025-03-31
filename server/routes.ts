@@ -2,6 +2,12 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
+import Stripe from "stripe";
+
+// Initialize Stripe - will be null if no API key is provided
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
@@ -173,7 +179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/me/library/albums/liked", ensureAuthenticated, async (req, res) => {
     try {
-      const albums = await storage.getUserLikedAlbums(req.user.id);
+      const albums = await storage.getUserLikedAlbums(req.user!.id);
       res.json(albums);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch liked albums" });
@@ -182,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/me/library/tracks/downloaded", ensureAuthenticated, async (req, res) => {
     try {
-      const tracks = await storage.getUserDownloadedTracks(req.user.id);
+      const tracks = await storage.getUserDownloadedTracks(req.user!.id);
       res.json(tracks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch downloaded tracks" });
@@ -191,7 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/me/library/tracks/purchased", ensureAuthenticated, async (req, res) => {
     try {
-      const tracks = await storage.getUserPurchasedTracks(req.user.id);
+      const tracks = await storage.getUserPurchasedTracks(req.user!.id);
       res.json(tracks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch purchased tracks" });
@@ -200,7 +206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/me/library/albums/purchased", ensureAuthenticated, async (req, res) => {
     try {
-      const albums = await storage.getUserPurchasedAlbums(req.user.id);
+      const albums = await storage.getUserPurchasedAlbums(req.user!.id);
       res.json(albums);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch purchased albums" });
@@ -210,7 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/me/library/tracks/:id/like", ensureAuthenticated, async (req, res) => {
     try {
       const trackId = parseInt(req.params.id);
-      await storage.addTrackToUserLibrary(req.user.id, trackId, { isLiked: true });
+      await storage.addTrackToUserLibrary(req.user!.id, trackId, { isLiked: true });
       res.status(200).json({ message: "Track liked successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to like track" });
@@ -220,7 +226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/me/library/tracks/:id/like", ensureAuthenticated, async (req, res) => {
     try {
       const trackId = parseInt(req.params.id);
-      await storage.removeTrackFromUserLibrary(req.user.id, trackId);
+      await storage.removeTrackFromUserLibrary(req.user!.id, trackId);
       res.status(200).json({ message: "Track removed from likes" });
     } catch (error) {
       res.status(500).json({ message: "Failed to remove track from likes" });
@@ -230,7 +236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/me/library/albums/:id/like", ensureAuthenticated, async (req, res) => {
     try {
       const albumId = parseInt(req.params.id);
-      await storage.addAlbumToUserLibrary(req.user.id, albumId, { isLiked: true });
+      await storage.addAlbumToUserLibrary(req.user!.id, albumId, { isLiked: true });
       res.status(200).json({ message: "Album liked successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to like album" });
@@ -240,7 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/me/library/albums/:id/like", ensureAuthenticated, async (req, res) => {
     try {
       const albumId = parseInt(req.params.id);
-      await storage.removeAlbumFromUserLibrary(req.user.id, albumId);
+      await storage.removeAlbumFromUserLibrary(req.user!.id, albumId);
       res.status(200).json({ message: "Album removed from likes" });
     } catch (error) {
       res.status(500).json({ message: "Failed to remove album from likes" });
@@ -250,7 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Playlists
   app.get("/api/me/playlists", ensureAuthenticated, async (req, res) => {
     try {
-      const playlists = await storage.getUserPlaylists(req.user.id);
+      const playlists = await storage.getUserPlaylists(req.user!.id);
       res.json(playlists);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch playlists" });
@@ -282,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Playlist name is required" });
       }
       
-      const playlist = await storage.createPlaylist(req.user.id, name, isPublic);
+      const playlist = await storage.createPlaylist(req.user!.id, name, isPublic);
       res.status(201).json(playlist);
     } catch (error) {
       res.status(500).json({ message: "Failed to create playlist" });
@@ -299,7 +305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Only allow updates to playlists owned by the user
-      if (req.user.id !== playlist.userId) {
+      if (req.user!.id !== playlist.userId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -321,7 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Only allow deletion of playlists owned by the user
-      if (req.user.id !== playlist.userId) {
+      if (req.user!.id !== playlist.userId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -348,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Only allow adding tracks to playlists owned by the user
-      if (req.user.id !== playlist.userId) {
+      if (req.user!.id !== playlist.userId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -371,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Only allow removing tracks from playlists owned by the user
-      if (req.user.id !== playlist.userId) {
+      if (req.user!.id !== playlist.userId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -385,7 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User settings
   app.get("/api/me/preferences", ensureAuthenticated, async (req, res) => {
     try {
-      const preferences = await storage.getUserPreferences(req.user.id);
+      const preferences = await storage.getUserPreferences(req.user!.id);
       res.json(preferences);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user preferences" });
@@ -395,7 +401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/me/preferences", ensureAuthenticated, async (req, res) => {
     try {
       const preferences = req.body;
-      const updatedPreferences = await storage.saveUserPreferences(req.user.id, preferences);
+      const updatedPreferences = await storage.saveUserPreferences(req.user!.id, preferences);
       res.json(updatedPreferences);
     } catch (error) {
       res.status(500).json({ message: "Failed to update user preferences" });
@@ -414,10 +420,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/me/subscription", ensureAuthenticated, async (req, res) => {
     try {
-      const subscription = await storage.getUserSubscription(req.user.id);
+      const subscription = await storage.getUserSubscription(req.user!.id);
       res.json(subscription || { active: false });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user subscription" });
+    }
+  });
+
+  // Stripe payment routes
+  app.post("/api/create-payment-intent", ensureAuthenticated, async (req, res) => {
+    try {
+      if (!stripe) {
+        return res.status(500).json({ 
+          message: "Stripe is not configured. Please add STRIPE_SECRET_KEY to your environment variables." 
+        });
+      }
+
+      const { items, amount } = req.body;
+      
+      if (!items || !items.length) {
+        return res.status(400).json({ message: "No items provided for purchase" });
+      }
+
+      // Validate amount
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+
+      // In a production app, you'd calculate the amount server-side
+      // based on the items to prevent tampering
+      const totalAmount = Math.round(amount * 100); // Convert to cents
+
+      // Create a PaymentIntent with the order amount and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: totalAmount,
+        currency: "usd",
+        // In a real app, you might want to store which items were purchased
+        metadata: {
+          userId: req.user!.id.toString(),
+          items: JSON.stringify(items.map((item: {id: number; type: string}) => ({ id: item.id, type: item.type })))
+        },
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+
+      res.status(200).json({
+        clientSecret: paymentIntent.client_secret,
+      });
+    } catch (error: any) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ 
+        message: "Failed to create payment intent", 
+        error: error.message 
+      });
+    }
+  });
+
+  // Webhook endpoint to handle Stripe events (payment succeeded, failed, etc.)
+  app.post("/api/webhook", async (req, res) => {
+    // This endpoint would usually validate the webhook signature
+    // and process events like 'payment_intent.succeeded'
+    // In a real app, you would add the purchased items to the user's library here
+    
+    // For simplicity in this prototype, we'll handle purchase operations client-side
+    res.status(200).json({ received: true });
+  });
+
+  // Handle successful payments
+  app.post("/api/payment-success", ensureAuthenticated, async (req, res) => {
+    try {
+      const { paymentIntentId, items } = req.body;
+      
+      if (!paymentIntentId) {
+        return res.status(400).json({ message: "Payment intent ID is required" });
+      }
+      
+      if (!items || !items.length) {
+        return res.status(400).json({ message: "No items provided" });
+      }
+      
+      // In a real app, you would verify the payment was successful with Stripe
+      // and then add the items to the user's library
+      
+      // Process purchased items
+      for (const item of items as Array<{id: number; type: string}>) {
+        if (item.type === 'track') {
+          await storage.addTrackToUserLibrary(req.user!.id, item.id, { isPurchased: true });
+        } else if (item.type === 'album') {
+          await storage.addAlbumToUserLibrary(req.user!.id, item.id, { isPurchased: true });
+        }
+      }
+      
+      res.status(200).json({ success: true });
+    } catch (error: any) {
+      console.error("Error processing payment success:", error);
+      res.status(500).json({ 
+        message: "Failed to process payment success", 
+        error: error.message 
+      });
     }
   });
 
