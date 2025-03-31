@@ -191,11 +191,16 @@ export interface Artist {
   name: string;
   image: string;
   bio: string;
+  genre?: string;
   genres: string[];
   socialLinks: {
+    website?: string;
     youtube?: string;
     instagram?: string;
     twitter?: string;
+    facebook?: string;
+    tiktok?: string;
+    soundcloud?: string;
   };
   verified: boolean;
 }

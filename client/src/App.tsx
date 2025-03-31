@@ -16,6 +16,7 @@ import StorePage from "@/pages/store-page";
 import SubscriptionPage from "@/pages/subscription-page";
 import SubscriptionPaymentPage from "@/pages/subscription-payment-page";
 import ArtistDashboardPage from "@/pages/artist-dashboard-page";
+import ArtistProfilePage from "@/pages/artist-profile-page";
 import NotFound from "@/pages/not-found";
 
 // Layout components
@@ -113,6 +114,12 @@ function Router() {
       <ProtectedRoute path="/artist-dashboard" component={() => (
         <AppLayout>
           <ArtistDashboardPage />
+        </AppLayout>
+      )} />
+
+      <ProtectedRoute path="/artist-profile" component={() => (
+        <AppLayout>
+          <ArtistProfilePage />
         </AppLayout>
       )} />
       

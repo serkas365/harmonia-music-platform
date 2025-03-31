@@ -23,6 +23,7 @@ import {
   Shield,
   BarChart,
   LogOut,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -67,9 +68,13 @@ const Sidebar = ({ className }: SidebarProps) => {
     { icon: ShoppingCart, label: t('common.cart'), path: '/cart' },
   ];
   
-  // Add Artist Dashboard link for users with artist role
+  // Add Artist Dashboard and Profile links for users with artist role
   const navItems = user?.role === 'artist' 
-    ? [...baseNavItems, { icon: BarChart, label: t('common.artistDashboard'), path: '/artist-dashboard' }]
+    ? [
+        ...baseNavItems, 
+        { icon: BarChart, label: t('common.artistDashboard'), path: '/artist-dashboard' },
+        { icon: User, label: t('common.artistProfile'), path: '/artist-profile' }
+      ]
     : baseNavItems;
 
   const collectionItems = [
@@ -395,18 +400,32 @@ const Sidebar = ({ className }: SidebarProps) => {
         
         {/* Artist Dashboard Button - Only for artists */}
         {user?.role === 'artist' && (
-          <div 
-            className={cn(
-              "flex flex-col items-center justify-center py-2 cursor-pointer",
-              location === '/artist-dashboard'
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-            onClick={() => window.location.href = '/artist-dashboard'}
-          >
-            <BarChart className="h-5 w-5 mb-1" />
-            <span className="text-xs">{t('common.artistDashboard')}</span>
-          </div>
+          <>
+            <div 
+              className={cn(
+                "flex flex-col items-center justify-center py-2 cursor-pointer",
+                location === '/artist-dashboard'
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+              onClick={() => window.location.href = '/artist-dashboard'}
+            >
+              <BarChart className="h-5 w-5 mb-1" />
+              <span className="text-xs">{t('common.artistDashboard')}</span>
+            </div>
+            <div 
+              className={cn(
+                "flex flex-col items-center justify-center py-2 cursor-pointer",
+                location === '/artist-profile'
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+              onClick={() => window.location.href = '/artist-profile'}
+            >
+              <User className="h-5 w-5 mb-1" />
+              <span className="text-xs">{t('common.artistProfile')}</span>
+            </div>
+          </>
         )}
       </div>
     </>
