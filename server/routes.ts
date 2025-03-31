@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
@@ -154,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // USER LIBRARY ROUTES
   // These routes should be protected - only accessible to authenticated users
   
-  const ensureAuthenticated = (req, res, next) => {
+  const ensureAuthenticated = (req: Request, res: Response, next: NextFunction) => {
     if (req.isAuthenticated()) {
       return next();
     }
@@ -162,9 +162,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // User Library
-  app.get("/api/me/library/tracks/liked", ensureAuthenticated, async (req, res) => {
+  app.get("/api/me/library/tracks/liked", ensureAuthenticated, async (req: Request, res: Response) => {
     try {
-      const tracks = await storage.getUserLikedTracks(req.user.id);
+      const tracks = await storage.getUserLikedTracks(req.user!.id);
       res.json(tracks);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch liked tracks" });

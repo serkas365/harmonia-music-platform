@@ -10,6 +10,7 @@ import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import LibraryPage from "@/pages/library-page";
 import CartPage from "@/pages/cart-page";
+import StorePage from "@/pages/store-page";
 import NotFound from "@/pages/not-found";
 
 // Layout components
@@ -71,6 +72,12 @@ function Router() {
       <ProtectedRoute path="/cart" component={() => (
         <AppLayout>
           <CartPage />
+        </AppLayout>
+      )} />
+      
+      <ProtectedRoute path="/store" component={() => (
+        <AppLayout>
+          <StorePage />
         </AppLayout>
       )} />
       

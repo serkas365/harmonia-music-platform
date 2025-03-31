@@ -1,17 +1,28 @@
 import { Album } from "@shared/schema";
-import { Play } from "lucide-react";
+import { Play, ShoppingCart } from "lucide-react";
 import { usePlayerStore } from "@/stores/usePlayerStore";
+import { useCartStore } from "@/stores/useCartStore";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 interface AlbumCardProps {
   album: Album;
   className?: string;
   showArtist?: boolean;
+  showBuyButton?: boolean;
 }
 
-const AlbumCard = ({ album, className, showArtist = true }: AlbumCardProps) => {
+const AlbumCard = ({ album, className, showArtist = true, showBuyButton = false }: AlbumCardProps) => {
+  const { t } = useTranslation();
+  const { toast } = useToast();
   const playTracks = usePlayerStore((state) => state.playTracks);
+  const addAlbumToCart = useCartStore((state) => state.addAlbum);
+  const cartItems = useCartStore((state) => state.items);
+  
+  const isInCart = cartItems.some(item => item.id === album.id && item.type === 'album');
   
   const handlePlay = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -20,6 +31,17 @@ const AlbumCard = ({ album, className, showArtist = true }: AlbumCardProps) => {
     if (album.tracks && album.tracks.length > 0) {
       playTracks(album.tracks, 0);
     }
+  };
+  
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addAlbumToCart(album);
+    
+    toast({
+      title: t('cart.addedToCart'),
+      description: `${album.title} - ${album.artistName}`,
+    });
   };
   
   return (
@@ -51,6 +73,24 @@ const AlbumCard = ({ album, className, showArtist = true }: AlbumCardProps) => {
         <h3 className="font-bold text-sm truncate">{album.title}</h3>
         {showArtist && (
           <p className="text-xs text-muted-foreground truncate">{album.artistName}</p>
+        )}
+        
+        {showBuyButton && (
+          <div className="mt-3">
+            <Button
+              variant={isInCart ? "secondary" : "outline"}
+              size="sm"
+              className={cn(
+                "w-full text-xs h-8",
+                isInCart ? "bg-secondary/20 text-secondary border-secondary/20" : ""
+              )}
+              onClick={handleAddToCart}
+              disabled={isInCart}
+            >
+              <ShoppingCart className="h-3 w-3 mr-1" />
+              {isInCart ? t('cart.inCart') : t('cart.buyAlbum')}
+            </Button>
+          </div>
         )}
       </div>
     </div>

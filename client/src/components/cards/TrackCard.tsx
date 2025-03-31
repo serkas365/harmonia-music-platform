@@ -1,25 +1,32 @@
 import { Track } from "@shared/schema";
-import { Heart, Plus, Play } from "lucide-react";
+import { Heart, Plus, Play, ShoppingCart } from "lucide-react";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useLibraryStore } from "@/stores/useLibraryStore";
+import { useCartStore } from "@/stores/useCartStore";
+import { useToast } from "@/hooks/use-toast";
 
 interface TrackCardProps {
   track: Track;
   className?: string;
   compact?: boolean;
+  showBuyButton?: boolean;
 }
 
-const TrackCard = ({ track, className, compact = false }: TrackCardProps) => {
+const TrackCard = ({ track, className, compact = false, showBuyButton = false }: TrackCardProps) => {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const playTrack = usePlayerStore((state) => state.playTrack);
   const addLikedTrack = useLibraryStore((state) => state.addLikedTrack);
   const likedTracks = useLibraryStore((state) => state.likedTracks);
+  const addTrackToCart = useCartStore((state) => state.addTrack);
+  const cartItems = useCartStore((state) => state.items);
   
   const isLiked = likedTracks.some(t => t.id === track.id);
+  const isInCart = cartItems.some(item => item.id === track.id && item.type === 'track');
   
   const handlePlay = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -38,6 +45,17 @@ const TrackCard = ({ track, className, compact = false }: TrackCardProps) => {
     e.stopPropagation();
     // Open playlist selection dialog
     console.log("Add to playlist:", track.id);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addTrackToCart(track);
+    
+    toast({
+      title: t('cart.addedToCart'),
+      description: `${track.title} - ${track.artistName}`,
+    });
   };
   
   return (
@@ -74,7 +92,24 @@ const TrackCard = ({ track, className, compact = false }: TrackCardProps) => {
         </div>
       </div>
       {!compact && (
-        <div className="flex items-center space-x-3 ml-2">
+        <div className="flex items-center space-x-2 ml-2">
+          {/* Buy button */}
+          {(showBuyButton || track.purchaseAvailable) && (
+            <Button
+              variant={isInCart ? "secondary" : "outline"}
+              size="sm"
+              className={cn(
+                "text-xs h-8",
+                isInCart ? "bg-secondary/20 text-secondary border-secondary/20" : ""
+              )}
+              onClick={handleAddToCart}
+              disabled={isInCart}
+            >
+              <ShoppingCart className="h-3 w-3 mr-1" />
+              {isInCart ? t('cart.inCart') : track.purchasePrice ? `$${(track.purchasePrice / 100).toFixed(2)}` : t('cart.buy')}
+            </Button>
+          )}
+          
           <Button
             variant="ghost"
             size="icon"
