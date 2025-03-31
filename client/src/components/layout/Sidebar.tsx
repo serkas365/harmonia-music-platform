@@ -18,36 +18,29 @@ import {
   Download, 
   ShoppingCart, 
   Plus,
+  Settings,
   Shield,
-  Smartphone
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
   className?: string;
 }
 
 const Sidebar = ({ className }: SidebarProps) => {
+  const { t } = useTranslation();
   const [location] = useLocation();
-  const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const libraryPlaylists = useLibraryStore((state) => state.playlists);
-  const cartItems = useCartStore((state) => state.items);
-
-  useEffect(() => {
-    setPlaylists(libraryPlaylists);
-  }, [libraryPlaylists]);
-
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const playlists = useLibraryStore((state) => state.playlists);
 
   const navItems = [
     { icon: Home, label: t('common.home'), path: '/' },
     { icon: Search, label: t('common.search'), path: '/search' },
     { icon: Library, label: t('common.library'), path: '/library' },
     { icon: ShoppingBag, label: t('common.store'), path: '/store' },
+    { icon: Shield, label: t('common.premium'), path: '/subscriptions' },
+    // Cart has special handling for the icon (CartIndicator)
     { icon: ShoppingCart, label: t('common.cart'), path: '/cart' },
   ];
 
@@ -58,10 +51,7 @@ const Sidebar = ({ className }: SidebarProps) => {
   ];
 
   return (
-    <aside className={cn(
-      "w-full md:w-64 bg-background-elevated h-20 md:h-full flex flex-col md:flex-col md:p-4 border-b md:border-r border-gray-800 md:overflow-y-auto scrollbar-hide md:sticky top-auto bottom-0 md:top-0 z-10 backdrop-blur-xl shadow-lg",
-      className
-    )}>
+    <>
       {/* Mobile Top Navigation - Only visible on mobile */}
       <div className="flex md:hidden w-full justify-between items-center px-4 py-2 bg-background/95 backdrop-blur-lg border-b border-gray-800 fixed top-0 left-0 right-0 z-20">
         <div className="flex items-center">
@@ -91,109 +81,11 @@ const Sidebar = ({ className }: SidebarProps) => {
         </div>
       </div>
       
-      {/* Mobile Bottom Navigation - Only visible on mobile */}
-      <div className="flex md:hidden w-full justify-around items-center bg-background/95 backdrop-blur-lg border-t border-gray-800 fixed bottom-0 left-0 right-0">
-        {/* Home Button */}
-        <div 
-          className={cn(
-            "flex flex-col items-center justify-center py-2 cursor-pointer",
-            location === '/'
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          onClick={() => window.location.href = '/'}
-        >
-          <Home className="h-5 w-5 mb-1" />
-          <span className="text-xs">{t('common.home')}</span>
-        </div>
-        
-        {/* Search Button */}
-        <div 
-          className={cn(
-            "flex flex-col items-center justify-center py-2 cursor-pointer",
-            location === '/search'
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          onClick={() => window.location.href = '/search'}
-        >
-          <Search className="h-5 w-5 mb-1" />
-          <span className="text-xs">{t('common.search')}</span>
-        </div>
-        
-        {/* Library Button */}
-        <div 
-          className={cn(
-            "flex flex-col items-center justify-center py-2 cursor-pointer",
-            location.startsWith('/library')
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          onClick={() => window.location.href = '/library'}
-        >
-          <Library className="h-5 w-5 mb-1" />
-          <span className="text-xs">{t('common.library')}</span>
-        </div>
-        
-        {/* Store Button */}
-        <div 
-          className={cn(
-            "flex flex-col items-center justify-center py-2 cursor-pointer",
-            location === '/store'
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          onClick={() => window.location.href = '/store'}
-        >
-          <ShoppingBag className="h-5 w-5 mb-1" />
-          <span className="text-xs">{t('common.store')}</span>
-        </div>
-        
-        {/* Premium Button */}
-        {user && (() => {
-          // Check if user has a premium or ultimate subscription
-          interface SubscriptionData {
-            active: boolean;
-            planId?: number;
-            userId?: number;
-            startDate?: string;
-            endDate?: string;
-            autoRenew?: boolean;
-            paymentMethod?: string;
-          }
-          
-          const { data: userSubscription } = useQuery<SubscriptionData>({
-            queryKey: ['/api/me/subscription'],
-            enabled: !!user,
-          });
-          
-          const hasPremiumPlan = userSubscription?.planId === 2 || userSubscription?.planId === 3;
-          
-          return (
-            <div
-              className={cn(
-                "flex flex-col items-center justify-center py-2 cursor-pointer",
-                location === '/subscriptions'
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              onClick={() => window.location.href = '/subscriptions'}
-            >
-              {hasPremiumPlan ? (
-                <Shield className="h-5 w-5 mb-1 text-primary" />
-              ) : (
-                <Shield className="h-5 w-5 mb-1" />
-              )}
-              <span className="text-xs">
-                {t('common.premium')}
-              </span>
-            </div>
-          );
-        })()}
-      </div>
-
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:flex-col md:h-full">
+      <aside className={cn(
+        "hidden md:flex md:w-64 bg-background-elevated md:h-full md:flex-col md:p-4 md:border-r border-gray-800 md:overflow-y-auto scrollbar-hide md:sticky md:top-0 z-10 backdrop-blur-xl shadow-lg",
+        className
+      )}>
         <div className="mb-8 flex items-center">
           <svg className="h-8 w-8 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="hsl(var(--primary))" strokeWidth="2"/>
@@ -347,8 +239,109 @@ const Sidebar = ({ className }: SidebarProps) => {
             );
           })()}
         </div>
+      </aside>
+      
+      {/* Mobile Bottom Navigation - Only visible on mobile */}
+      <div className="flex md:hidden w-full justify-around items-center bg-background/95 backdrop-blur-lg border-t border-gray-800 fixed bottom-0 left-0 right-0 z-20">
+        {/* Home Button */}
+        <div 
+          className={cn(
+            "flex flex-col items-center justify-center py-2 cursor-pointer",
+            location === '/'
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => window.location.href = '/'}
+        >
+          <Home className="h-5 w-5 mb-1" />
+          <span className="text-xs">{t('common.home')}</span>
+        </div>
+        
+        {/* Search Button */}
+        <div 
+          className={cn(
+            "flex flex-col items-center justify-center py-2 cursor-pointer",
+            location === '/search'
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => window.location.href = '/search'}
+        >
+          <Search className="h-5 w-5 mb-1" />
+          <span className="text-xs">{t('common.search')}</span>
+        </div>
+        
+        {/* Library Button */}
+        <div 
+          className={cn(
+            "flex flex-col items-center justify-center py-2 cursor-pointer",
+            location.startsWith('/library')
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => window.location.href = '/library'}
+        >
+          <Library className="h-5 w-5 mb-1" />
+          <span className="text-xs">{t('common.library')}</span>
+        </div>
+        
+        {/* Store Button */}
+        <div 
+          className={cn(
+            "flex flex-col items-center justify-center py-2 cursor-pointer",
+            location === '/store'
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => window.location.href = '/store'}
+        >
+          <ShoppingBag className="h-5 w-5 mb-1" />
+          <span className="text-xs">{t('common.store')}</span>
+        </div>
+        
+        {/* Premium Button */}
+        {user && (() => {
+          // Check if user has a premium or ultimate subscription
+          interface SubscriptionData {
+            active: boolean;
+            planId?: number;
+            userId?: number;
+            startDate?: string;
+            endDate?: string;
+            autoRenew?: boolean;
+            paymentMethod?: string;
+          }
+          
+          const { data: userSubscription } = useQuery<SubscriptionData>({
+            queryKey: ['/api/me/subscription'],
+            enabled: !!user,
+          });
+          
+          const hasPremiumPlan = userSubscription?.planId === 2 || userSubscription?.planId === 3;
+          
+          return (
+            <div
+              className={cn(
+                "flex flex-col items-center justify-center py-2 cursor-pointer",
+                location === '/subscriptions'
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+              onClick={() => window.location.href = '/subscriptions'}
+            >
+              {hasPremiumPlan ? (
+                <Shield className="h-5 w-5 mb-1 text-primary" />
+              ) : (
+                <Shield className="h-5 w-5 mb-1" />
+              )}
+              <span className="text-xs">
+                {t('common.premium')}
+              </span>
+            </div>
+          );
+        })()}
       </div>
-    </aside>
+    </>
   );
 };
 
