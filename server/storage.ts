@@ -143,8 +143,11 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
     const now = new Date();
+    // Ensure profileImage is undefined rather than null
+    const { profileImage, ...restInsertUser } = insertUser;
     const user: User = { 
-      ...insertUser, 
+      ...restInsertUser,
+      profileImage: profileImage || undefined, 
       id,
       createdAt: now,
       preferences: {
@@ -158,7 +161,8 @@ export class MemStorage implements IStorage {
           newReleases: true,
           playlists: true
         }
-      }
+      },
+      subscriptionTier: 'free'
     };
     this.users.set(id, user);
     

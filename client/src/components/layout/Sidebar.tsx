@@ -55,17 +55,19 @@ const Sidebar = ({ className }: SidebarProps) => {
       {/* Mobile Bottom Navigation */}
       <div className="flex md:hidden w-full justify-around items-center">
         {navItems.map((item) => (
-          <Link key={item.path} href={item.path}>
-            <a className={cn(
-              "flex flex-col items-center justify-center py-2",
+          <div 
+            key={item.path}
+            className={cn(
+              "flex flex-col items-center justify-center py-2 cursor-pointer",
               location === item.path
                 ? "text-primary"
                 : "text-muted-foreground hover:text-foreground"
-            )}>
-              <item.icon className="h-5 w-5 mb-1" />
-              <span className="text-xs">{item.label}</span>
-            </a>
-          </Link>
+            )}
+            onClick={() => window.location.href = item.path}
+          >
+            <item.icon className="h-5 w-5 mb-1" />
+            <span className="text-xs">{item.label}</span>
+          </div>
         ))}
       </div>
 
@@ -82,22 +84,24 @@ const Sidebar = ({ className }: SidebarProps) => {
         <nav className="flex-1 overflow-y-auto">
           <div className="space-y-1">
             {navItems.map((item) => (
-              <Link key={item.path} href={item.path}>
-                <a className={cn(
-                  "flex items-center px-4 py-3 rounded-lg group",
+              <div 
+                key={item.path}
+                className={cn(
+                  "flex items-center px-4 py-3 rounded-lg group cursor-pointer",
                   location === item.path
                     ? "text-white bg-background-highlight"
                     : "text-muted-foreground hover:text-white hover:bg-background-highlight"
-                )}>
-                  <item.icon className={cn(
-                    "mr-3 h-5 w-5",
-                    location === item.path
-                      ? "text-primary"
-                      : "group-hover:text-primary"
-                  )} />
-                  <span className="font-medium">{item.label}</span>
-                </a>
-              </Link>
+                )}
+                onClick={() => window.location.href = item.path}
+              >
+                <item.icon className={cn(
+                  "mr-3 h-5 w-5",
+                  location === item.path
+                    ? "text-primary"
+                    : "group-hover:text-primary"
+                )} />
+                <span className="font-medium">{item.label}</span>
+              </div>
             ))}
           </div>
 
@@ -107,17 +111,19 @@ const Sidebar = ({ className }: SidebarProps) => {
             </h3>
             <div className="mt-4 space-y-1">
               {collectionItems.map((item) => (
-                <Link key={item.path} href={item.path}>
-                  <a className={cn(
-                    "flex items-center px-4 py-2 rounded-lg",
+                <div 
+                  key={item.path}
+                  className={cn(
+                    "flex items-center px-4 py-2 rounded-lg cursor-pointer",
                     location === item.path
                       ? "text-white bg-background-highlight"
                       : "text-muted-foreground hover:text-white hover:bg-background-highlight"
-                  )}>
-                    <item.icon className="mr-3 h-4 w-4" />
-                    <span>{item.label}</span>
-                  </a>
-                </Link>
+                  )}
+                  onClick={() => window.location.href = item.path}
+                >
+                  <item.icon className="mr-3 h-4 w-4" />
+                  <span>{item.label}</span>
+                </div>
               ))}
             </div>
           </div>
@@ -127,25 +133,28 @@ const Sidebar = ({ className }: SidebarProps) => {
               {t('common.playlists')}
             </h3>
             <div className="mt-4 space-y-1">
-              <Link href="/playlists/create">
-                <a className="flex items-center px-4 py-2 text-muted-foreground hover:text-white hover:bg-background-highlight rounded-lg">
-                  <Plus className="mr-3 h-4 w-4" />
-                  <span>{t('common.createPlaylist')}</span>
-                </a>
-              </Link>
+              <div
+                className="flex items-center px-4 py-2 text-muted-foreground hover:text-white hover:bg-background-highlight rounded-lg cursor-pointer"
+                onClick={() => window.location.href = "/playlists/create"}
+              >
+                <Plus className="mr-3 h-4 w-4" />
+                <span>{t('common.createPlaylist')}</span>
+              </div>
               
               {/* Map through user playlists */}
               {playlists.map((playlist) => (
-                <Link key={playlist.id} href={`/playlists/${playlist.id}`}>
-                  <a className={cn(
-                    "flex items-center px-4 py-2 rounded-lg",
+                <div 
+                  key={playlist.id}
+                  className={cn(
+                    "flex items-center px-4 py-2 rounded-lg cursor-pointer",
                     location === `/playlists/${playlist.id}`
                       ? "text-white bg-background-highlight"
                       : "text-muted-foreground hover:text-white hover:bg-background-highlight"
-                  )}>
-                    <span className="truncate">{playlist.name}</span>
-                  </a>
-                </Link>
+                  )}
+                  onClick={() => window.location.href = `/playlists/${playlist.id}`}
+                >
+                  <span className="truncate">{playlist.name}</span>
+                </div>
               ))}
             </div>
           </div>
