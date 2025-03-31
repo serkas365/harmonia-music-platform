@@ -221,7 +221,7 @@ const MusicPlayer = () => {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background-elevated border-t border-gray-800 py-2 md:py-4 px-4 md:px-8 z-20">
+    <div className="fixed bottom-20 md:bottom-0 left-0 right-0 bg-background-elevated border-t border-gray-800 py-2 md:py-4 px-4 md:px-8 z-20">
       {/* Hidden audio element */}
       <audio ref={audioRef} preload="metadata" />
       
