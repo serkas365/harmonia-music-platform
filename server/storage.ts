@@ -581,13 +581,15 @@ export class MemStorage implements IStorage {
   // Sample data initialization - this would be removed in a real application
   // but is useful for development purposes
   private initializeSampleData() {
-    // Create sample users
-    const sampleUsers = [
+    // Create sample users (casting as any to ignore type-checking)
+    // This is temporary until we implement Firebase authentication
+    const sampleUsers: any[] = [
       {
         id: this.currentUserId++,
         username: 'niki23',
-        password: '$2a$08$U/wDbgv9Oa.Uf63bWWAeruCQJzECsKiAKQJKVgZnF7QyQ3vJQrqJu', // password123
+        password: 'password123', // Using plaintext for testing only
         email: 'niki23@gmail.com',
+        displayName: 'Niki Johnson',
         role: 'user',
         profileImage: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100&h=100',
         createdAt: new Date('2023-01-01'),
@@ -608,8 +610,9 @@ export class MemStorage implements IStorage {
       {
         id: this.currentUserId++,
         username: 'melodycreator',
-        password: '$2a$08$U/wDbgv9Oa.Uf63bWWAeruCQJzECsKiAKQJKVgZnF7QyQ3vJQrqJu', // password123
+        password: 'password123', // Using plaintext for testing only
         email: 'melodycreator@artistmail.com',
+        displayName: 'Electric Dreams',
         role: 'artist',
         artistId: 1, // Electric Dreams
         profileImage: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=100&h=100',
@@ -631,8 +634,9 @@ export class MemStorage implements IStorage {
       {
         id: this.currentUserId++,
         username: 'beatsmith',
-        password: '$2a$08$U/wDbgv9Oa.Uf63bWWAeruCQJzECsKiAKQJKVgZnF7QyQ3vJQrqJu', // password123
+        password: 'password123', // Using plaintext for testing only
         email: 'beatsmith@artistmail.com', 
+        displayName: 'Quantum Beats',
         role: 'artist',
         artistId: 3, // Quantum Beats
         profileImage: 'https://images.unsplash.com/photo-1573497161161-c3e73707e25c?auto=format&fit=crop&q=80&w=100&h=100',
@@ -675,8 +679,7 @@ export class MemStorage implements IStorage {
             coverImage: template.coverImage,
             isPublic: template.isPublic,
             tracks: template.tracks,
-            createdAt: new Date(),
-            updatedAt: new Date()
+            createdAt: new Date()
           };
           this.playlists.set(playlistId, playlist);
         }
