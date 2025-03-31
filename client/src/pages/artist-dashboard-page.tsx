@@ -83,8 +83,8 @@ const ArtistDashboardPage = () => {
   if (!user.artistId) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">{t('Artist Dashboard')}</h1>
-        <p>{t('You need to create an artist profile to access the dashboard.')}</p>
+        <h1 className="text-3xl font-bold mb-6">{t('common.artistDashboard')}</h1>
+        <p>{t('artistDashboard.needArtistProfile')}</p>
       </div>
     );
   }
@@ -100,9 +100,9 @@ const ArtistDashboardPage = () => {
   if (analyticsError || followersError) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">{t('Artist Dashboard')}</h1>
+        <h1 className="text-3xl font-bold mb-6">{t('common.artistDashboard')}</h1>
         <p className="text-destructive">
-          {t('Error loading dashboard data. Please try again.')}
+          {t('artistDashboard.errorLoading')}
         </p>
       </div>
     );
@@ -111,18 +111,18 @@ const ArtistDashboardPage = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">{t('Artist Dashboard')}</h1>
+        <h1 className="text-3xl font-bold">{t('common.artistDashboard')}</h1>
         <div className="mt-4 md:mt-0">
           <Select value={period} onValueChange={(value) => setPeriod(value as typeof period)}>
             <SelectTrigger className="w-36">
-              <SelectValue placeholder={t('Select Period')} />
+              <SelectValue placeholder={t('artistDashboard.selectPeriod')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="day">{t('Day')}</SelectItem>
-              <SelectItem value="week">{t('Week')}</SelectItem>
-              <SelectItem value="month">{t('Month')}</SelectItem>
-              <SelectItem value="year">{t('Year')}</SelectItem>
-              <SelectItem value="all">{t('All Time')}</SelectItem>
+              <SelectItem value="day">{t('artistDashboard.day')}</SelectItem>
+              <SelectItem value="week">{t('artistDashboard.week')}</SelectItem>
+              <SelectItem value="month">{t('artistDashboard.month')}</SelectItem>
+              <SelectItem value="year">{t('artistDashboard.year')}</SelectItem>
+              <SelectItem value="all">{t('artistDashboard.allTime')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -133,7 +133,7 @@ const ArtistDashboardPage = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('Total Streams')}
+              {t('artistDashboard.totalStreams')}
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -146,7 +146,7 @@ const ArtistDashboardPage = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('Total Purchases')}
+              {t('artistDashboard.totalPurchases')}
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -159,7 +159,7 @@ const ArtistDashboardPage = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('Total Revenue')}
+              {t('artistDashboard.totalRevenue')}
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -175,9 +175,9 @@ const ArtistDashboardPage = () => {
       <div className="mb-8">
         <Card>
           <CardHeader>
-            <CardTitle>{t('Followers')}</CardTitle>
+            <CardTitle>{t('artistDashboard.followers')}</CardTitle>
             <CardDescription>
-              {t('You have {{count}} followers', { count: followers?.length || 0 })}
+              {t('artistDashboard.youHaveFollowers', { count: followers?.length || 0 })}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -185,8 +185,8 @@ const ArtistDashboardPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('User ID')}</TableHead>
-                    <TableHead>{t('Followed Since')}</TableHead>
+                    <TableHead>{t('artistDashboard.userId')}</TableHead>
+                    <TableHead>{t('artistDashboard.followedSince')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -201,13 +201,13 @@ const ArtistDashboardPage = () => {
                 </TableBody>
                 {followers.length > 5 && (
                   <TableCaption>
-                    {t('Showing 5 of {{count}} followers', { count: followers.length })}
+                    {t('artistDashboard.showing', { count: followers.length })}
                   </TableCaption>
                 )}
               </Table>
             ) : (
               <div className="text-center py-4 text-muted-foreground">
-                {t('No followers yet')}
+                {t('artistDashboard.noFollowersYet')}
               </div>
             )}
           </CardContent>
@@ -218,9 +218,9 @@ const ArtistDashboardPage = () => {
       <div>
         <Card>
           <CardHeader>
-            <CardTitle>{t('Performance Analytics')}</CardTitle>
+            <CardTitle>{t('artistDashboard.performanceAnalytics')}</CardTitle>
             <CardDescription>
-              {t('Detailed analytics for the selected period')}
+              {t('artistDashboard.detailedAnalytics')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -228,11 +228,11 @@ const ArtistDashboardPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('Date')}</TableHead>
-                    <TableHead>{t('Period')}</TableHead>
-                    <TableHead className="text-right">{t('Streams')}</TableHead>
-                    <TableHead className="text-right">{t('Purchases')}</TableHead>
-                    <TableHead className="text-right">{t('Revenue')}</TableHead>
+                    <TableHead>{t('artistDashboard.date')}</TableHead>
+                    <TableHead>{t('artistDashboard.period')}</TableHead>
+                    <TableHead className="text-right">{t('artistDashboard.streams')}</TableHead>
+                    <TableHead className="text-right">{t('artistDashboard.purchases')}</TableHead>
+                    <TableHead className="text-right">{t('artistDashboard.revenue')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -253,7 +253,7 @@ const ArtistDashboardPage = () => {
               </Table>
             ) : (
               <div className="text-center py-4 text-muted-foreground">
-                {t('No analytics data available for this period')}
+                {t('artistDashboard.noAnalyticsData')}
               </div>
             )}
           </CardContent>

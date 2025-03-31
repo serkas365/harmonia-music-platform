@@ -57,11 +57,43 @@ const HomePage = () => {
   const { user } = useAuth();
   
   // Fetch all playlists (as a substitute for personalized playlists)
+  // For artists, we'll use recommended playlists instead of their own playlists
   const { data: madeForYou, isLoading: isLoadingPlaylists } = useQuery<Playlist[]>({
     queryKey: ['/api/me/playlists'],
     queryFn: async () => {
       // For now, use the user's playlists if they're logged in, otherwise return an empty array
       if (!user) return [];
+      
+      // For artist accounts, provide some recommended playlists instead of their own
+      if (user.role === 'artist') {
+        // For now, we'll use sample data since this is just for demonstration
+        return [
+          {
+            id: 101,
+            userId: user.id,
+            name: "Trending This Week",
+            coverImage: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=300&h=300&q=80",
+            isPublic: true,
+            tracks: []
+          },
+          {
+            id: 102,
+            userId: user.id,
+            name: "Discover New Artists",
+            coverImage: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&h=300&q=80",
+            isPublic: true,
+            tracks: []
+          },
+          {
+            id: 103,
+            userId: user.id,
+            name: "Staff Picks",
+            coverImage: "https://images.unsplash.com/photo-1485579149621-3123dd979885?w=300&h=300&q=80",
+            isPublic: true,
+            tracks: []
+          }
+        ];
+      }
       
       const response = await fetch('/api/me/playlists');
       if (!response.ok) {
