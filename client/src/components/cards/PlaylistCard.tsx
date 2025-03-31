@@ -36,7 +36,7 @@ const PlaylistCard = ({
   return (
     <div 
       className={cn(
-        "block bg-background-elevated rounded-lg overflow-hidden group hover:bg-background-highlight transition-all duration-300 cursor-pointer",
+        "block bg-background-elevated rounded-lg overflow-hidden group hover:bg-background-highlight hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer",
         className
       )}
       onClick={() => window.location.href = `/playlists/${playlist.id}`}
@@ -46,8 +46,8 @@ const PlaylistCard = ({
           "absolute inset-0 flex items-center justify-center bg-gradient-to-r from-primary/90 to-accent/90 group-hover:opacity-90 transition-opacity",
           gradientColors
         )}>
-          <div className="bg-black/40 px-4 py-2 rounded-md w-3/4 flex items-center justify-center">
-            <span className="text-white font-bold text-sm md:text-base text-center drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">{overlayTitle}</span>
+          <div className="bg-black/75 px-4 py-3 rounded-md w-3/4 flex items-center justify-center border border-white/20 shadow-lg">
+            <span className="text-white font-bold text-base md:text-lg text-center tracking-wide drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)]">{overlayTitle}</span>
           </div>
         </div>
         
