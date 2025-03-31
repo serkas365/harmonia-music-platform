@@ -122,6 +122,8 @@ const enTranslations = {
     tryDifferentSearch: "Try a different search term or browse all items",
     addToCart: "Add to Cart",
     addedToCart: "Added to Cart",
+    buyAlbum: "Buy Album",
+    buyTrack: "Buy Track",
   },
 };
 
@@ -246,6 +248,8 @@ const frTranslations = {
     tryDifferentSearch: "Essayez un autre terme de recherche ou parcourez tous les articles",
     addToCart: "Ajouter au Panier",
     addedToCart: "Ajouté au Panier",
+    buyAlbum: "Acheter l'album",
+    buyTrack: "Acheter le morceau",
   },
 };
 

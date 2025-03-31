@@ -53,7 +53,7 @@ const TrackCard = ({ track, className, compact = false, showBuyButton = false }:
     addTrackToCart(track);
     
     toast({
-      title: t('cart.addedToCart'),
+      title: t('store.addedToCart'),
       description: `${track.title} - ${track.artistName}`,
     });
   };
@@ -106,7 +106,7 @@ const TrackCard = ({ track, className, compact = false, showBuyButton = false }:
               disabled={isInCart}
             >
               <ShoppingCart className="h-3 w-3 mr-1" />
-              {isInCart ? t('cart.inCart') : track.purchasePrice ? `$${(track.purchasePrice / 100).toFixed(2)}` : t('cart.buy')}
+              {isInCart ? t('store.addedToCart') : track.purchasePrice ? `$${(track.purchasePrice / 100).toFixed(2)}` : t('store.buyTrack')}
             </Button>
           )}
           

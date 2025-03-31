@@ -88,7 +88,7 @@ const AlbumCard = ({ album, className, showArtist = true, showBuyButton = false 
               disabled={isInCart}
             >
               <ShoppingCart className="h-3 w-3 mr-1" />
-              {isInCart ? t('cart.inCart') : t('cart.buyAlbum')}
+              {isInCart ? t('store.addedToCart') : t('store.buyAlbum')}
             </Button>
           </div>
         )}
