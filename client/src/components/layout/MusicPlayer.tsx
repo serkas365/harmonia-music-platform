@@ -221,7 +221,7 @@ const MusicPlayer = () => {
   }
 
   return (
-    <div className="fixed bottom-20 md:bottom-0 left-0 right-0 bg-background-elevated border-t border-gray-800 py-2 md:py-4 px-4 md:px-8 z-20">
+    <div className="fixed bottom-20 md:bottom-0 left-0 right-0 bg-background-elevated border-t border-gray-800 py-2 md:py-4 px-4 md:px-8 z-20 backdrop-blur-md shadow-lg">
       {/* Hidden audio element */}
       <audio ref={audioRef} preload="metadata" />
       
@@ -233,7 +233,7 @@ const MusicPlayer = () => {
       
       {/* Preview Mode Banner */}
       {isPreviewMode && currentTrack.purchaseAvailable && (
-        <div className="bg-accent text-accent-foreground px-4 py-1 text-center text-sm">
+        <div className="bg-accent/90 text-accent-foreground px-4 py-2 text-center text-sm font-medium shadow-sm border-b border-accent">
           <span className="font-medium">{t('player.previewMode')}: {previewDuration} {t('player.previewSeconds')}</span>
           <button 
             className="underline font-semibold hover:text-primary transition-colors ml-2"
@@ -242,7 +242,7 @@ const MusicPlayer = () => {
               window.location.href = '/store';
             }}
           >
-            {t('player.purchaseTrack')} ${(currentTrack.purchasePrice || 0) / 100}
+            {t('player.purchaseTrack')} ${(currentTrack.purchasePrice || 0).toFixed(2)}
           </button>
         </div>
       )}
