@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import LibraryPage from "@/pages/library-page";
+import CartPage from "@/pages/cart-page";
 import NotFound from "@/pages/not-found";
 
 // Layout components
@@ -64,6 +65,12 @@ function Router() {
       <ProtectedRoute path="/library/:section" component={() => (
         <AppLayout>
           <LibraryPage />
+        </AppLayout>
+      )} />
+      
+      <ProtectedRoute path="/cart" component={() => (
+        <AppLayout>
+          <CartPage />
         </AppLayout>
       )} />
       

@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Playlist } from "@shared/schema";
 import { useState, useEffect } from "react";
 import { useLibraryStore } from "@/stores/useLibraryStore";
+import { useCartStore } from "@/stores/useCartStore";
 import { 
   Home, 
   Search, 
@@ -15,6 +16,7 @@ import {
   Plus 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -27,6 +29,7 @@ const Sidebar = ({ className }: SidebarProps) => {
   const { user } = useAuth();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const libraryPlaylists = useLibraryStore((state) => state.playlists);
+  const cartItems = useCartStore((state) => state.items);
 
   useEffect(() => {
     setPlaylists(libraryPlaylists);
@@ -39,6 +42,7 @@ const Sidebar = ({ className }: SidebarProps) => {
     { icon: Search, label: t('common.search'), path: '/search' },
     { icon: Library, label: t('common.library'), path: '/library' },
     { icon: ShoppingBag, label: t('common.store'), path: '/store' },
+    { icon: ShoppingCart, label: t('common.cart'), path: '/cart' },
   ];
 
   const collectionItems = [
@@ -65,7 +69,14 @@ const Sidebar = ({ className }: SidebarProps) => {
             )}
             onClick={() => window.location.href = item.path}
           >
-            <item.icon className="h-5 w-5 mb-1" />
+            <div className="relative">
+              <item.icon className="h-5 w-5 mb-1" />
+              {item.path === '/cart' && cartItems.length > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
+                  {cartItems.length}
+                </Badge>
+              )}
+            </div>
             <span className="text-xs">{item.label}</span>
           </div>
         ))}
@@ -94,12 +105,19 @@ const Sidebar = ({ className }: SidebarProps) => {
                 )}
                 onClick={() => window.location.href = item.path}
               >
-                <item.icon className={cn(
-                  "mr-3 h-5 w-5",
-                  location === item.path
-                    ? "text-primary"
-                    : "group-hover:text-primary"
-                )} />
+                <div className="relative">
+                  <item.icon className={cn(
+                    "mr-3 h-5 w-5",
+                    location === item.path
+                      ? "text-primary"
+                      : "group-hover:text-primary"
+                  )} />
+                  {item.path === '/cart' && cartItems.length > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
+                      {cartItems.length}
+                    </Badge>
+                  )}
+                </div>
                 <span className="font-medium">{item.label}</span>
               </div>
             ))}
