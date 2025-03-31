@@ -80,6 +80,7 @@ export class MemStorage implements IStorage {
   private userPurchasedAlbums: Map<number, Set<number>>; // userId -> Set of albumIds
   private subscriptionPlans: Map<number, SubscriptionPlan>;
   private userSubscriptions: Map<number, UserSubscription>;
+  private defaultPlaylists: { name: string; coverImage: string; isPublic: boolean; tracks: any[] }[];
   
   currentUserId: number;
   currentTrackId: number;
@@ -105,6 +106,7 @@ export class MemStorage implements IStorage {
     this.userPurchasedAlbums = new Map();
     this.subscriptionPlans = new Map();
     this.userSubscriptions = new Map();
+    this.defaultPlaylists = [];
     
     this.currentUserId = 1;
     this.currentTrackId = 1;
@@ -166,6 +168,23 @@ export class MemStorage implements IStorage {
     this.userDownloadedTracks.set(id, new Set());
     this.userPurchasedTracks.set(id, new Set());
     this.userPurchasedAlbums.set(id, new Set());
+    
+    // Create default playlists for the user
+    if (this.defaultPlaylists) {
+      for (const template of this.defaultPlaylists) {
+        const playlistId = this.currentPlaylistId++;
+        const playlist: Playlist = {
+          id: playlistId,
+          name: template.name,
+          userId: id,
+          coverImage: template.coverImage,
+          isPublic: template.isPublic,
+          createdAt: now,
+          tracks: []
+        };
+        this.playlists.set(playlistId, playlist);
+      }
+    }
     
     return user;
   }
@@ -817,32 +836,27 @@ export class MemStorage implements IStorage {
       this.tracks.set(track.id, track);
     });
     
-    // Create default playlists for new users
-    const playlists = [
+    // Create default playlist templates that will be cloned for each new user
+    this.defaultPlaylists = [
       {
-        id: this.currentPlaylistId++,
         name: 'Chill Vibes',
-        userId: 0, // Will be assigned to the user when they register
         coverImage: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&q=80&w=300&h=300',
         isPublic: true,
-        createdAt: new Date(),
         tracks: []
       },
       {
-        id: this.currentPlaylistId++,
         name: 'Workout Mix',
-        userId: 0, // Will be assigned to the user when they register
         coverImage: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&q=80&w=300&h=300',
         isPublic: true,
-        createdAt: new Date(),
+        tracks: []
+      },
+      {
+        name: 'My Weekly Mix',
+        coverImage: 'https://images.unsplash.com/photo-1511735111819-9a3f7709049c?auto=format&fit=crop&q=80&w=300&h=300',
+        isPublic: false,
         tracks: []
       }
     ];
-    
-    // Playlists will be assigned to users when they register
-    playlists.forEach(playlist => {
-      this.playlists.set(playlist.id, playlist);
-    });
   }
 }
 
