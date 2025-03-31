@@ -1,11 +1,13 @@
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
+import i18n from "i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { Playlist } from "@shared/schema";
 import { useState, useEffect } from "react";
 import { useLibraryStore } from "@/stores/useLibraryStore";
 import { useCartStore } from "@/stores/useCartStore";
 import { CartIndicator } from "@/components/cart/CartIndicator";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { 
   Home, 
   Search, 
@@ -26,7 +28,7 @@ interface SidebarProps {
 
 const Sidebar = ({ className }: SidebarProps) => {
   const [location] = useLocation();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const libraryPlaylists = useLibraryStore((state) => state.playlists);
@@ -59,7 +61,7 @@ const Sidebar = ({ className }: SidebarProps) => {
     )}>
       {/* Mobile Bottom Navigation */}
       <div className="flex md:hidden w-full justify-around items-center">
-        {navItems.map((item) => (
+        {navItems.slice(0, 4).map((item) => (
           <div 
             key={item.path}
             className={cn(
@@ -78,6 +80,26 @@ const Sidebar = ({ className }: SidebarProps) => {
             <span className="text-xs">{item.label}</span>
           </div>
         ))}
+        
+        {/* Cart */}
+        <div 
+          className={cn(
+            "flex flex-col items-center justify-center py-2 cursor-pointer",
+            location === '/cart'
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => window.location.href = '/cart'}
+        >
+          <CartIndicator className="mb-1" />
+          <span className="text-xs">{t('common.cart')}</span>
+        </div>
+        
+        {/* Language Toggle for Mobile */}
+        <div className="flex flex-col items-center justify-center py-2">
+          <LanguageToggle className="h-8 w-8 p-0 mb-1" />
+          <span className="text-xs">{i18n.language === 'fr' ? 'FR' : 'EN'}</span>
+        </div>
       </div>
 
       {/* Desktop Sidebar */}
@@ -173,9 +195,15 @@ const Sidebar = ({ className }: SidebarProps) => {
           </div>
         </nav>
 
-        {/* Subscription upgrade prompt */}
-        {user && (
-          <div className="mt-auto pt-8">
+        {/* Language Toggle and Subscription upgrade prompt */}
+        <div className="mt-auto pt-8">
+          {/* Language Toggle */}
+          <div className="px-4 mb-4 flex justify-start">
+            <LanguageToggle />
+          </div>
+          
+          {/* Subscription upgrade prompt */}
+          {user && (
             <div className="px-4 py-3 bg-primary/10 rounded-lg">
               <p className="text-sm font-medium text-primary">{t('common.premium')}</p>
               <p className="text-xs text-muted-foreground mt-1">{t('common.upgrade')}</p>
@@ -186,8 +214,8 @@ const Sidebar = ({ className }: SidebarProps) => {
                 {t('common.upgradeNow')}
               </Button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </aside>
   );
