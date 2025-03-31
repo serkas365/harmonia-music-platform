@@ -210,6 +210,7 @@ const Sidebar = ({ className }: SidebarProps) => {
               <Button 
                 variant="default"
                 className="mt-2 w-full py-2 px-3 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg"
+                onClick={() => window.location.href = '/subscriptions'}
               >
                 {t('common.upgradeNow')}
               </Button>

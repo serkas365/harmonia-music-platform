@@ -13,6 +13,7 @@ import CartPage from "@/pages/cart-page";
 import CheckoutPage from "@/pages/checkout-page";
 import PaymentSuccessPage from "@/pages/payment-success-page";
 import StorePage from "@/pages/store-page";
+import SubscriptionPage from "@/pages/subscription-page";
 import NotFound from "@/pages/not-found";
 
 // Layout components
@@ -92,6 +93,12 @@ function Router() {
       <ProtectedRoute path="/payment-success" component={() => (
         <AppLayout>
           <PaymentSuccessPage />
+        </AppLayout>
+      )} />
+      
+      <ProtectedRoute path="/subscriptions" component={() => (
+        <AppLayout>
+          <SubscriptionPage />
         </AppLayout>
       )} />
       

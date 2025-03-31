@@ -426,6 +426,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch user subscription" });
     }
   });
+  
+  app.post("/api/me/subscription", ensureAuthenticated, async (req, res) => {
+    try {
+      const { planId } = req.body;
+      
+      if (!planId || typeof planId !== 'number') {
+        return res.status(400).json({ message: "Valid plan ID is required" });
+      }
+      
+      // Verify that the plan exists
+      const plan = await storage.getSubscriptionPlans().then(plans => 
+        plans.find(p => p.id === planId)
+      );
+      
+      if (!plan) {
+        return res.status(404).json({ message: "Subscription plan not found" });
+      }
+      
+      // Check if user already has a subscription
+      const existingSubscription = await storage.getUserSubscription(req.user!.id);
+      
+      // For demo purposes, we'll handle both cases simply without Stripe integration
+      const subscriptionData = {
+        userId: req.user!.id,
+        planId: planId,
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        autoRenew: true,
+        paymentMethod: 'credit_card', // Simplified for demo
+      };
+      
+      let subscription;
+      
+      if (existingSubscription) {
+        // Update existing subscription
+        subscription = await storage.updateUserSubscription(existingSubscription.id, {
+          ...subscriptionData
+        });
+      } else {
+        // Create new subscription
+        subscription = await storage.createUserSubscription(subscriptionData);
+      }
+      
+      res.status(200).json({ 
+        success: true, 
+        subscription,
+        message: "Subscription updated successfully" 
+      });
+    } catch (error) {
+      console.error("Subscription update error:", error);
+      res.status(500).json({ message: "Failed to update subscription" });
+    }
+  });
 
   // Stripe payment routes
   app.post("/api/create-payment-intent", ensureAuthenticated, async (req, res) => {
