@@ -196,7 +196,7 @@ const Sidebar = ({ className }: SidebarProps) => {
         </nav>
 
         {/* Language Toggle and Subscription upgrade prompt */}
-        <div className="mt-auto pt-8 pb-32">
+        <div className="mt-auto pt-8 pb-16">
           {/* Language Toggle */}
           <div className="px-4 mb-4 flex justify-start">
             <LanguageToggle />
