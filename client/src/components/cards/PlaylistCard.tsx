@@ -41,10 +41,12 @@ const PlaylistCard = ({
       )}>
         <div className="relative aspect-square">
           <div className={cn(
-            "absolute inset-0 flex items-center justify-center bg-gradient-to-r opacity-80 group-hover:opacity-90 transition-opacity",
+            "absolute inset-0 flex items-center justify-center bg-gradient-to-r from-primary/90 to-accent/90 group-hover:opacity-90 transition-opacity",
             gradientColors
           )}>
-            <span className="text-white font-bold text-sm md:text-base px-4 text-center drop-shadow-lg">{overlayTitle}</span>
+            <div className="bg-black/40 px-4 py-2 rounded-md w-3/4 flex items-center justify-center">
+              <span className="text-white font-bold text-sm md:text-base text-center drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">{overlayTitle}</span>
+            </div>
           </div>
           
           {displayTracks.length > 0 ? (
