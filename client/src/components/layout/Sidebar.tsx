@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { Playlist } from "@shared/schema";
+import { toast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useLibraryStore } from "@/stores/useLibraryStore";
 import { useCartStore } from "@/stores/useCartStore";
@@ -21,6 +22,7 @@ import {
   Settings,
   Shield,
   BarChart,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -31,9 +33,29 @@ interface SidebarProps {
 
 const Sidebar = ({ className }: SidebarProps) => {
   const { t } = useTranslation();
-  const [location] = useLocation();
-  const { user } = useAuth();
+  const [location, setLocation] = useLocation();
+  const { user, logoutMutation } = useAuth();
   const playlists = useLibraryStore((state) => state.playlists);
+  
+  const handleLogout = () => {
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast({
+          title: t('auth.logoutSuccess'),
+          description: t('auth.logoutSuccessMessage'),
+          variant: "default",
+        });
+        window.location.href = "/auth";
+      },
+      onError: (error) => {
+        toast({
+          title: t('auth.logoutError'),
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    });
+  };
 
   const baseNavItems = [
     { icon: Home, label: t('common.home'), path: '/' },
@@ -81,6 +103,16 @@ const Sidebar = ({ className }: SidebarProps) => {
           >
             <CartIndicator />
           </div>
+          
+          {/* Logout Button for Mobile */}
+          {user && (
+            <div 
+              className="text-muted-foreground hover:text-foreground cursor-pointer"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-5 w-5" />
+            </div>
+          )}
           
           {/* Language Toggle for Mobile */}
           <LanguageToggle className="h-8 w-8 p-0" />
@@ -183,12 +215,26 @@ const Sidebar = ({ className }: SidebarProps) => {
           </div>
         </nav>
 
-        {/* Language Toggle and Subscription upgrade prompt */}
+        {/* Language Toggle, Logout, and Subscription upgrade prompt */}
         <div className="mt-auto pt-8 pb-16">
           {/* Language Toggle */}
           <div className="px-4 mb-4 flex justify-start">
             <LanguageToggle />
           </div>
+          
+          {/* Logout button */}
+          {user && (
+            <div className="px-4 mb-4">
+              <Button 
+                variant="outline"
+                className="w-full py-2 px-3 text-sm font-medium rounded-lg flex items-center justify-center"
+                onClick={handleLogout}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                {t('auth.logout')}
+              </Button>
+            </div>
+          )}
           
           {/* Subscription upgrade prompt */}
           {user && (() => {

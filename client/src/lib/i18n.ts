@@ -87,6 +87,10 @@ const enTranslations = {
     termsAndPrivacy: "By signing in, you agree to our Terms of Service and Privacy Policy",
     terms: "Terms of Service",
     privacy: "Privacy Policy",
+    logout: "Logout",
+    logoutSuccess: "Logged out successfully",
+    logoutSuccessMessage: "You have been logged out of your account",
+    logoutError: "Logout failed",
   },
   player: {
     shuffle: "Shuffle",
@@ -327,6 +331,10 @@ const frTranslations = {
     termsAndPrivacy: "En vous connectant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité",
     terms: "Conditions d'utilisation",
     privacy: "Politique de confidentialité",
+    logout: "Déconnexion",
+    logoutSuccess: "Déconnexion réussie",
+    logoutSuccessMessage: "Vous avez été déconnecté de votre compte",
+    logoutError: "Échec de la déconnexion",
   },
   player: {
     shuffle: "Aléatoire",
