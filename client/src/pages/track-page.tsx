@@ -71,7 +71,9 @@ const TrackPage = () => {
   // Handle play track
   const handlePlayTrack = () => {
     if (track) {
-      playTrack(track);
+      // If track is purchasable, use preview mode
+      const isPreview = track.purchaseAvailable || false;
+      playTrack(track, isPreview);
     }
   };
   
@@ -256,7 +258,13 @@ const TrackPage = () => {
                           variant="ghost" 
                           size="icon"
                           className="h-8 w-8 opacity-0 hover:opacity-100 focus:opacity-100"
-                          onClick={() => albumTrack.id !== track.id && playTrack(albumTrack)}
+                          onClick={() => {
+                            if (albumTrack.id !== track.id) {
+                              // If the track is purchasable, use preview mode
+                              const isPreview = albumTrack.purchaseAvailable || false;
+                              playTrack(albumTrack, isPreview);
+                            }
+                          }}
                         >
                           <Play className="h-4 w-4" />
                         </Button>

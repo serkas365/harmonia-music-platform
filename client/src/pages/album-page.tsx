@@ -56,7 +56,9 @@ const AlbumPage = () => {
   // Handle play album
   const handlePlayAlbum = () => {
     if (album && album.tracks && album.tracks.length > 0) {
-      playTracks(album.tracks, 0);
+      // If any track is for purchase, all will be played in preview mode
+      const anyPurchasableTracks = album.tracks.some(track => track.purchaseAvailable);
+      playTracks(album.tracks, 0, false, anyPurchasableTracks);
     }
   };
   
@@ -64,7 +66,9 @@ const AlbumPage = () => {
   const handleShufflePlay = () => {
     if (album && album.tracks && album.tracks.length > 0) {
       const randomIndex = Math.floor(Math.random() * album.tracks.length);
-      playTracks(album.tracks, randomIndex, true); // true enables shuffle mode
+      // If any track is for purchase, all will be played in preview mode
+      const anyPurchasableTracks = album.tracks.some(track => track.purchaseAvailable);
+      playTracks(album.tracks, randomIndex, true, anyPurchasableTracks); // true enables shuffle mode
     }
   };
   
@@ -85,7 +89,9 @@ const AlbumPage = () => {
   // Handle track play
   const handlePlayTrack = (track: Track, index: number) => {
     if (album && album.tracks) {
-      playTracks(album.tracks, index);
+      // If the track is purchasable, use preview mode
+      const anyPurchasableTracks = album.tracks.some(track => track.purchaseAvailable);
+      playTracks(album.tracks, index, false, anyPurchasableTracks);
     }
   };
   

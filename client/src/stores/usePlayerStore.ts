@@ -21,7 +21,7 @@ export interface PlayerState {
   pause: () => void;
   togglePlay: () => void;
   playTrack: (track: Track, isPreview?: boolean) => void;
-  playTracks: (tracks: Track[], startIndex: number, shuffle?: boolean) => void;
+  playTracks: (tracks: Track[], startIndex: number, shuffle?: boolean, isPreview?: boolean) => void;
   nextTrack: () => void;
   prevTrack: () => void;
   setVolume: (volume: number) => void;
@@ -73,7 +73,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     });
   },
   
-  playTracks: (tracks, startIndex, shuffle = false) => {
+  playTracks: (tracks, startIndex, shuffle = false, isPreview = false) => {
     const currentTrack = tracks[startIndex];
     let remainingTracks = [...tracks.slice(startIndex + 1), ...tracks.slice(0, startIndex)];
     
@@ -87,12 +87,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       queue: remainingTracks, 
       isPlaying: true, 
       progress: 0,
-      isShuffled: shuffle 
+      isShuffled: shuffle,
+      isPreviewMode: isPreview
     });
   },
   
   nextTrack: () => {
-    const { currentTrack, queue, history, repeatMode } = get();
+    const { currentTrack, queue, history, repeatMode, isPreviewMode } = get();
     if (queue.length === 0) {
       if (repeatMode === 'all' && history.length > 0) {
         // Start over with history
@@ -103,7 +104,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
           queue: tracksToPlay.slice(1),
           history: [],
           progress: 0,
-          isPlaying: true 
+          isPlaying: true,
+          isPreviewMode // Preserve preview mode status
         });
       } else if (repeatMode === 'one' && currentTrack) {
         // Repeat current track
@@ -121,12 +123,15 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       queue: newQueue, 
       history: newHistory,
       progress: 0,
-      isPlaying: true 
+      isPlaying: true,
+      // Maintain preview mode when moving to the next track
+      // If the current track is in preview mode, all tracks in the queue should be as well
+      isPreviewMode
     });
   },
   
   prevTrack: () => {
-    const { currentTrack, queue, history } = get();
+    const { currentTrack, queue, history, isPreviewMode } = get();
     
     // If we're in the first few seconds of the track, go to previous track
     // Otherwise restart the current track
@@ -146,7 +151,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       queue: newQueue, 
       history: newHistory,
       progress: 0,
-      isPlaying: true
+      isPlaying: true,
+      // Maintain preview mode when moving to the previous track
+      isPreviewMode
     });
   },
   

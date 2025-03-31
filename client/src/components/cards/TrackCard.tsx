@@ -33,8 +33,8 @@ const TrackCard = ({ track, className, compact = false, showBuyButton = false }:
     e.preventDefault();
     e.stopPropagation();
     
-    // If the track is available for purchase and we're in the store, play in preview mode
-    if (track.purchaseAvailable && showBuyButton) {
+    // If the track is available for purchase, always play in preview mode
+    if (track.purchaseAvailable) {
       playTrack(track, true); // Play in preview mode
     } else {
       playTrack(track); // Play normally
