@@ -59,11 +59,40 @@ const Sidebar = ({ className }: SidebarProps) => {
 
   return (
     <aside className={cn(
-      "w-full md:w-64 bg-background-elevated h-20 md:h-full flex flex-row md:flex-col md:p-4 border-b md:border-r border-gray-800 md:overflow-y-auto scrollbar-hide fixed md:sticky bottom-0 md:top-0 z-10 backdrop-blur-xl shadow-lg",
+      "w-full md:w-64 bg-background-elevated h-20 md:h-full flex flex-col md:flex-col md:p-4 border-b md:border-r border-gray-800 md:overflow-y-auto scrollbar-hide md:sticky top-auto bottom-0 md:top-0 z-10 backdrop-blur-xl shadow-lg",
       className
     )}>
-      {/* Mobile Bottom Navigation */}
-      <div className="flex md:hidden w-full justify-around items-center bg-background/95 backdrop-blur-lg border-t border-gray-800">
+      {/* Mobile Top Navigation - Only visible on mobile */}
+      <div className="flex md:hidden w-full justify-between items-center px-4 py-2 bg-background/95 backdrop-blur-lg border-b border-gray-800 fixed top-0 left-0 right-0 z-20">
+        <div className="flex items-center">
+          <svg className="h-6 w-6 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="hsl(var(--primary))" strokeWidth="2"/>
+            <path d="M9 16.5V7.5L16.5 12L9 16.5Z" fill="hsl(var(--primary))"/>
+          </svg>
+          <h1 className="text-lg font-bold">Harmonia</h1>
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          {/* Cart */}
+          <div 
+            className={cn(
+              "flex items-center cursor-pointer",
+              location === '/cart'
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+            onClick={() => window.location.href = '/cart'}
+          >
+            <CartIndicator />
+          </div>
+          
+          {/* Language Toggle for Mobile */}
+          <LanguageToggle className="h-8 w-8 p-0" />
+        </div>
+      </div>
+      
+      {/* Mobile Bottom Navigation - Only visible on mobile */}
+      <div className="flex md:hidden w-full justify-around items-center bg-background/95 backdrop-blur-lg border-t border-gray-800 fixed bottom-0 left-0 right-0">
         {/* Home Button */}
         <div 
           className={cn(
@@ -76,6 +105,20 @@ const Sidebar = ({ className }: SidebarProps) => {
         >
           <Home className="h-5 w-5 mb-1" />
           <span className="text-xs">{t('common.home')}</span>
+        </div>
+        
+        {/* Search Button */}
+        <div 
+          className={cn(
+            "flex flex-col items-center justify-center py-2 cursor-pointer",
+            location === '/search'
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => window.location.href = '/search'}
+        >
+          <Search className="h-5 w-5 mb-1" />
+          <span className="text-xs">{t('common.search')}</span>
         </div>
         
         {/* Library Button */}
@@ -106,21 +149,7 @@ const Sidebar = ({ className }: SidebarProps) => {
           <span className="text-xs">{t('common.store')}</span>
         </div>
         
-        {/* Cart */}
-        <div 
-          className={cn(
-            "flex flex-col items-center justify-center py-2 cursor-pointer",
-            location === '/cart'
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          onClick={() => window.location.href = '/cart'}
-        >
-          <CartIndicator className="mb-1" />
-          <span className="text-xs">{t('common.cart')}</span>
-        </div>
-        
-        {/* Subscription/Account Menu Button */}
+        {/* Subscription Button */}
         {user && (() => {
           // Check if user has a premium or ultimate subscription
           interface SubscriptionData {
@@ -156,7 +185,7 @@ const Sidebar = ({ className }: SidebarProps) => {
                 <Shield className="h-5 w-5 mb-1" />
               )}
               <span className="text-xs">
-                {hasPremiumPlan ? t('subscription.subscribed') : t('common.premium')}
+                {t('common.premium')}
               </span>
             </div>
           );
