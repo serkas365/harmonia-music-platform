@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { usePlayerStore } from "@/stores/usePlayerStore";
+import { useLibraryStore } from "@/stores/useLibraryStore";
+import { Loader2 } from "lucide-react";
 import { 
   Play, 
   Pause, 
@@ -18,11 +20,14 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { formatTime } from "@/lib/utils";
+import QueueManagement from "@/components/player/QueueManagement";
 
 const MusicPlayer = () => {
   const { t } = useTranslation();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isSeeking, setIsSeeking] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
   
   const {
     currentTrack,
@@ -43,6 +48,12 @@ const MusicPlayer = () => {
     toggleShuffle,
     setRepeatMode,
   } = usePlayerStore();
+  
+  const likedTracks = useLibraryStore((state) => state.likedTracks);
+  const addLikedTrack = useLibraryStore((state) => state.addLikedTrack);
+  const removeLikedTrack = useLibraryStore((state) => state.removeLikedTrack);
+  
+  const isLiked = currentTrack ? likedTracks.some(track => track.id === currentTrack.id) : false;
 
   // Initialize audio element
   useEffect(() => {
@@ -57,25 +68,41 @@ const MusicPlayer = () => {
 
     const onLoadedMetadata = () => {
       setDuration(audio.duration);
+      setIsLoading(false);
     };
 
     const onEnded = () => {
       if (repeatMode === 'one') {
         audio.currentTime = 0;
-        audio.play();
+        audio.play().catch(error => {
+          console.error('Error replaying audio:', error);
+        });
       } else {
         nextTrack();
       }
+    };
+    
+    const onLoadStart = () => {
+      setIsLoading(true);
+    };
+    
+    const onError = () => {
+      setIsLoading(false);
+      console.error('Audio playback error');
     };
 
     audio.addEventListener('timeupdate', onTimeUpdate);
     audio.addEventListener('loadedmetadata', onLoadedMetadata);
     audio.addEventListener('ended', onEnded);
+    audio.addEventListener('loadstart', onLoadStart);
+    audio.addEventListener('error', onError);
 
     return () => {
       audio.removeEventListener('timeupdate', onTimeUpdate);
       audio.removeEventListener('loadedmetadata', onLoadedMetadata);
       audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('loadstart', onLoadStart);
+      audio.removeEventListener('error', onError);
     };
   }, [isSeeking, nextTrack, repeatMode, setDuration, setProgress]);
 
@@ -85,11 +112,18 @@ const MusicPlayer = () => {
     if (!audio) return;
 
     if (isPlaying) {
-      audio.play().catch(error => {
-        console.error('Error playing audio:', error);
-      });
+      setIsLoading(true);
+      audio.play()
+        .then(() => {
+          setIsLoading(false);
+        })
+        .catch(error => {
+          setIsLoading(false);
+          console.error('Error playing audio:', error);
+        });
     } else {
       audio.pause();
+      setIsLoading(false);
     }
   }, [isPlaying]);
 
@@ -98,13 +132,19 @@ const MusicPlayer = () => {
     const audio = audioRef.current;
     if (!audio || !currentTrack) return;
 
+    setIsLoading(true);
     audio.src = currentTrack.audioUrl;
     setProgress(0);
     
     if (isPlaying) {
-      audio.play().catch(error => {
-        console.error('Error playing audio:', error);
-      });
+      audio.play()
+        .then(() => {
+          setIsLoading(false);
+        })
+        .catch(error => {
+          setIsLoading(false);
+          console.error('Error playing audio:', error);
+        });
     }
   }, [currentTrack, isPlaying, setProgress]);
 
@@ -142,25 +182,43 @@ const MusicPlayer = () => {
       {/* Hidden audio element */}
       <audio ref={audioRef} preload="metadata" />
       
+      {/* Queue Management Dialog */}
+      <QueueManagement 
+        open={isQueueOpen} 
+        onClose={() => setIsQueueOpen(false)} 
+      />
+      
       <div className="max-w-screen-2xl mx-auto">
         <div className="flex items-center">
           {/* Currently Playing */}
           <div className="flex items-center mr-4 flex-shrink-0">
-            <div className="hidden sm:block w-14 h-14 rounded overflow-hidden mr-3">
-              {/* Typically this would be the album cover */}
+            <div className="hidden sm:block w-14 h-14 rounded overflow-hidden mr-3 relative">
+              {/* Album cover placeholder */}
               <div className="w-full h-full bg-background-highlight flex items-center justify-center">
                 <span className="text-xs truncate">{currentTrack.albumTitle}</span>
               </div>
+              {isLoading && (
+                <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              )}
             </div>
             <div className="flex-1 min-w-0 mr-4">
               <h4 className="font-bold text-sm truncate">{currentTrack.title}</h4>
               <p className="text-xs text-muted-foreground truncate">{currentTrack.artistName}</p>
             </div>
             <div className="hidden sm:flex items-center space-x-3">
-              <button className="text-muted-foreground hover:text-white">
-                <Heart className="h-4 w-4" />
+              <button 
+                className={`hover:text-white ${isLiked ? 'text-primary' : 'text-muted-foreground'}`}
+                onClick={() => isLiked ? removeLikedTrack(currentTrack.id) : addLikedTrack(currentTrack)}
+                title={isLiked ? t('player.unlike') : t('player.like')}
+              >
+                <Heart className="h-4 w-4" fill={isLiked ? 'currentColor' : 'none'} />
               </button>
-              <button className="text-muted-foreground hover:text-white">
+              <button 
+                className="text-muted-foreground hover:text-white"
+                title={t('player.info')}
+              >
                 <Info className="h-4 w-4" />
               </button>
             </div>
@@ -173,6 +231,7 @@ const MusicPlayer = () => {
                 className={`text-muted-foreground hover:text-white hidden sm:block ${isShuffled ? 'text-primary' : ''}`}
                 onClick={toggleShuffle}
                 title={t('player.shuffle')}
+                disabled={isLoading}
               >
                 <Shuffle className="h-4 w-4" />
               </button>
@@ -180,6 +239,7 @@ const MusicPlayer = () => {
                 className="text-muted-foreground hover:text-white"
                 onClick={prevTrack}
                 title={t('player.previous')}
+                disabled={isLoading}
               >
                 <SkipBack className="h-5 w-5" />
               </button>
@@ -189,13 +249,21 @@ const MusicPlayer = () => {
                 className="bg-primary hover:bg-primary/90 text-white rounded-full h-10 w-10 flex items-center justify-center"
                 onClick={togglePlay}
                 title={isPlaying ? t('player.pause') : t('player.play')}
+                disabled={isLoading}
               >
-                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                {isLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : isPlaying ? (
+                  <Pause className="h-5 w-5" />
+                ) : (
+                  <Play className="h-5 w-5" />
+                )}
               </Button>
               <button 
                 className="text-muted-foreground hover:text-white"
                 onClick={nextTrack}
                 title={t('player.next')}
+                disabled={isLoading}
               >
                 <SkipForward className="h-5 w-5" />
               </button>
@@ -203,6 +271,7 @@ const MusicPlayer = () => {
                 className={`text-muted-foreground hover:text-white hidden sm:block ${repeatMode !== 'off' ? 'text-primary' : ''}`}
                 onClick={toggleRepeat}
                 title={t('player.repeat')}
+                disabled={isLoading}
               >
                 <Repeat className="h-4 w-4" />
                 {repeatMode === 'one' && <span className="absolute text-[10px] font-bold">1</span>}
@@ -220,6 +289,7 @@ const MusicPlayer = () => {
                   step={0.1}
                   onValueChange={(value) => handleSeek(value[0])}
                   className="h-1"
+                  disabled={isLoading}
                 />
               </div>
               <span className="text-xs text-muted-foreground ml-2 hidden sm:block">
@@ -232,6 +302,7 @@ const MusicPlayer = () => {
           <div className="hidden md:flex items-center space-x-4 ml-4 flex-shrink-0">
             <button 
               className="text-muted-foreground hover:text-white"
+              onClick={() => setIsQueueOpen(true)}
               title={t('player.queue')}
             >
               <ListMusic className="h-4 w-4" />
