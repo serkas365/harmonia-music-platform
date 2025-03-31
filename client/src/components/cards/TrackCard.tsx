@@ -1,5 +1,5 @@
 import { Track } from "@shared/schema";
-import { Heart, Plus, Play, ShoppingCart } from "lucide-react";
+import { Heart, Plus, Play, ShoppingCart, ListMusic } from "lucide-react";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils";
@@ -20,6 +20,7 @@ const TrackCard = ({ track, className, compact = false, showBuyButton = false }:
   const { t } = useTranslation();
   const { toast } = useToast();
   const playTrack = usePlayerStore((state) => state.playTrack);
+  const addToQueue = usePlayerStore((state) => state.addToQueue);
   const addLikedTrack = useLibraryStore((state) => state.addLikedTrack);
   const likedTracks = useLibraryStore((state) => state.likedTracks);
   const addTrackToCart = useCartStore((state) => state.addTrack);
@@ -45,6 +46,16 @@ const TrackCard = ({ track, className, compact = false, showBuyButton = false }:
     e.stopPropagation();
     // Open playlist selection dialog
     console.log("Add to playlist:", track.id);
+  };
+  
+  const handleAddToQueue = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToQueue(track);
+    toast({
+      title: t('player.addedToQueue'),
+      description: `${track.title} - ${track.artistName}`,
+    });
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -125,6 +136,14 @@ const TrackCard = ({ track, className, compact = false, showBuyButton = false }:
             onClick={handleAddToPlaylist}
           >
             <Plus className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-white h-8 w-8"
+            onClick={handleAddToQueue}
+          >
+            <ListMusic className="h-4 w-4" />
           </Button>
           <Button
             variant="default"
