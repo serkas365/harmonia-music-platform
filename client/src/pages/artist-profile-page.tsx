@@ -168,22 +168,74 @@ const ArtistProfilePage = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="artist-image">{t('artistProfile.imageUrl')}</Label>
-                <Input 
-                  id="artist-image" 
-                  value={image} 
-                  onChange={(e) => setImage(e.target.value)} 
-                  placeholder={t('artistProfile.imageUrlPlaceholder')}
-                />
+                <div className="grid grid-cols-1 gap-2">
+                  <Input 
+                    id="artist-image" 
+                    value={image} 
+                    onChange={(e) => setImage(e.target.value)} 
+                    placeholder={t('artistProfile.imageUrlPlaceholder')}
+                  />
+                  <div className="text-xs text-muted-foreground">{t('artistProfile.or')}</div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="artist-image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (e) => {
+                            if (e.target?.result) {
+                              setImage(e.target.result as string);
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </div>
+                  {image && (
+                    <div className="mt-2">
+                      <p className="text-xs text-muted-foreground mb-1">{t('artistProfile.preview')}</p>
+                      <div className="w-20 h-20 rounded-full overflow-hidden border border-border">
+                        <img src={image} alt="Profile Preview" className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="artist-genre">{t('artistProfile.genre')}</Label>
-                <Input 
-                  id="artist-genre" 
-                  value={genre} 
-                  onChange={(e) => setGenre(e.target.value)} 
-                  placeholder={t('artistProfile.genrePlaceholder')}
-                />
+                <select
+                  id="artist-genre"
+                  value={genre}
+                  onChange={(e) => setGenre(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="">{t('artistProfile.selectGenre')}</option>
+                  <option value="Pop">Pop</option>
+                  <option value="Rock">Rock</option>
+                  <option value="Hip Hop">Hip Hop</option>
+                  <option value="R&B">R&B</option>
+                  <option value="Electronic">Electronic</option>
+                  <option value="Jazz">Jazz</option>
+                  <option value="Classical">Classical</option>
+                  <option value="Country">Country</option>
+                  <option value="Folk">Folk</option>
+                  <option value="Reggae">Reggae</option>
+                  <option value="Latin">Latin</option>
+                  <option value="Metal">Metal</option>
+                  <option value="Blues">Blues</option>
+                  <option value="Indie">Indie</option>
+                  <option value="Dance">Dance</option>
+                  <option value="Soul">Soul</option>
+                  <option value="Punk">Punk</option>
+                  <option value="Ambient">Ambient</option>
+                  <option value="Afrobeat">Afrobeat</option>
+                  <option value="K-Pop">K-Pop</option>
+                </select>
               </div>
             </CardContent>
             <CardFooter>
