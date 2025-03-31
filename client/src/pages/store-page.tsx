@@ -22,7 +22,7 @@ const StorePage = () => {
   const { t } = useTranslation();
   const [trackFilter, setTrackFilter] = useState("");
   const [albumFilter, setAlbumFilter] = useState("");
-  const [priceSort, setPriceSort] = useState<"asc" | "desc" | "">("");
+  const [priceSort, setPriceSort] = useState<"asc" | "desc" | "default">("default");
 
   // Fetch tracks and albums for the store
   const { data: tracks, isLoading: tracksLoading } = useQuery<Track[]>({
@@ -44,7 +44,7 @@ const StorePage = () => {
             : true)
         )
         .sort((a, b) => {
-          if (!priceSort || !a.purchasePrice || !b.purchasePrice) return 0;
+          if (priceSort === "default" || !a.purchasePrice || !b.purchasePrice) return 0;
           return priceSort === "asc" 
             ? a.purchasePrice - b.purchasePrice 
             : b.purchasePrice - a.purchasePrice;
@@ -102,12 +102,12 @@ const StorePage = () => {
               </span>
             </div>
             <div className="w-full md:w-auto">
-              <Select value={priceSort} onValueChange={(value: "asc" | "desc" | "") => setPriceSort(value)}>
+              <Select value={priceSort} onValueChange={(value: "asc" | "desc" | "default") => setPriceSort(value)}>
                 <SelectTrigger className="w-full md:w-[180px]">
                   <SelectValue placeholder={t('store.sortByPrice')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">
+                  <SelectItem value="default">
                     {t('store.default')}
                   </SelectItem>
                   <SelectItem value="asc">
