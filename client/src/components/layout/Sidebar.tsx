@@ -56,11 +56,11 @@ const Sidebar = ({ className }: SidebarProps) => {
 
   return (
     <aside className={cn(
-      "w-full md:w-64 bg-background-elevated h-20 md:h-full flex flex-row md:flex-col md:p-4 border-b md:border-r border-gray-800 md:overflow-y-auto scrollbar-hide fixed md:sticky bottom-0 md:top-0 z-10 backdrop-blur-md shadow-lg",
+      "w-full md:w-64 bg-background-elevated h-20 md:h-full flex flex-row md:flex-col md:p-4 border-b md:border-r border-gray-800 md:overflow-y-auto scrollbar-hide fixed md:sticky bottom-0 md:top-0 z-10 backdrop-blur-xl shadow-lg",
       className
     )}>
       {/* Mobile Bottom Navigation */}
-      <div className="flex md:hidden w-full justify-around items-center bg-background-elevated/95">
+      <div className="flex md:hidden w-full justify-around items-center bg-background/95 backdrop-blur-lg border-t border-gray-800">
         {navItems.slice(0, 4).map((item) => (
           <div 
             key={item.path}

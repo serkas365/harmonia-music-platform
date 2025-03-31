@@ -221,7 +221,7 @@ const MusicPlayer = () => {
   }
 
   return (
-    <div className="fixed bottom-20 md:bottom-0 left-0 right-0 bg-background-elevated border-t border-gray-800 py-2 md:py-4 px-4 md:px-8 z-20 backdrop-blur-md shadow-lg">
+    <div className="fixed bottom-20 md:bottom-0 left-0 right-0 bg-background/95 border-t border-gray-800 py-2 md:py-4 px-4 md:px-8 z-20 backdrop-blur-xl shadow-lg">
       {/* Hidden audio element */}
       <audio ref={audioRef} preload="metadata" />
       
@@ -295,7 +295,7 @@ const MusicPlayer = () => {
                 <Shuffle className="h-4 w-4" />
               </button>
               <button 
-                className="text-muted-foreground hover:text-white"
+                className="text-foreground hover:text-white bg-background-highlight hover:bg-background-highlight/80 p-2 rounded-full"
                 onClick={prevTrack}
                 title={t('player.previous')}
                 disabled={isLoading}
@@ -305,21 +305,21 @@ const MusicPlayer = () => {
               <Button
                 variant="default"
                 size="icon"
-                className="bg-primary hover:bg-primary/90 text-white rounded-full h-10 w-10 flex items-center justify-center"
+                className="bg-primary hover:bg-primary/90 text-white rounded-full h-12 w-12 flex items-center justify-center shadow-md"
                 onClick={togglePlay}
                 title={isPlaying ? t('player.pause') : t('player.play')}
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="h-6 w-6 animate-spin" />
                 ) : isPlaying ? (
-                  <Pause className="h-5 w-5" />
+                  <Pause className="h-6 w-6" />
                 ) : (
-                  <Play className="h-5 w-5" />
+                  <Play className="h-6 w-6" />
                 )}
               </Button>
               <button 
-                className="text-muted-foreground hover:text-white"
+                className="text-foreground hover:text-white bg-background-highlight hover:bg-background-highlight/80 p-2 rounded-full"
                 onClick={nextTrack}
                 title={t('player.next')}
                 disabled={isLoading}
@@ -341,13 +341,13 @@ const MusicPlayer = () => {
               <span className="text-xs text-muted-foreground mr-2 hidden sm:block">
                 {formatTime(progress)}
               </span>
-              <div className="relative flex-1 h-1">
+              <div className="relative flex-1 h-2">
                 <Slider
                   value={[progress]}
                   max={duration || 100}
                   step={0.1}
                   onValueChange={(value) => handleSeek(value[0])}
-                  className="h-1"
+                  className="h-2"
                   disabled={isLoading}
                 />
               </div>
