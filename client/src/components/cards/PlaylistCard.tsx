@@ -87,7 +87,7 @@ const PlaylistCard = ({
         <div className="p-3">
           <h3 className="font-bold text-sm truncate">{playlist.name}</h3>
           <p className="text-xs text-muted-foreground truncate">
-            {displayTracks.length} tracks
+            {playlist.tracks?.length || 0} tracks
           </p>
         </div>
       </div>
