@@ -205,6 +205,7 @@ export class MemStorage implements IStorage {
           userId: id,
           coverImage: template.coverImage,
           isPublic: template.isPublic,
+          isDefault: true, // Mark as a system-generated playlist
           createdAt: now,
           tracks: []
         };
@@ -331,6 +332,7 @@ export class MemStorage implements IStorage {
       name,
       userId,
       isPublic,
+      isDefault: false, // Mark as user-created playlist
       createdAt: now,
       tracks: []
     };
@@ -688,6 +690,7 @@ export class MemStorage implements IStorage {
             userId: user.id,
             coverImage: template.coverImage,
             isPublic: template.isPublic,
+            isDefault: true, // Mark as a system-generated playlist
             tracks: template.tracks,
             createdAt: new Date()
           };

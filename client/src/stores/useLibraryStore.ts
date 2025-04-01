@@ -51,7 +51,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
   })),
   
   addPlaylist: (playlist) => set((state) => ({
-    playlists: [...state.playlists, playlist]
+    playlists: [...state.playlists.filter(p => p.id !== playlist.id), playlist]
   })),
   
   updatePlaylist: (playlist) => set((state) => ({

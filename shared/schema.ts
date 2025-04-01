@@ -277,6 +277,7 @@ export interface Playlist {
   isPublic: boolean;
   createdAt: Date;
   tracks?: PlaylistTrack[];
+  isDefault?: boolean; // Flag to identify system-generated playlists
 }
 
 export interface PlaylistTrack {

@@ -70,10 +70,20 @@ const LibraryPage = () => {
     isLoadingPurchasedTracks ||
     isLoadingPurchasedAlbums;
 
-  // Update library store when data is loaded
+  // Reset playlists state on component mount
+  useEffect(() => {
+    useLibraryStore.setState({ playlists: [] });
+  }, []);
+
+  // Update library store when data is loaded - only include user created playlists
   useEffect(() => {
     if (playlistsData && Array.isArray(playlistsData)) {
-      playlistsData.forEach(playlist => {
+      // Filter out system-generated playlists (typically those with isDefault = true)
+      // Only include playlists actually created by the user (not the default ones)
+      const userCreatedPlaylists = playlistsData.filter(playlist => playlist.isDefault !== true);
+      
+      // Add the filtered playlists to the store
+      userCreatedPlaylists.forEach(playlist => {
         addPlaylist(playlist);
       });
     }
