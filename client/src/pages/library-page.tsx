@@ -6,9 +6,10 @@ import { Album, Track, Playlist } from "@shared/schema";
 import AlbumCard from "@/components/cards/AlbumCard";
 import TrackCard from "@/components/cards/TrackCard";
 import PlaylistCard from "@/components/cards/PlaylistCard";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 
 const LibraryPage = () => {
   const { t } = useTranslation();
@@ -21,8 +22,102 @@ const LibraryPage = () => {
     playlists,
     downloadedTracks,
     purchasedTracks,
-    purchasedAlbums
+    purchasedAlbums,
+    addPlaylist,
+    addLikedTrack,
+    addLikedAlbum,
+    addDownloadedTrack,
+    addPurchasedTrack,
+    addPurchasedAlbum
   } = useLibraryStore();
+
+  // Fetch user's playlists
+  const { data: playlistsData, isLoading: isLoadingPlaylists } = useQuery<Playlist[]>({
+    queryKey: ['/api/me/playlists']
+  });
+
+  // Fetch user's liked tracks
+  const { data: likedTracksData, isLoading: isLoadingLikedTracks } = useQuery<Track[]>({
+    queryKey: ['/api/me/library/tracks/liked']
+  });
+
+  // Fetch user's liked albums
+  const { data: likedAlbumsData, isLoading: isLoadingLikedAlbums } = useQuery<Album[]>({
+    queryKey: ['/api/me/library/albums/liked']
+  });
+
+  // Fetch user's downloaded tracks
+  const { data: downloadedTracksData, isLoading: isLoadingDownloadedTracks } = useQuery<Track[]>({
+    queryKey: ['/api/me/library/tracks/downloaded']
+  });
+
+  // Fetch user's purchased tracks
+  const { data: purchasedTracksData, isLoading: isLoadingPurchasedTracks } = useQuery<Track[]>({
+    queryKey: ['/api/me/library/tracks/purchased']
+  });
+
+  // Fetch user's purchased albums
+  const { data: purchasedAlbumsData, isLoading: isLoadingPurchasedAlbums } = useQuery<Album[]>({
+    queryKey: ['/api/me/library/albums/purchased']
+  });
+
+  // Loading state
+  const isLoading = 
+    isLoadingPlaylists || 
+    isLoadingLikedTracks ||
+    isLoadingLikedAlbums ||
+    isLoadingDownloadedTracks ||
+    isLoadingPurchasedTracks ||
+    isLoadingPurchasedAlbums;
+
+  // Update library store when data is loaded
+  useEffect(() => {
+    if (playlistsData && Array.isArray(playlistsData)) {
+      playlistsData.forEach(playlist => {
+        addPlaylist(playlist);
+      });
+    }
+  }, [playlistsData, addPlaylist]);
+
+  useEffect(() => {
+    if (likedTracksData && Array.isArray(likedTracksData)) {
+      likedTracksData.forEach(track => {
+        addLikedTrack(track);
+      });
+    }
+  }, [likedTracksData, addLikedTrack]);
+
+  useEffect(() => {
+    if (likedAlbumsData && Array.isArray(likedAlbumsData)) {
+      likedAlbumsData.forEach(album => {
+        addLikedAlbum(album);
+      });
+    }
+  }, [likedAlbumsData, addLikedAlbum]);
+
+  useEffect(() => {
+    if (downloadedTracksData && Array.isArray(downloadedTracksData)) {
+      downloadedTracksData.forEach(track => {
+        addDownloadedTrack(track);
+      });
+    }
+  }, [downloadedTracksData, addDownloadedTrack]);
+
+  useEffect(() => {
+    if (purchasedTracksData && Array.isArray(purchasedTracksData)) {
+      purchasedTracksData.forEach(track => {
+        addPurchasedTrack(track);
+      });
+    }
+  }, [purchasedTracksData, addPurchasedTrack]);
+
+  useEffect(() => {
+    if (purchasedAlbumsData && Array.isArray(purchasedAlbumsData)) {
+      purchasedAlbumsData.forEach(album => {
+        addPurchasedAlbum(album);
+      });
+    }
+  }, [purchasedAlbumsData, addPurchasedAlbum]);
   
   // Parse the current location to determine active tab
   useEffect(() => {
@@ -53,7 +148,13 @@ const LibraryPage = () => {
         <h1 className="text-2xl md:text-3xl font-bold">{t('common.library')}</h1>
       </div>
       
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground">{t('common.loading')}</p>
+        </div>
+      ) : (
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="w-full justify-start mb-6 bg-transparent border-b border-gray-800">
           <TabsTrigger value="playlists" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
             {t('common.playlists')}
@@ -194,6 +295,7 @@ const LibraryPage = () => {
           </div>
         </TabsContent>
       </Tabs>
+      )}
     </div>
   );
 };
