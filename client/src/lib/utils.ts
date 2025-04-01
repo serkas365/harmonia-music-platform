@@ -35,3 +35,13 @@ export function formatDate(date: Date | string): string {
     day: 'numeric'
   }).format(dateObj);
 }
+
+/**
+ * Format duration in seconds to a readable string (MM:SS)
+ * @param seconds Duration in seconds
+ * @returns Formatted duration string (MM:SS)
+ */
+export function formatDuration(seconds: number): string {
+  // Alias for formatTime for semantic clarity
+  return formatTime(seconds);
+}

@@ -39,7 +39,7 @@ const PlaylistCard = ({
         "block bg-background-elevated rounded-lg overflow-hidden group hover:bg-background-highlight hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer",
         className
       )}
-      onClick={() => window.location.href = `/playlists/${playlist.id}`}
+      onClick={() => window.location.href = `/playlists/${playlist.id}`} // We'll fix the navigation properly later
     >
       <div className="relative aspect-square">
         <div className={cn(

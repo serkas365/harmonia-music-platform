@@ -72,7 +72,7 @@ const LibraryPage = () => {
         <TabsContent value="playlists">
           <div className="mb-4 flex justify-between items-center">
             <h2 className="text-xl font-semibold">{t('common.playlists')}</h2>
-            <Link href="/playlists/create">
+            <Link href="/create-playlist">
               <Button variant="outline" size="sm" className="gap-2">
                 <PlusCircle className="h-4 w-4" />
                 {t('common.createPlaylist')}
@@ -88,14 +88,14 @@ const LibraryPage = () => {
                   playlist={playlist} 
                   overlayTitle={playlist.name}
                   gradientColors="from-primary to-secondary"
-                  tracks={playlist.tracks?.map(pt => pt.track).filter(Boolean)}
+                  tracks={playlist.tracks?.map(pt => pt.track).filter((track): track is Track => !!track)}
                 />
               ))}
             </div>
           ) : (
             <div className="text-center py-12 bg-background-elevated rounded-lg">
               <p className="text-muted-foreground mb-4">{t('common.library')}</p>
-              <Link href="/playlists/create">
+              <Link href="/create-playlist">
                 <Button variant="default" className="bg-primary hover:bg-primary/90">
                   {t('common.createPlaylist')}
                 </Button>
