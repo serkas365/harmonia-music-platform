@@ -8,10 +8,10 @@ let auth;
 // For Replit, we're using the application default credentials method
 try {
   const app = initializeApp({
-    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+    projectId: "harmonia-music-e2a73",
   });
   auth = getAuth(app);
-  console.log('Firebase Admin SDK initialized successfully');
+  console.log('Firebase Admin SDK initialized successfully with project ID: harmonia-music-e2a73');
 } catch (error) {
   console.error('Error initializing Firebase Admin SDK:', error);
 }
