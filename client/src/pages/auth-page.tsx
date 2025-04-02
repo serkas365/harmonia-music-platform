@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@/hooks/use-auth";
+import { useFirebaseAuth } from "@/hooks/useFirebaseAuth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { LoginData, RegisterData, loginSchema, registerSchema } from "@shared/schema";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -13,46 +13,89 @@ import { Redirect, Link } from "wouter";
 import { Apple, Facebook, Loader2 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 
+// Define new form schemas for Firebase
+const loginSchema = z.object({
+  email: z.string().email({ message: "Invalid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+});
+
+const registerSchema = z.object({
+  email: z.string().email({ message: "Invalid email address" }),
+  username: z.string().min(3, { message: "Username must be at least 3 characters" }),
+  displayName: z.string().min(2, { message: "Display name must be at least 2 characters" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+type RegisterFormData = z.infer<typeof registerSchema>;
+
 const AuthPage = () => {
   const { t } = useTranslation();
-  const { user, loginMutation, registerMutation, isLoading } = useAuth();
+  const { appUser, isLoading, login, register, loginWithGoogle } = useFirebaseAuth();
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Setup login form
-  const loginForm = useForm<LoginData>({
+  // Setup login form with Firebase schema
+  const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
 
-  // Setup register form
-  const registerForm = useForm<RegisterData>({
+  // Setup register form with Firebase schema
+  const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
       email: "",
+      username: "",
       displayName: "",
       password: "",
       confirmPassword: "",
-      subscriptionTier: "free",
     },
   });
   
   // Redirect if already logged in - IMPORTANT: must be after all hook calls
-  if (user) {
+  if (appUser) {
     return <Redirect to="/" />;
   }
 
   // Handle login submission
-  const onLoginSubmit = async (data: LoginData) => {
-    loginMutation.mutate(data);
+  const onLoginSubmit = async (data: LoginFormData) => {
+    setIsSubmitting(true);
+    try {
+      await login(data.email, data.password);
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Handle register submission
-  const onRegisterSubmit = async (data: RegisterData) => {
-    registerMutation.mutate(data);
+  const onRegisterSubmit = async (data: RegisterFormData) => {
+    setIsSubmitting(true);
+    try {
+      await register(data.email, data.password, data.username);
+    } catch (error) {
+      console.error("Registration error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Handle Google login
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+    } catch (error) {
+      console.error("Google login error:", error);
+    }
   };
 
   return (
@@ -79,12 +122,12 @@ const AuthPage = () => {
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                   <FormField
                     control={loginForm.control}
-                    name="username"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('auth.username')}</FormLabel>
+                        <FormLabel>{t('auth.email')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="your_username" {...field} />
+                          <Input type="email" placeholder="your@email.com" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -120,9 +163,9 @@ const AuthPage = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-primary hover:bg-primary/90"
-                    disabled={loginMutation.isPending}
+                    disabled={isSubmitting}
                   >
-                    {loginMutation.isPending ? (
+                    {isSubmitting ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     ) : null}
                     {t('auth.signIn')}
@@ -207,9 +250,9 @@ const AuthPage = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-primary hover:bg-primary/90"
-                    disabled={registerMutation.isPending}
+                    disabled={isSubmitting}
                   >
-                    {registerMutation.isPending ? (
+                    {isSubmitting ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     ) : null}
                     {t('auth.signUp')}
@@ -232,13 +275,28 @@ const AuthPage = () => {
             </div>
 
             <div className="grid grid-cols-3 gap-3 mt-4">
-              <Button variant="outline" className="flex justify-center items-center">
+              <Button 
+                variant="outline" 
+                className="flex justify-center items-center" 
+                onClick={handleGoogleLogin}
+                type="button"
+              >
                 <FcGoogle className="h-5 w-5" />
               </Button>
-              <Button variant="outline" className="flex justify-center items-center">
+              <Button 
+                variant="outline" 
+                className="flex justify-center items-center" 
+                disabled 
+                type="button"
+              >
                 <Facebook className="h-5 w-5 text-blue-600" />
               </Button>
-              <Button variant="outline" className="flex justify-center items-center">
+              <Button 
+                variant="outline" 
+                className="flex justify-center items-center" 
+                disabled 
+                type="button"
+              >
                 <Apple className="h-5 w-5" />
               </Button>
             </div>

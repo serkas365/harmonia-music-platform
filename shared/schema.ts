@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   artistId: integer("artist_id").references(() => artists.id), // Only for artist users
   subscriptionTier: text("subscription_tier").notNull().default("free"),
   subscriptionEndDate: timestamp("subscription_end_date"),
+  firebaseUid: text("firebase_uid").unique(), // Firebase user ID for Firebase Auth integration
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -166,6 +167,7 @@ export interface User {
   artistId?: number;
   subscriptionTier: 'free' | 'premium' | 'ultimate';
   subscriptionEndDate?: Date;
+  firebaseUid?: string; // Firebase user ID when using Firebase Auth
   createdAt: Date;
   preferences?: UserPreferences;
   artist?: Artist; // Associated artist profile if the user is an artist

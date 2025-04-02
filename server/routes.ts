@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import Stripe from "stripe";
+import { auth } from "./firebase-admin";
 
 // Initialize Stripe - will be null if no API key is provided
 const stripe = process.env.STRIPE_SECRET_KEY 
@@ -12,6 +13,55 @@ const stripe = process.env.STRIPE_SECRET_KEY
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
+  
+  // Firebase authentication endpoints
+  app.post("/api/auth/verify-token", async (req, res) => {
+    try {
+      const { idToken } = req.body;
+      
+      if (!idToken) {
+        return res.status(400).json({ message: "ID token is required" });
+      }
+      
+      // Verify the Firebase ID token
+      const decodedToken = await auth.verifyIdToken(idToken);
+      
+      // Get or create user in our system
+      let user = await storage.getUserByEmail(decodedToken.email || "");
+      
+      if (!user) {
+        // Create a new user with Firebase info
+        const displayName = decodedToken.name || decodedToken.email?.split('@')[0] || 'User';
+        user = await storage.createUser({
+          username: displayName,
+          displayName: displayName,
+          email: decodedToken.email || "",
+          password: "", // Firebase handles authentication
+          role: "listener",
+          firebaseUid: decodedToken.uid,
+          profileImage: decodedToken.picture || "",
+        });
+      } else if (!user.firebaseUid) {
+        // Update existing user with Firebase UID if not set
+        user = await storage.updateUser(user.id, {
+          firebaseUid: decodedToken.uid,
+          profileImage: user.profileImage || decodedToken.picture || "",
+        }) || user;
+      }
+      
+      // Log in the user using session-based auth
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Failed to create session" });
+        }
+        
+        return res.status(200).json(user);
+      });
+    } catch (error: any) {
+      console.error("Error verifying Firebase token:", error);
+      res.status(401).json({ message: "Invalid token" });
+    }
+  });
 
   // API routes
   app.get("/api/tracks", async (req, res) => {
