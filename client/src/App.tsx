@@ -144,12 +144,16 @@ function Router() {
   );
 }
 
+import { AuthProvider as UseAuthProvider } from "@/hooks/use-auth";
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router />
-        <Toaster />
+        <UseAuthProvider>
+          <Router />
+          <Toaster />
+        </UseAuthProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
