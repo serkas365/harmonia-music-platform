@@ -3,12 +3,13 @@ import {
   getAuth, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
+  GoogleAuthProvider, 
   signInWithRedirect, 
-  GoogleAuthProvider,
-  getRedirectResult
+  signInWithPopup, 
+  getRedirectResult 
 } from "firebase/auth";
 
-// Firebase configuration
+// Firebase configuration - using environment variables
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
@@ -19,38 +20,44 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
 
-// Google Auth Provider
-const googleProvider = new GoogleAuthProvider();
-
-// Authentication functions
+// Login with email and password
 export const loginWithEmailPassword = async (email: string, password: string) => {
   return await signInWithEmailAndPassword(auth, email, password);
 };
 
+// Register with email and password
 export const registerWithEmailPassword = async (email: string, password: string) => {
   return await createUserWithEmailAndPassword(auth, email, password);
 };
 
+// Google authentication provider
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+// Sign in with Google using redirect (better for mobile)
 export const signInWithGoogle = () => {
   signInWithRedirect(auth, googleProvider);
 };
 
+// Handle redirect result
 export const handleRedirectResult = async () => {
   try {
     const result = await getRedirectResult(auth);
-    return result?.user || null;
+    if (result) {
+      // This gives you a Google Access Token
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      return result.user;
+    }
+    return null;
   } catch (error) {
-    console.error("Error handling redirect result:", error);
+    console.error("Error handling redirect:", error);
     throw error;
   }
 };
 
+// Logout function
 export const logout = async () => {
   return await auth.signOut();
 };
-
-export default app;
