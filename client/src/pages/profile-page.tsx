@@ -19,7 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { User, UserPreferences, NotificationSettings } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2, Save, User as UserIcon } from "lucide-react";
-import { Redirect } from "wouter";
+import { Redirect, Link } from "wouter";
 
 // Schema for profile update form
 const profileFormSchema = z.object({
@@ -583,7 +583,10 @@ const ProfilePage = () => {
                           </Select>
                           {user.subscriptionTier === 'free' && (
                             <FormDescription>
-                              {t('profilePage.upgradeForBetterAudio', 'Upgrade to Premium or Ultimate for better audio quality')}
+                              {t('profilePage.upgradeForBetterAudio', 'Upgrade to Premium or Ultimate for better audio quality')}{' '}
+                              <Link href="/subscription" className="underline text-primary hover:text-primary/80">
+                                {t('profilePage.upgradeNow', 'Upgrade now')}
+                              </Link>
                             </FormDescription>
                           )}
                           <FormMessage />
@@ -777,7 +780,9 @@ const ProfilePage = () => {
                           </p>
                         )}
                       </div>
-                      <Button variant="outline" size="sm">{t('profilePage.manageSub', 'Manage')}</Button>
+                      <Link href="/subscription">
+                        <Button variant="outline" size="sm">{t('profilePage.manageSub', 'Manage')}</Button>
+                      </Link>
                     </div>
                   </div>
                 </div>
