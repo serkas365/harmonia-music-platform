@@ -15,6 +15,13 @@ import { Apple, Facebook, Loader2 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { useToast } from "@/hooks/use-toast";
 
+// Declare the global method that's defined in useFirebaseAuth.tsx
+declare global {
+  interface Window {
+    cancelAuthenticationProcess?: () => void;
+  }
+}
+
 // Define new form schemas for Firebase
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -153,6 +160,56 @@ const AuthPage = () => {
 
   // Common loading state between both auth systems
   const isGlobalLoading = isLoading || authLoading;
+  const [authFailedVisible, setAuthFailedVisible] = useState(false);
+  
+  // Auto-hide auth failed message after 8 seconds
+  useEffect(() => {
+    if (authFailedVisible) {
+      const timer = setTimeout(() => {
+        setAuthFailedVisible(false);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [authFailedVisible]);
+  
+  // Listen for authentication timeout events
+  useEffect(() => {
+    const handleAuthTimeout = () => {
+      setAuthFailedVisible(true);
+    };
+    
+    window.addEventListener('auth:timeout', handleAuthTimeout);
+    return () => {
+      window.removeEventListener('auth:timeout', handleAuthTimeout);
+    };
+  }, []);
+
+  // Cancel authentication process (reset states)
+  const cancelAuthentication = () => {
+    if (isAuthenticating) {
+      // Use the global method we added to cancel authentication
+      if (window.cancelAuthenticationProcess) {
+        window.cancelAuthenticationProcess();
+      }
+      
+      toast({
+        title: "Authentication Cancelled",
+        description: "You can try again when ready",
+      });
+    }
+  };
+  
+  // Listen for authentication cancelled events
+  useEffect(() => {
+    const handleAuthCancelled = () => {
+      setAuthFailedVisible(true);
+    };
+    
+    window.addEventListener('auth:cancelled', handleAuthCancelled);
+    return () => {
+      window.removeEventListener('auth:cancelled', handleAuthCancelled);
+    };
+  }, []);
   
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -166,14 +223,35 @@ const AuthPage = () => {
             </svg>
             <h1 className="text-3xl font-bold">Harmonia</h1>
             
-            {/* Authentication status indicator */}
+            {/* Authentication status indicators */}
             {isAuthenticating && (
               <div className="ml-auto flex items-center bg-background/60 backdrop-blur-sm px-3 py-1 rounded-full border border-border/40 shadow-sm">
                 <Loader2 className="h-3 w-3 animate-spin mr-2 text-primary" />
-                <span className="text-xs font-medium">Authenticating...</span>
+                <span className="text-xs font-medium mr-2">Authenticating...</span>
+                <button 
+                  onClick={cancelAuthentication}
+                  className="text-xs text-muted-foreground hover:text-primary"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+            
+            {authFailedVisible && (
+              <div className="ml-auto flex items-center bg-destructive/10 backdrop-blur-sm px-3 py-1 rounded-full border border-destructive/40 shadow-sm">
+                <span className="text-xs font-medium text-destructive">Authentication failed</span>
               </div>
             )}
           </div>
+          
+          {/* Show auth recovery message if there was a timeout */}
+          {!isAuthenticating && authFailedVisible && (
+            <div className="mb-4 p-3 bg-muted/60 rounded-md border border-border/60">
+              <p className="text-sm">
+                Authentication process took too long or failed. Please try again or use a different method.
+              </p>
+            </div>
+          )}
 
           <Tabs value={authMode} onValueChange={(value) => setAuthMode(value as 'login' | 'register')}>
             <TabsList className="grid w-full grid-cols-2 mb-6">

@@ -3,6 +3,14 @@ import { User as FirebaseUser, onAuthStateChanged } from "firebase/auth";
 import { auth, loginWithEmailPassword, registerWithEmailPassword, signInWithGoogle, logout, handleRedirectResult } from "../lib/firebase";
 import { apiRequest } from "../lib/queryClient";
 import { useToast } from "./use-toast";
+
+// Extend Window interface to add our global methods
+declare global {
+  interface Window {
+    cancelAuthenticationProcess?: () => void;
+  }
+}
+
 // Using inline type definition instead of importing from shared/schema
 type AppUser = {
   id: number;
@@ -45,9 +53,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Process server authentication in a separate effect to avoid blocking UI
   useEffect(() => {
     let isMounted = true;
+    let authTimeout: NodeJS.Timeout;
     
     const performServerAuth = async () => {
       if (!auth.currentUser || !isMounted) return;
+      
+      // Set a timeout to prevent indefinite authentication state
+      authTimeout = setTimeout(() => {
+        if (isMounted && isAuthenticating) {
+          setIsAuthenticating(false);
+          setIsLoading(false);
+          setServerAuthInitiated(false);
+          // Emit an event that the auth page can listen for to show the auth failed message
+          window.dispatchEvent(new CustomEvent('auth:timeout'));
+          toast({
+            title: "Authentication Timeout",
+            description: "Authentication is taking longer than expected. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }, 10000); // 10 second timeout
       
       try {
         const idToken = await auth.currentUser.getIdToken();
@@ -81,6 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       } finally {
         if (isMounted) {
+          clearTimeout(authTimeout);
           setIsLoading(false);
           setIsAuthenticating(false);
           setServerAuthInitiated(false);
@@ -95,6 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       isMounted = false;
+      if (authTimeout) clearTimeout(authTimeout);
     };
   }, [firebaseUser, appUser, serverAuthInitiated, toast]);
 
@@ -148,7 +175,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       setIsAuthenticating(true);
+      
+      // Set a timeout to automatically reset the authenticating state
+      const authTimeout = setTimeout(() => {
+        setIsAuthenticating(false);
+        toast({
+          title: "Login Timeout",
+          description: "Login is taking longer than expected. You can try again.",
+          variant: "destructive",
+        });
+      }, 8000); // 8 second timeout
+      
       await loginWithEmailPassword(email, password);
+      clearTimeout(authTimeout);
       // Firebase auth listener will update the state
     } catch (error: any) {
       setIsAuthenticating(false);
@@ -165,7 +204,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (email: string, password: string, username: string) => {
     try {
       setIsAuthenticating(true);
+      
+      // Set a timeout to automatically reset the authenticating state
+      const authTimeout = setTimeout(() => {
+        setIsAuthenticating(false);
+        toast({
+          title: "Registration Timeout",
+          description: "Registration is taking longer than expected. You can try again.",
+          variant: "destructive",
+        });
+      }, 8000); // 8 second timeout
+      
       await registerWithEmailPassword(email, password);
+      clearTimeout(authTimeout);
       // Firebase auth listener will update the state
     } catch (error: any) {
       setIsAuthenticating(false);
@@ -182,6 +233,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const loginWithGoogleAuth = async () => {
     try {
       setIsAuthenticating(true);
+      
+      // For Google login, we'll also set an authentication timeout
+      // This may be cleared if the page is redirected away, but will help if there's an issue
+      // before redirect occurs
+      setTimeout(() => {
+        setIsAuthenticating(false);
+      }, 5000);
+      
       signInWithGoogle();
       // Redirect will happen, and handleRedirectResult will be called on return
     } catch (error: any) {
@@ -193,6 +252,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       throw error;
     }
+  };
+  
+  // Add a method to allow cancellation of authentication from outside
+  window.cancelAuthenticationProcess = () => {
+    setIsAuthenticating(false);
+    setIsLoading(false);
+    setServerAuthInitiated(false);
+    
+    // Emit event for auth-page to capture
+    window.dispatchEvent(new CustomEvent('auth:cancelled'));
   };
 
   // Logout
