@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useFirebaseAuth } from "@/hooks/useFirebaseAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -60,8 +61,11 @@ const AuthPage = () => {
     },
   });
   
-  // Redirect if already logged in - IMPORTANT: must be after all hook calls
-  if (appUser) {
+  // Get standard auth state
+  const { user, isLoading: authLoading } = useAuth();
+  
+  // Redirect if already logged in (by either auth system) - IMPORTANT: must be after all hook calls
+  if (appUser || user) {
     return <Redirect to="/" />;
   }
 

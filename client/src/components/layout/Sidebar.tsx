@@ -46,7 +46,10 @@ const Sidebar = ({ className }: SidebarProps) => {
           description: t('auth.logoutSuccessMessage'),
           variant: "default",
         });
-        window.location.href = "/auth";
+        // Properly redirect to auth page using wouter's setLocation
+        setTimeout(() => {
+          setLocation("/auth");
+        }, 300);
       },
       onError: (error) => {
         toast({
@@ -87,27 +90,30 @@ const Sidebar = ({ className }: SidebarProps) => {
     <>
       {/* Mobile Top Navigation - Only visible on mobile */}
       <div className="flex md:hidden w-full justify-between items-center px-4 py-2 bg-background/95 backdrop-blur-lg border-b border-gray-800 fixed top-0 left-0 right-0 z-20">
-        <div className="flex items-center">
-          <svg className="h-6 w-6 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="hsl(var(--primary))" strokeWidth="2"/>
-            <path d="M9 16.5V7.5L16.5 12L9 16.5Z" fill="hsl(var(--primary))"/>
-          </svg>
-          <h1 className="text-lg font-bold">Harmonia</h1>
-        </div>
+        <Link href="/">
+          <div className="flex items-center cursor-pointer">
+            <svg className="h-6 w-6 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="hsl(var(--primary))" strokeWidth="2"/>
+              <path d="M9 16.5V7.5L16.5 12L9 16.5Z" fill="hsl(var(--primary))"/>
+            </svg>
+            <h1 className="text-lg font-bold">Harmonia</h1>
+          </div>
+        </Link>
         
         <div className="flex items-center space-x-4">
           {/* Cart */}
-          <div 
-            className={cn(
-              "flex items-center cursor-pointer",
-              location === '/cart'
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-            onClick={() => window.location.href = '/cart'}
-          >
-            <CartIndicator />
-          </div>
+          <Link href="/cart">
+            <div 
+              className={cn(
+                "flex items-center cursor-pointer",
+                location === '/cart'
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <CartIndicator />
+            </div>
+          </Link>
           
           {/* Logout Button for Mobile */}
           {user && (
@@ -129,39 +135,41 @@ const Sidebar = ({ className }: SidebarProps) => {
         "hidden md:flex md:w-64 bg-background-elevated md:h-full md:flex-col md:p-4 md:border-r border-gray-800 md:overflow-y-auto scrollbar-hide md:sticky md:top-0 z-10 backdrop-blur-xl shadow-lg",
         className
       )}>
-        <div className="mb-8 flex items-center">
-          <svg className="h-8 w-8 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="hsl(var(--primary))" strokeWidth="2"/>
-            <path d="M9 16.5V7.5L16.5 12L9 16.5Z" fill="hsl(var(--primary))"/>
-          </svg>
-          <h1 className="text-2xl font-bold">Harmonia</h1>
-        </div>
+        <Link href="/">
+          <div className="mb-8 flex items-center cursor-pointer">
+            <svg className="h-8 w-8 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="hsl(var(--primary))" strokeWidth="2"/>
+              <path d="M9 16.5V7.5L16.5 12L9 16.5Z" fill="hsl(var(--primary))"/>
+            </svg>
+            <h1 className="text-2xl font-bold">Harmonia</h1>
+          </div>
+        </Link>
 
         <nav className="flex-1 overflow-y-auto">
           <div className="space-y-1">
             {navItems.map((item) => (
-              <div 
-                key={item.path}
-                className={cn(
-                  "flex items-center px-4 py-3 rounded-lg group cursor-pointer",
-                  location === item.path
-                    ? "text-white bg-background-highlight"
-                    : "text-muted-foreground hover:text-white hover:bg-background-highlight"
-                )}
-                onClick={() => window.location.href = item.path}
-              >
-                {item.path === '/cart' ? (
-                  <CartIndicator className="mr-3" />
-                ) : (
-                  <item.icon className={cn(
-                    "mr-3 h-5 w-5",
+              <Link key={item.path} href={item.path}>
+                <div 
+                  className={cn(
+                    "flex items-center px-4 py-3 rounded-lg group cursor-pointer",
                     location === item.path
-                      ? "text-primary"
-                      : "group-hover:text-primary"
-                  )} />
-                )}
-                <span className="font-medium">{item.label}</span>
-              </div>
+                      ? "text-white bg-background-highlight"
+                      : "text-muted-foreground hover:text-white hover:bg-background-highlight"
+                  )}
+                >
+                  {item.path === '/cart' ? (
+                    <CartIndicator className="mr-3" />
+                  ) : (
+                    <item.icon className={cn(
+                      "mr-3 h-5 w-5",
+                      location === item.path
+                        ? "text-primary"
+                        : "group-hover:text-primary"
+                    )} />
+                  )}
+                  <span className="font-medium">{item.label}</span>
+                </div>
+              </Link>
             ))}
           </div>
 
@@ -171,19 +179,19 @@ const Sidebar = ({ className }: SidebarProps) => {
             </h3>
             <div className="mt-4 space-y-1">
               {collectionItems.map((item) => (
-                <div 
-                  key={item.path}
-                  className={cn(
-                    "flex items-center px-4 py-2 rounded-lg cursor-pointer",
-                    location === item.path
-                      ? "text-white bg-background-highlight"
-                      : "text-muted-foreground hover:text-white hover:bg-background-highlight"
-                  )}
-                  onClick={() => window.location.href = item.path}
-                >
-                  <item.icon className="mr-3 h-4 w-4" />
-                  <span>{item.label}</span>
-                </div>
+                <Link key={item.path} href={item.path}>
+                  <div 
+                    className={cn(
+                      "flex items-center px-4 py-2 rounded-lg cursor-pointer",
+                      location === item.path
+                        ? "text-white bg-background-highlight"
+                        : "text-muted-foreground hover:text-white hover:bg-background-highlight"
+                    )}
+                  >
+                    <item.icon className="mr-3 h-4 w-4" />
+                    <span>{item.label}</span>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -193,28 +201,29 @@ const Sidebar = ({ className }: SidebarProps) => {
               {t('common.playlists')}
             </h3>
             <div className="mt-4 space-y-1">
-              <div
-                className="flex items-center px-4 py-2 text-muted-foreground hover:text-white hover:bg-background-highlight rounded-lg cursor-pointer"
-                onClick={() => window.location.href = "/playlists/create"}
-              >
-                <Plus className="mr-3 h-4 w-4" />
-                <span>{t('common.createPlaylist')}</span>
-              </div>
+              <Link href="/playlists/create">
+                <div
+                  className="flex items-center px-4 py-2 text-muted-foreground hover:text-white hover:bg-background-highlight rounded-lg cursor-pointer"
+                >
+                  <Plus className="mr-3 h-4 w-4" />
+                  <span>{t('common.createPlaylist')}</span>
+                </div>
+              </Link>
               
               {/* Map through user playlists */}
               {playlists.map((playlist) => (
-                <div 
-                  key={playlist.id}
-                  className={cn(
-                    "flex items-center px-4 py-2 rounded-lg cursor-pointer",
-                    location === `/playlists/${playlist.id}`
-                      ? "text-white bg-background-highlight"
-                      : "text-muted-foreground hover:text-white hover:bg-background-highlight"
-                  )}
-                  onClick={() => window.location.href = `/playlists/${playlist.id}`}
-                >
-                  <span className="truncate">{playlist.name}</span>
-                </div>
+                <Link key={playlist.id} href={`/playlists/${playlist.id}`}>
+                  <div 
+                    className={cn(
+                      "flex items-center px-4 py-2 rounded-lg cursor-pointer",
+                      location === `/playlists/${playlist.id}`
+                        ? "text-white bg-background-highlight"
+                        : "text-muted-foreground hover:text-white hover:bg-background-highlight"
+                    )}
+                  >
+                    <span className="truncate">{playlist.name}</span>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -269,13 +278,14 @@ const Sidebar = ({ className }: SidebarProps) => {
                   <p className="text-xs text-muted-foreground mt-1">
                     {userSubscription?.planId === 2 ? 'Premium' : 'Ultimate'}
                   </p>
-                  <Button 
-                    variant="outline"
-                    className="mt-2 w-full py-2 px-3 text-sm font-medium rounded-lg"
-                    onClick={() => window.location.href = '/subscriptions'}
-                  >
-                    {t('subscription.manageSubscriptions')}
-                  </Button>
+                  <Link href="/subscriptions">
+                    <Button 
+                      variant="outline"
+                      className="mt-2 w-full py-2 px-3 text-sm font-medium rounded-lg"
+                    >
+                      {t('subscription.manageSubscriptions')}
+                    </Button>
+                  </Link>
                 </div>
               );
             }
@@ -285,13 +295,14 @@ const Sidebar = ({ className }: SidebarProps) => {
               <div className="px-4 py-3 bg-primary/10 rounded-lg">
                 <p className="text-sm font-medium text-primary">{t('common.premium')}</p>
                 <p className="text-xs text-muted-foreground mt-1">{t('common.upgrade')}</p>
-                <Button 
-                  variant="default"
-                  className="mt-2 w-full py-2 px-3 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg"
-                  onClick={() => window.location.href = '/subscriptions'}
-                >
-                  {t('common.upgradeNow')}
-                </Button>
+                <Link href="/subscriptions">
+                  <Button 
+                    variant="default"
+                    className="mt-2 w-full py-2 px-3 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg"
+                  >
+                    {t('common.upgradeNow')}
+                  </Button>
+                </Link>
               </div>
             );
           })()}
@@ -301,60 +312,64 @@ const Sidebar = ({ className }: SidebarProps) => {
       {/* Mobile Bottom Navigation - Only visible on mobile */}
       <div className="flex md:hidden w-full justify-around items-center bg-background/95 backdrop-blur-lg border-t border-gray-800 fixed bottom-0 left-0 right-0 z-20">
         {/* Home Button */}
-        <div 
-          className={cn(
-            "flex flex-col items-center justify-center py-2 cursor-pointer",
-            location === '/'
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          onClick={() => window.location.href = '/'}
-        >
-          <Home className="h-5 w-5 mb-1" />
-          <span className="text-xs">{t('common.home')}</span>
-        </div>
+        <Link href="/">
+          <div 
+            className={cn(
+              "flex flex-col items-center justify-center py-2 cursor-pointer",
+              location === '/'
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Home className="h-5 w-5 mb-1" />
+            <span className="text-xs">{t('common.home')}</span>
+          </div>
+        </Link>
         
         {/* Search Button */}
-        <div 
-          className={cn(
-            "flex flex-col items-center justify-center py-2 cursor-pointer",
-            location === '/search'
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          onClick={() => window.location.href = '/search'}
-        >
-          <Search className="h-5 w-5 mb-1" />
-          <span className="text-xs">{t('common.search')}</span>
-        </div>
+        <Link href="/search">
+          <div 
+            className={cn(
+              "flex flex-col items-center justify-center py-2 cursor-pointer",
+              location === '/search'
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Search className="h-5 w-5 mb-1" />
+            <span className="text-xs">{t('common.search')}</span>
+          </div>
+        </Link>
         
         {/* Library Button */}
-        <div 
-          className={cn(
-            "flex flex-col items-center justify-center py-2 cursor-pointer",
-            location.startsWith('/library')
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          onClick={() => window.location.href = '/library'}
-        >
-          <Library className="h-5 w-5 mb-1" />
-          <span className="text-xs">{t('common.library')}</span>
-        </div>
+        <Link href="/library">
+          <div 
+            className={cn(
+              "flex flex-col items-center justify-center py-2 cursor-pointer",
+              location.startsWith('/library')
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Library className="h-5 w-5 mb-1" />
+            <span className="text-xs">{t('common.library')}</span>
+          </div>
+        </Link>
         
         {/* Store Button */}
-        <div 
-          className={cn(
-            "flex flex-col items-center justify-center py-2 cursor-pointer",
-            location === '/store'
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          onClick={() => window.location.href = '/store'}
-        >
-          <ShoppingBag className="h-5 w-5 mb-1" />
-          <span className="text-xs">{t('common.store')}</span>
-        </div>
+        <Link href="/store">
+          <div 
+            className={cn(
+              "flex flex-col items-center justify-center py-2 cursor-pointer",
+              location === '/store'
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <ShoppingBag className="h-5 w-5 mb-1" />
+            <span className="text-xs">{t('common.store')}</span>
+          </div>
+        </Link>
         
         {/* Premium Button */}
         {user && (() => {
@@ -377,54 +392,57 @@ const Sidebar = ({ className }: SidebarProps) => {
           const hasPremiumPlan = userSubscription?.planId === 2 || userSubscription?.planId === 3;
           
           return (
-            <div
-              className={cn(
-                "flex flex-col items-center justify-center py-2 cursor-pointer",
-                location === '/subscriptions'
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              onClick={() => window.location.href = '/subscriptions'}
-            >
-              {hasPremiumPlan ? (
-                <Shield className="h-5 w-5 mb-1 text-primary" />
-              ) : (
-                <Shield className="h-5 w-5 mb-1" />
-              )}
-              <span className="text-xs">
-                {t('common.premium')}
-              </span>
-            </div>
+            <Link href="/subscriptions">
+              <div
+                className={cn(
+                  "flex flex-col items-center justify-center py-2 cursor-pointer",
+                  location === '/subscriptions'
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {hasPremiumPlan ? (
+                  <Shield className="h-5 w-5 mb-1 text-primary" />
+                ) : (
+                  <Shield className="h-5 w-5 mb-1" />
+                )}
+                <span className="text-xs">
+                  {t('common.premium')}
+                </span>
+              </div>
+            </Link>
           );
         })()}
         
         {/* Artist Dashboard Button - Only for artists */}
         {user?.role === 'artist' && (
           <>
-            <div 
-              className={cn(
-                "flex flex-col items-center justify-center py-2 cursor-pointer",
-                location === '/artist-dashboard'
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              onClick={() => window.location.href = '/artist-dashboard'}
-            >
-              <BarChart className="h-5 w-5 mb-1" />
-              <span className="text-xs">{t('common.artistDashboard')}</span>
-            </div>
-            <div 
-              className={cn(
-                "flex flex-col items-center justify-center py-2 cursor-pointer",
-                location === '/artist-profile'
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              onClick={() => window.location.href = '/artist-profile'}
-            >
-              <User className="h-5 w-5 mb-1" />
-              <span className="text-xs">{t('common.artistProfile')}</span>
-            </div>
+            <Link href="/artist-dashboard">
+              <div 
+                className={cn(
+                  "flex flex-col items-center justify-center py-2 cursor-pointer",
+                  location === '/artist-dashboard'
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <BarChart className="h-5 w-5 mb-1" />
+                <span className="text-xs">{t('common.artistDashboard')}</span>
+              </div>
+            </Link>
+            <Link href="/artist-profile">
+              <div 
+                className={cn(
+                  "flex flex-col items-center justify-center py-2 cursor-pointer",
+                  location === '/artist-profile'
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <User className="h-5 w-5 mb-1" />
+                <span className="text-xs">{t('common.artistProfile')}</span>
+              </div>
+            </Link>
           </>
         )}
       </div>

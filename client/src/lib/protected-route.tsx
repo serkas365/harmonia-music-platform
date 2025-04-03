@@ -1,4 +1,5 @@
 import { useFirebaseAuth } from "../hooks/useFirebaseAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
 
@@ -9,7 +10,11 @@ export function ProtectedRoute({
   path: string;
   component: () => React.JSX.Element;
 }) {
-  const { appUser, isLoading } = useFirebaseAuth();
+  const { appUser, isLoading: firebaseLoading } = useFirebaseAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  
+  const isLoading = firebaseLoading || authLoading;
+  const isAuthenticated = appUser || user;
 
   if (isLoading) {
     return (
@@ -21,7 +26,7 @@ export function ProtectedRoute({
     );
   }
 
-  if (!appUser) {
+  if (!isAuthenticated) {
     return (
       <Route path={path}>
         <Redirect to="/auth" />
