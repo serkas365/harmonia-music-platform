@@ -9,16 +9,16 @@ import {
   getRedirectResult 
 } from "firebase/auth";
 
-// Firebase configuration - using provided values directly
-console.log("Using hardcoded Firebase configuration");
-
+// Firebase configuration - using environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyBHcBWA06tKTGx0CfjrK0ujW_PGMmSjgSM",
-  authDomain: "harmonia-music-e2a73.firebaseapp.com",
-  projectId: "harmonia-music-e2a73",
-  storageBucket: "harmonia-music-e2a73.appspot.com",
-  appId: "1:669057862941:web:6b56c72382a587952ee5f4",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
+
+console.log("Firebase configured with project ID:", import.meta.env.VITE_FIREBASE_PROJECT_ID);
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

@@ -74,6 +74,8 @@ const AuthPage = () => {
     setIsSubmitting(true);
     try {
       await login(data.email, data.password);
+      // Force a redirect to home after successful login
+      window.location.href = '/';
     } catch (error) {
       console.error("Login error:", error);
     } finally {
@@ -86,6 +88,8 @@ const AuthPage = () => {
     setIsSubmitting(true);
     try {
       await register(data.email, data.password, data.username);
+      // Force a hard redirect to refresh the auth state
+      window.location.href = '/';
     } catch (error) {
       console.error("Registration error:", error);
     } finally {
@@ -97,6 +101,8 @@ const AuthPage = () => {
   const handleGoogleLogin = async () => {
     try {
       await loginWithGoogle();
+      // No need for a hard redirect here as the Google auth flow
+      // already includes a redirect and the state will be refreshed
     } catch (error) {
       console.error("Google login error:", error);
     }

@@ -159,9 +159,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logoutUser = async () => {
     try {
       setIsLoading(true);
+      
+      // Clear server session first
+      await apiRequest("POST", "/api/auth/logout");
+      
+      // Then sign out from Firebase
       await logout();
+      
+      // Clear local state immediately
       setAppUser(null);
-      // Firebase auth state listener will handle the rest
+      
+      // Force a hard refresh to clear all states and caches
+      window.location.href = '/auth';
+      
     } catch (error: any) {
       toast({
         title: "Logout Failed",
