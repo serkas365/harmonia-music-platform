@@ -32,11 +32,31 @@ interface SidebarProps {
   className?: string;
 }
 
+// Define the subscription data interface outside of the component
+interface SubscriptionData {
+  active: boolean;
+  planId?: number;
+  userId?: number;
+  startDate?: string;
+  endDate?: string;
+  autoRenew?: boolean;
+  paymentMethod?: string;
+}
+
 const Sidebar = ({ className }: SidebarProps) => {
   const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   const { user, logoutMutation } = useAuth();
   const playlists = useLibraryStore((state) => state.playlists);
+  
+  // Need to move all hooks to the top level
+  const { data: userSubscription } = useQuery<SubscriptionData>({
+    queryKey: ['/api/me/subscription'],
+    enabled: !!user, // Only run this query when we have a user
+  });
+  
+  // Compute subscription status at the top level
+  const hasPremiumPlan = userSubscription?.planId === 2 || userSubscription?.planId === 3;
   
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
@@ -85,6 +105,43 @@ const Sidebar = ({ className }: SidebarProps) => {
     { icon: Download, label: t('common.downloaded'), path: '/library/downloaded' },
     { icon: ShoppingCart, label: t('common.purchased'), path: '/library/purchased' },
   ];
+
+  // Render the premium subscription UI based on subscription status
+  const renderSubscriptionUI = () => {
+    if (hasPremiumPlan) {
+      return (
+        <div className="px-4 py-3 bg-primary/10 rounded-lg">
+          <p className="text-sm font-medium text-primary">{t('subscription.subscribed')}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {userSubscription?.planId === 2 ? 'Premium' : 'Ultimate'}
+          </p>
+          <Link href="/subscriptions">
+            <Button 
+              variant="outline"
+              className="mt-2 w-full py-2 px-3 text-sm font-medium rounded-lg"
+            >
+              {t('subscription.manageSubscriptions')}
+            </Button>
+          </Link>
+        </div>
+      );
+    } else {
+      return (
+        <div className="px-4 py-3 bg-primary/10 rounded-lg">
+          <p className="text-sm font-medium text-primary">{t('common.premium')}</p>
+          <p className="text-xs text-muted-foreground mt-1">{t('common.upgrade')}</p>
+          <Link href="/subscriptions">
+            <Button 
+              variant="default"
+              className="mt-2 w-full py-2 px-3 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg"
+            >
+              {t('common.upgradeNow')}
+            </Button>
+          </Link>
+        </div>
+      );
+    }
+  };
 
   return (
     <>
@@ -251,61 +308,7 @@ const Sidebar = ({ className }: SidebarProps) => {
           )}
           
           {/* Subscription upgrade prompt */}
-          {user && (() => {
-            // Check if user has a premium or ultimate subscription
-            interface SubscriptionData {
-              active: boolean;
-              planId?: number;
-              userId?: number;
-              startDate?: string;
-              endDate?: string;
-              autoRenew?: boolean;
-              paymentMethod?: string;
-            }
-            
-            const { data: userSubscription } = useQuery<SubscriptionData>({
-              queryKey: ['/api/me/subscription'],
-              enabled: !!user,
-            });
-            
-            const hasPremiumPlan = userSubscription?.planId === 2 || userSubscription?.planId === 3;
-            
-            // Don't show upgrade prompt for premium users
-            if (hasPremiumPlan) {
-              return (
-                <div className="px-4 py-3 bg-primary/10 rounded-lg">
-                  <p className="text-sm font-medium text-primary">{t('subscription.subscribed')}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {userSubscription?.planId === 2 ? 'Premium' : 'Ultimate'}
-                  </p>
-                  <Link href="/subscriptions">
-                    <Button 
-                      variant="outline"
-                      className="mt-2 w-full py-2 px-3 text-sm font-medium rounded-lg"
-                    >
-                      {t('subscription.manageSubscriptions')}
-                    </Button>
-                  </Link>
-                </div>
-              );
-            }
-            
-            // Show upgrade prompt for free tier users
-            return (
-              <div className="px-4 py-3 bg-primary/10 rounded-lg">
-                <p className="text-sm font-medium text-primary">{t('common.premium')}</p>
-                <p className="text-xs text-muted-foreground mt-1">{t('common.upgrade')}</p>
-                <Link href="/subscriptions">
-                  <Button 
-                    variant="default"
-                    className="mt-2 w-full py-2 px-3 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg"
-                  >
-                    {t('common.upgradeNow')}
-                  </Button>
-                </Link>
-              </div>
-            );
-          })()}
+          {user && renderSubscriptionUI()}
         </div>
       </aside>
       
@@ -372,47 +375,27 @@ const Sidebar = ({ className }: SidebarProps) => {
         </Link>
         
         {/* Premium Button */}
-        {user && (() => {
-          // Check if user has a premium or ultimate subscription
-          interface SubscriptionData {
-            active: boolean;
-            planId?: number;
-            userId?: number;
-            startDate?: string;
-            endDate?: string;
-            autoRenew?: boolean;
-            paymentMethod?: string;
-          }
-          
-          const { data: userSubscription } = useQuery<SubscriptionData>({
-            queryKey: ['/api/me/subscription'],
-            enabled: !!user,
-          });
-          
-          const hasPremiumPlan = userSubscription?.planId === 2 || userSubscription?.planId === 3;
-          
-          return (
-            <Link href="/subscriptions">
-              <div
-                className={cn(
-                  "flex flex-col items-center justify-center py-2 cursor-pointer",
-                  location === '/subscriptions'
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {hasPremiumPlan ? (
-                  <Shield className="h-5 w-5 mb-1 text-primary" />
-                ) : (
-                  <Shield className="h-5 w-5 mb-1" />
-                )}
-                <span className="text-xs">
-                  {t('common.premium')}
-                </span>
-              </div>
-            </Link>
-          );
-        })()}
+        {user && (
+          <Link href="/subscriptions">
+            <div
+              className={cn(
+                "flex flex-col items-center justify-center py-2 cursor-pointer",
+                location === '/subscriptions'
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {hasPremiumPlan ? (
+                <Shield className="h-5 w-5 mb-1 text-primary" />
+              ) : (
+                <Shield className="h-5 w-5 mb-1" />
+              )}
+              <span className="text-xs">
+                {t('common.premium')}
+              </span>
+            </div>
+          </Link>
+        )}
         
         {/* Artist Dashboard Button - Only for artists */}
         {user?.role === 'artist' && (
