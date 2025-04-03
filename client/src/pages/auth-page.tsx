@@ -10,9 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Redirect, Link } from "wouter";
+import { Redirect, Link, useLocation } from "wouter";
 import { Apple, Facebook, Loader2 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
+import { useToast } from "@/hooks/use-toast";
 
 // Define new form schemas for Firebase
 const loginSchema = z.object({
@@ -36,7 +37,9 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 const AuthPage = () => {
   const { t } = useTranslation();
-  const { appUser, isLoading, login, register, loginWithGoogle } = useFirebaseAuth();
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const { appUser, isLoading, isAuthenticating, login, register, loginWithGoogle } = useFirebaseAuth();
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -64,18 +67,36 @@ const AuthPage = () => {
   // Get standard auth state
   const { user, isLoading: authLoading } = useAuth();
   
-  // Redirect if already logged in (by either auth system) - IMPORTANT: must be after all hook calls
-  if (appUser || user) {
-    return <Redirect to="/" />;
-  }
-
+  // Effect for successful authentication - immediately redirect to home
+  useEffect(() => {
+    if (appUser || user) {
+      toast({
+        title: "Welcome to Harmonia",
+        description: `Successfully logged in as ${appUser?.displayName || user?.displayName || 'user'}`,
+      });
+      navigate('/');
+    }
+  }, [appUser, user, navigate, toast]);
+  
   // Handle login submission
   const onLoginSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
     try {
       await login(data.email, data.password);
-    } catch (error) {
+      // The app will redirect when the auth changes in the effect above
+      
+      // Display a message while waiting for authentication to complete
+      toast({
+        title: "Logging in...",
+        description: "Preparing your music experience",
+      });
+    } catch (error: any) {
       console.error("Login error:", error);
+      toast({
+        title: "Login failed",
+        description: error.message || "Please check your credentials and try again",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -86,8 +107,20 @@ const AuthPage = () => {
     setIsSubmitting(true);
     try {
       await register(data.email, data.password, data.username);
-    } catch (error) {
+      // The app will redirect when the auth changes in the effect above
+      
+      // Display a message while waiting for registration to complete
+      toast({
+        title: "Creating account...",
+        description: "Setting up your Harmonia experience",
+      });
+    } catch (error: any) {
       console.error("Registration error:", error);
+      toast({
+        title: "Registration failed",
+        description: error.message || "Please check your information and try again",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -97,11 +130,30 @@ const AuthPage = () => {
   const handleGoogleLogin = async () => {
     try {
       await loginWithGoogle();
-    } catch (error) {
+      // The app will redirect via popup/redirect flow
+      
+      toast({
+        title: "Google authentication in progress...",
+        description: "You'll be redirected to continue",
+      });
+    } catch (error: any) {
       console.error("Google login error:", error);
+      toast({
+        title: "Google login failed",
+        description: error.message || "Please try again later",
+        variant: "destructive"
+      });
     }
   };
+  
+  // If already authenticated, avoid flicker by returning null while the effect redirects
+  if (appUser || user) {
+    return null;
+  }
 
+  // Common loading state between both auth systems
+  const isGlobalLoading = isLoading || authLoading;
+  
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Auth Form Section */}
@@ -113,6 +165,14 @@ const AuthPage = () => {
               <path d="M9 16.5V7.5L16.5 12L9 16.5Z" fill="hsl(var(--primary))"/>
             </svg>
             <h1 className="text-3xl font-bold">Harmonia</h1>
+            
+            {/* Authentication status indicator */}
+            {isAuthenticating && (
+              <div className="ml-auto flex items-center bg-background/60 backdrop-blur-sm px-3 py-1 rounded-full border border-border/40 shadow-sm">
+                <Loader2 className="h-3 w-3 animate-spin mr-2 text-primary" />
+                <span className="text-xs font-medium">Authenticating...</span>
+              </div>
+            )}
           </div>
 
           <Tabs value={authMode} onValueChange={(value) => setAuthMode(value as 'login' | 'register')}>

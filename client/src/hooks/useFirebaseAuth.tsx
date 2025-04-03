@@ -23,6 +23,7 @@ interface AuthContextType {
   firebaseUser: FirebaseUser | null;
   appUser: AppUser | null;
   isLoading: boolean;
+  isAuthenticating: boolean; // Added to distinguish between initial loading and ongoing auth
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, username: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
@@ -37,81 +38,120 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticating, setIsAuthenticating] = useState(false); // Track ongoing authentication
+  const [serverAuthInitiated, setServerAuthInitiated] = useState(false);
   const { toast } = useToast();
+
+  // Process server authentication in a separate effect to avoid blocking UI
+  useEffect(() => {
+    let isMounted = true;
+    
+    const performServerAuth = async () => {
+      if (!auth.currentUser || !isMounted) return;
+      
+      try {
+        const idToken = await auth.currentUser.getIdToken();
+        
+        const response = await apiRequest(
+          "POST", 
+          "/api/auth/verify-token", 
+          { idToken }
+        );
+        
+        if (response.ok && isMounted) {
+          const userData = await response.json();
+          setAppUser(userData);
+        } else if (isMounted) {
+          // If server authentication fails, log out from Firebase
+          await auth.signOut();
+          toast({
+            title: "Authentication Error",
+            description: "Could not authenticate with the server.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Server authentication error:", error);
+        if (isMounted) {
+          toast({
+            title: "Authentication Error",
+            description: "An error occurred during authentication.",
+            variant: "destructive",
+          });
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+          setIsAuthenticating(false);
+          setServerAuthInitiated(false);
+        }
+      }
+    };
+
+    if (firebaseUser && !appUser && !serverAuthInitiated) {
+      setServerAuthInitiated(true);
+      performServerAuth();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [firebaseUser, appUser, serverAuthInitiated, toast]);
 
   // Listen for Firebase auth state changes
   useEffect(() => {
+    let isMounted = true;
+    
+    // Quickly set initial loading to false so UI renders faster
+    const initialLoadTimeout = setTimeout(() => {
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    }, 500);
+    
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!isMounted) return;
+      
+      // Update firebase user immediately to improve perceived performance
       setFirebaseUser(user);
+      
       if (!user) {
         setAppUser(null);
         setIsLoading(false);
-      } else {
-        // When Firebase user is authenticated, verify with our backend
-        handleServerAuth();
+        setIsAuthenticating(false);
       }
+      // Server auth is handled in the separate effect
     });
 
-    // Check for redirect result on component mount
+    // Check for redirect result on component mount - don't block on this
     handleRedirectResult()
       .then((user) => {
-        if (user) {
-          handleServerAuth();
+        if (user && isMounted) {
+          setFirebaseUser(user);
         }
       })
       .catch((error) => {
         console.error("Error handling redirect:", error);
-        setIsLoading(false);
+        if (isMounted) {
+          setIsAuthenticating(false);
+        }
       });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      clearTimeout(initialLoadTimeout);
+      unsubscribe();
+    };
   }, []);
-
-  // Function to handle server authentication after Firebase auth
-  const handleServerAuth = async () => {
-    if (!auth.currentUser) return;
-    
-    try {
-      const idToken = await auth.currentUser.getIdToken();
-      
-      const response = await apiRequest(
-        "POST", 
-        "/api/auth/verify-token", 
-        { idToken }
-      );
-      
-      if (response.ok) {
-        const userData = await response.json();
-        setAppUser(userData);
-      } else {
-        // If server authentication fails, log out from Firebase
-        await auth.signOut();
-        toast({
-          title: "Authentication Error",
-          description: "Could not authenticate with the server.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Server authentication error:", error);
-      toast({
-        title: "Authentication Error",
-        description: "An error occurred during authentication.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Login with email and password
   const login = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
+      setIsAuthenticating(true);
       await loginWithEmailPassword(email, password);
-      // handleServerAuth is called by the auth state listener
+      // Firebase auth listener will update the state
     } catch (error: any) {
-      setIsLoading(false);
+      setIsAuthenticating(false);
       toast({
         title: "Login Failed",
         description: error.message || "Failed to login. Please try again.",
@@ -124,11 +164,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Register with email and password
   const register = async (email: string, password: string, username: string) => {
     try {
-      setIsLoading(true);
+      setIsAuthenticating(true);
       await registerWithEmailPassword(email, password);
-      // handleServerAuth is called by the auth state listener
+      // Firebase auth listener will update the state
     } catch (error: any) {
-      setIsLoading(false);
+      setIsAuthenticating(false);
       toast({
         title: "Registration Failed",
         description: error.message || "Failed to register. Please try again.",
@@ -141,11 +181,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Login with Google
   const loginWithGoogleAuth = async () => {
     try {
-      setIsLoading(true);
+      setIsAuthenticating(true);
       signInWithGoogle();
       // Redirect will happen, and handleRedirectResult will be called on return
     } catch (error: any) {
-      setIsLoading(false);
+      setIsAuthenticating(false);
       toast({
         title: "Google Login Failed",
         description: error.message || "Failed to login with Google. Please try again.",
@@ -158,7 +198,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Logout
   const logoutUser = async () => {
     try {
-      setIsLoading(true);
+      setIsAuthenticating(true);
       await logout();
       setAppUser(null);
       // Firebase auth state listener will handle the rest
@@ -170,7 +210,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       throw error;
     } finally {
-      setIsLoading(false);
+      setIsAuthenticating(false);
     }
   };
 
@@ -178,6 +218,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     firebaseUser,
     appUser,
     isLoading,
+    isAuthenticating,
     login,
     register,
     loginWithGoogle: loginWithGoogleAuth,
