@@ -110,6 +110,7 @@ const Sidebar = ({ className }: SidebarProps) => {
     { icon: Library, label: t('common.library'), path: '/library' },
     { icon: ShoppingBag, label: t('common.store'), path: '/store' },
     { icon: Shield, label: t('common.premium'), path: '/subscriptions' },
+    { icon: User, label: t('common.profile'), path: '/profile' },
     // Cart has special handling for the icon (CartIndicator)
     { icon: ShoppingCart, label: t('common.cart'), path: '/cart' },
   ];
@@ -415,6 +416,25 @@ const Sidebar = ({ className }: SidebarProps) => {
               )}
               <span className="text-xs">
                 {t('common.premium')}
+              </span>
+            </div>
+          </Link>
+        )}
+        
+        {/* Profile Button */}
+        {user && (
+          <Link href="/profile">
+            <div
+              className={cn(
+                "flex flex-col items-center justify-center py-2 cursor-pointer",
+                location === '/profile'
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <User className="h-5 w-5 mb-1" />
+              <span className="text-xs">
+                {t('common.profile')}
               </span>
             </div>
           </Link>

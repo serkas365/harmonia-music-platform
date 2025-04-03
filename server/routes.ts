@@ -438,16 +438,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User settings
+  // User profile and settings
+  app.get("/api/me", ensureAuthenticated, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
+  
+  app.patch("/api/me", ensureAuthenticated, async (req, res) => {
+    try {
+      const { displayName, profileImage } = req.body;
+      const updatedUser = await storage.updateUser(req.user!.id, { 
+        displayName, 
+        profileImage 
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user profile" });
+    }
+  });
+
   app.get("/api/me/preferences", ensureAuthenticated, async (req, res) => {
     try {
       const preferences = await storage.getUserPreferences(req.user!.id);
+      if (!preferences) {
+        return res.status(404).json({ message: "User preferences not found" });
+      }
       res.json(preferences);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user preferences" });
     }
   });
 
+  app.post("/api/me/preferences", ensureAuthenticated, async (req, res) => {
+    try {
+      const preferences = req.body;
+      const updatedPreferences = await storage.saveUserPreferences(req.user!.id, preferences);
+      res.json(updatedPreferences);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user preferences" });
+    }
+  });
+  
+  // Keep this for backward compatibility
   app.put("/api/me/preferences", ensureAuthenticated, async (req, res) => {
     try {
       const preferences = req.body;
