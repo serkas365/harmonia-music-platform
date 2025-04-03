@@ -137,13 +137,13 @@ const ProfilePage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       toast({
-        title: t('profile.updateSuccess'),
-        description: t('profile.profileUpdated'),
+        title: t('profilePage.updateSuccess'),
+        description: t('profilePage.profileUpdated'),
       });
     },
     onError: (error: Error) => {
       toast({
-        title: t('profile.updateError'),
+        title: t('profilePage.updateError'),
         description: error.message,
         variant: 'destructive',
       });
@@ -159,13 +159,13 @@ const ProfilePage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/me/preferences'] });
       toast({
-        title: t('profile.preferencesSuccess'),
-        description: t('profile.preferencesUpdated'),
+        title: t('profilePage.preferencesSuccess'),
+        description: t('profilePage.preferencesUpdated'),
       });
     },
     onError: (error: Error) => {
       toast({
-        title: t('profile.preferencesError'),
+        title: t('profilePage.preferencesError'),
         description: error.message,
         variant: 'destructive',
       });
@@ -206,9 +206,9 @@ const ProfilePage = () => {
         <TabsContent value="profile">
           <Card>
             <CardHeader>
-              <CardTitle>{t('profile.personalInfo', 'Personal Info')}</CardTitle>
+              <CardTitle>{t('profilePage.personalInfo', 'Personal Info')}</CardTitle>
               <CardDescription>
-                {t('profile.personalInfoDesc', 'Update your personal information')}
+                {t('profilePage.personalInfoDesc', 'Update your personal information')}
               </CardDescription>
             </CardHeader>
             <Form {...profileForm}>
@@ -230,13 +230,32 @@ const ProfilePage = () => {
                         name="profileImage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('profile.profileImage', 'Profile Image URL')}</FormLabel>
+                            <FormLabel>{t('profilePage.profileImage', 'Profile Image')}</FormLabel>
                             <FormControl>
                               <Input placeholder="https://example.com/image.jpg" {...field} />
                             </FormControl>
                             <FormDescription>
-                              {t('profile.imageDesc', 'Enter a URL for your profile picture')}
+                              {t('profilePage.imageDesc', 'Enter a URL for your profile picture')}
                             </FormDescription>
+                            <div className="mt-2">
+                              <Label htmlFor="profile-upload">{t('profilePage.or', 'OR upload an image:')}</Label>
+                              <Input 
+                                id="profile-upload" 
+                                type="file" 
+                                accept="image/*"
+                                className="mt-1"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = (event) => {
+                                      field.onChange(event.target?.result);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }} 
+                              />
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -249,12 +268,12 @@ const ProfilePage = () => {
                     name="displayName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('profile.displayName', 'Display Name')}</FormLabel>
+                        <FormLabel>{t('profilePage.displayName', 'Display Name')}</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
                         <FormDescription>
-                          {t('profile.displayNameDesc', 'This is your public display name')}
+                          {t('profilePage.displayNameDesc', 'This is your public display name')}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -266,12 +285,12 @@ const ProfilePage = () => {
                     name="city"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('profile.city', 'City')}</FormLabel>
+                        <FormLabel>{t('profilePage.city', 'City')}</FormLabel>
                         <FormControl>
                           <Input placeholder="New York, London, etc." {...field} />
                         </FormControl>
                         <FormDescription>
-                          {t('profile.cityDesc', 'Your city or location')}
+                          {t('profilePage.cityDesc', 'Your city or location')}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -283,12 +302,12 @@ const ProfilePage = () => {
                     name="favoriteArtists"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('profile.favoriteArtists', 'Favorite Artists')}</FormLabel>
+                        <FormLabel>{t('profilePage.favoriteArtists', 'Favorite Artists')}</FormLabel>
                         <FormControl>
                           <Input placeholder="Artist names, separated by commas" {...field} />
                         </FormControl>
                         <FormDescription>
-                          {t('profile.favoriteArtistsDesc', 'Add your favorite artists, separated by commas')}
+                          {t('profilePage.favoriteArtistsDesc', 'Add your favorite artists, separated by commas')}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -296,7 +315,7 @@ const ProfilePage = () => {
                   />
 
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">{t('profile.socialMedia', 'Social Media')}</h3>
+                    <h3 className="text-lg font-medium">{t('profilePage.socialMedia', 'Social Media')}</h3>
                     
                     <div className="grid gap-4 md:grid-cols-2">
                       <FormField
@@ -379,12 +398,12 @@ const ProfilePage = () => {
                     {updateProfileMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                        {t('profile.saving', 'Saving...')}
+                        {t('profilePage.saving', 'Saving...')}
                       </>
                     ) : (
                       <>
                         <Save className="mr-2 h-4 w-4" /> 
-                        {t('profile.saveChanges', 'Save Changes')}
+                        {t('profilePage.saveChanges', 'Save Changes')}
                       </>
                     )}
                   </Button>
@@ -398,30 +417,30 @@ const ProfilePage = () => {
         <TabsContent value="preferences">
           <Card>
             <CardHeader>
-              <CardTitle>{t('profile.preferences', 'Preferences')}</CardTitle>
+              <CardTitle>{t('profilePage.preferences', 'Preferences')}</CardTitle>
               <CardDescription>
-                {t('profile.preferencesDesc', 'Customize your experience')}
+                {t('profilePage.preferencesDesc', 'Customize your experience')}
               </CardDescription>
             </CardHeader>
             <Form {...preferencesForm}>
               <form onSubmit={preferencesForm.handleSubmit(onPreferencesSubmit)}>
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">{t('profile.appSettings', 'App Settings')}</h3>
+                    <h3 className="text-lg font-medium">{t('profilePage.appSettings', 'App Settings')}</h3>
                     
                     <FormField
                       control={preferencesForm.control}
                       name="language"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t('profile.language', 'Language')}</FormLabel>
+                          <FormLabel>{t('profilePage.language', 'Language')}</FormLabel>
                           <Select 
                             onValueChange={field.onChange} 
                             defaultValue={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder={t('profile.selectLanguage', 'Select language')} />
+                                <SelectValue placeholder={t('profilePage.selectLanguage', 'Select language')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -439,19 +458,19 @@ const ProfilePage = () => {
                       name="theme"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t('profile.theme', 'Theme')}</FormLabel>
+                          <FormLabel>{t('profilePage.theme', 'Theme')}</FormLabel>
                           <Select 
                             onValueChange={field.onChange} 
                             defaultValue={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder={t('profile.selectTheme', 'Select theme')} />
+                                <SelectValue placeholder={t('profilePage.selectTheme', 'Select theme')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="dark">{t('profile.dark', 'Dark')}</SelectItem>
-                              <SelectItem value="light">{t('profile.light', 'Light')}</SelectItem>
+                              <SelectItem value="dark">{t('profilePage.dark', 'Dark')}</SelectItem>
+                              <SelectItem value="light">{t('profilePage.light', 'Light')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -463,14 +482,14 @@ const ProfilePage = () => {
                   <Separator />
                   
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">{t('profile.playbackSettings', 'Playback Settings')}</h3>
+                    <h3 className="text-lg font-medium">{t('profilePage.playbackSettings', 'Playback Settings')}</h3>
                     
                     <FormField
                       control={preferencesForm.control}
                       name="audioQuality"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t('profile.audioQuality', 'Audio Quality')}</FormLabel>
+                          <FormLabel>{t('profilePage.audioQuality', 'Audio Quality')}</FormLabel>
                           <Select 
                             onValueChange={field.onChange} 
                             defaultValue={field.value}
@@ -478,22 +497,22 @@ const ProfilePage = () => {
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder={t('profile.selectQuality', 'Select quality')} />
+                                <SelectValue placeholder={t('profilePage.selectQuality', 'Select quality')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="standard">{t('profile.standard', 'Standard')}</SelectItem>
+                              <SelectItem value="standard">{t('profilePage.standard', 'Standard')}</SelectItem>
                               <SelectItem value="high" disabled={user.subscriptionTier === 'free'}>
-                                {t('profile.high', 'High')} {user.subscriptionTier === 'free' && '(Premium)'}
+                                {t('profilePage.high', 'High')} {user.subscriptionTier === 'free' && '(Premium)'}
                               </SelectItem>
                               <SelectItem value="lossless" disabled={user.subscriptionTier !== 'ultimate'}>
-                                {t('profile.lossless', 'Lossless')} {user.subscriptionTier !== 'ultimate' && '(Ultimate)'}
+                                {t('profilePage.lossless', 'Lossless')} {user.subscriptionTier !== 'ultimate' && '(Ultimate)'}
                               </SelectItem>
                             </SelectContent>
                           </Select>
                           {user.subscriptionTier === 'free' && (
                             <FormDescription>
-                              {t('profile.upgradeForBetterAudio', 'Upgrade to Premium or Ultimate for better audio quality')}
+                              {t('profilePage.upgradeForBetterAudio', 'Upgrade to Premium or Ultimate for better audio quality')}
                             </FormDescription>
                           )}
                           <FormMessage />
@@ -507,9 +526,9 @@ const ProfilePage = () => {
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                           <div className="space-y-0.5">
-                            <FormLabel>{t('profile.autoplay', 'Autoplay')}</FormLabel>
+                            <FormLabel>{t('profilePage.autoplay', 'Autoplay')}</FormLabel>
                             <FormDescription>
-                              {t('profile.autoplayDesc', 'Automatically play songs when opening the app')}
+                              {t('profilePage.autoplayDesc', 'Automatically play songs when opening the app')}
                             </FormDescription>
                           </div>
                           <FormControl>
@@ -526,7 +545,7 @@ const ProfilePage = () => {
                   <Separator />
                   
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">{t('profile.notifications', 'Notifications')}</h3>
+                    <h3 className="text-lg font-medium">{t('profilePage.notifications', 'Notifications')}</h3>
                     
                     <FormField
                       control={preferencesForm.control}
@@ -534,9 +553,9 @@ const ProfilePage = () => {
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                           <div className="space-y-0.5">
-                            <FormLabel>{t('profile.emailNotifications', 'Email Notifications')}</FormLabel>
+                            <FormLabel>{t('profilePage.emailNotifications', 'Email Notifications')}</FormLabel>
                             <FormDescription>
-                              {t('profile.emailNotificationsDesc', 'Receive notifications via email')}
+                              {t('profilePage.emailNotificationsDesc', 'Receive notifications via email')}
                             </FormDescription>
                           </div>
                           <FormControl>
@@ -555,9 +574,9 @@ const ProfilePage = () => {
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                           <div className="space-y-0.5">
-                            <FormLabel>{t('profile.pushNotifications', 'Push Notifications')}</FormLabel>
+                            <FormLabel>{t('profilePage.pushNotifications', 'Push Notifications')}</FormLabel>
                             <FormDescription>
-                              {t('profile.pushNotificationsDesc', 'Receive push notifications in the app')}
+                              {t('profilePage.pushNotificationsDesc', 'Receive push notifications in the app')}
                             </FormDescription>
                           </div>
                           <FormControl>
@@ -576,9 +595,9 @@ const ProfilePage = () => {
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                           <div className="space-y-0.5">
-                            <FormLabel>{t('profile.newReleaseNotifs', 'New Releases')}</FormLabel>
+                            <FormLabel>{t('profilePage.newReleaseNotifs', 'New Releases')}</FormLabel>
                             <FormDescription>
-                              {t('profile.newReleaseNotifsDesc', 'Get notified about new releases from your favorite artists')}
+                              {t('profilePage.newReleaseNotifsDesc', 'Get notified about new releases from your favorite artists')}
                             </FormDescription>
                           </div>
                           <FormControl>
@@ -597,9 +616,9 @@ const ProfilePage = () => {
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                           <div className="space-y-0.5">
-                            <FormLabel>{t('profile.playlistNotifs', 'Playlist Updates')}</FormLabel>
+                            <FormLabel>{t('profilePage.playlistNotifs', 'Playlist Updates')}</FormLabel>
                             <FormDescription>
-                              {t('profile.playlistNotifsDesc', 'Get notified when followed playlists are updated')}
+                              {t('profilePage.playlistNotifsDesc', 'Get notified when followed playlists are updated')}
                             </FormDescription>
                           </div>
                           <FormControl>
@@ -621,12 +640,12 @@ const ProfilePage = () => {
                     {updatePreferencesMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                        {t('profile.saving', 'Saving...')}
+                        {t('profilePage.saving', 'Saving...')}
                       </>
                     ) : (
                       <>
                         <Save className="mr-2 h-4 w-4" /> 
-                        {t('profile.saveChanges', 'Save Changes')}
+                        {t('profilePage.saveChanges', 'Save Changes')}
                       </>
                     )}
                   </Button>
@@ -640,41 +659,41 @@ const ProfilePage = () => {
         <TabsContent value="account">
           <Card>
             <CardHeader>
-              <CardTitle>{t('profile.accountSettings', 'Account Settings')}</CardTitle>
+              <CardTitle>{t('profilePage.accountSettings', 'Account Settings')}</CardTitle>
               <CardDescription>
-                {t('profile.accountSettingsDesc', 'Manage your account')}
+                {t('profilePage.accountSettingsDesc', 'Manage your account')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="font-medium">{t('profile.email', 'Email')}</h3>
+                    <h3 className="font-medium">{t('profilePage.email', 'Email')}</h3>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
                   </div>
-                  <Button variant="outline" size="sm">{t('profile.change', 'Change')}</Button>
+                  <Button variant="outline" size="sm">{t('profilePage.change', 'Change')}</Button>
                 </div>
                 
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="font-medium">{t('profile.username', 'Username')}</h3>
+                    <h3 className="font-medium">{t('profilePage.username', 'Username')}</h3>
                     <p className="text-sm text-muted-foreground">{user.username}</p>
                   </div>
-                  <Button variant="outline" size="sm">{t('profile.change', 'Change')}</Button>
+                  <Button variant="outline" size="sm">{t('profilePage.change', 'Change')}</Button>
                 </div>
                 
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="font-medium">{t('profile.password', 'Password')}</h3>
+                    <h3 className="font-medium">{t('profilePage.password', 'Password')}</h3>
                     <p className="text-sm text-muted-foreground">••••••••</p>
                   </div>
-                  <Button variant="outline" size="sm">{t('profile.change', 'Change')}</Button>
+                  <Button variant="outline" size="sm">{t('profilePage.change', 'Change')}</Button>
                 </div>
                 
                 <Separator />
                 
                 <div className="space-y-2">
-                  <h3 className="font-medium">{t('profile.subscription', 'Subscription')}</h3>
+                  <h3 className="font-medium">{t('profilePage.subscription', 'Subscription')}</h3>
                   <div className="bg-primary/10 p-4 rounded-lg">
                     <div className="flex justify-between items-center">
                       <div>
@@ -683,11 +702,11 @@ const ProfilePage = () => {
                         </p>
                         {user.subscriptionEndDate && (
                           <p className="text-sm text-muted-foreground">
-                            {t('profile.renewsOn', 'Renews on')} {new Date(user.subscriptionEndDate).toLocaleDateString()}
+                            {t('profilePage.renewsOn', 'Renews on')} {new Date(user.subscriptionEndDate).toLocaleDateString()}
                           </p>
                         )}
                       </div>
-                      <Button variant="outline" size="sm">{t('profile.manageSub', 'Manage')}</Button>
+                      <Button variant="outline" size="sm">{t('profilePage.manageSub', 'Manage')}</Button>
                     </div>
                   </div>
                 </div>
@@ -695,8 +714,8 @@ const ProfilePage = () => {
                 <Separator />
                 
                 <div className="space-y-4">
-                  <h3 className="font-medium">{t('profile.dangerZone', 'Danger Zone')}</h3>
-                  <Button variant="destructive">{t('profile.deleteAccount', 'Delete Account')}</Button>
+                  <h3 className="font-medium">{t('profilePage.dangerZone', 'Danger Zone')}</h3>
+                  <Button variant="destructive">{t('profilePage.deleteAccount', 'Delete Account')}</Button>
                 </div>
               </div>
             </CardContent>
