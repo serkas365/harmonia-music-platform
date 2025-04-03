@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import i18n from "i18next";
 import { useAuth } from "@/hooks/use-auth";
+import { useFirebaseAuth } from "@/hooks/useFirebaseAuth";
 import { Playlist } from "@shared/schema";
 import { toast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
@@ -47,6 +48,7 @@ const Sidebar = ({ className }: SidebarProps) => {
   const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   const { user, logoutMutation } = useAuth();
+  const { logoutUser: firebaseLogout } = useFirebaseAuth();
   const playlists = useLibraryStore((state) => state.playlists);
   
   // Need to move all hooks to the top level
@@ -58,27 +60,48 @@ const Sidebar = ({ className }: SidebarProps) => {
   // Compute subscription status at the top level
   const hasPremiumPlan = userSubscription?.planId === 2 || userSubscription?.planId === 3;
   
-  const handleLogout = () => {
-    logoutMutation.mutate(undefined, {
-      onSuccess: () => {
-        toast({
-          title: t('auth.logoutSuccess'),
-          description: t('auth.logoutSuccessMessage'),
-          variant: "default",
-        });
-        // Properly redirect to auth page using wouter's setLocation
-        setTimeout(() => {
+  const handleLogout = async () => {
+    try {
+      // First, log out from Firebase
+      await firebaseLogout();
+      
+      // Then, log out from the server-side auth
+      logoutMutation.mutate(undefined, {
+        onSuccess: () => {
+          toast({
+            title: t('auth.logoutSuccess'),
+            description: t('auth.logoutSuccessMessage'),
+            variant: "default",
+          });
+          
+          // Immediately redirect to auth page
           setLocation("/auth");
-        }, 300);
-      },
-      onError: (error) => {
-        toast({
-          title: t('auth.logoutError'),
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    });
+        },
+        onError: (error) => {
+          toast({
+            title: t('auth.logoutError'),
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+      });
+    } catch (error) {
+      console.error("Firebase logout error:", error);
+      
+      // Even if Firebase logout fails, still try to log out from server
+      logoutMutation.mutate(undefined, {
+        onSuccess: () => {
+          toast({
+            title: t('auth.logoutSuccess'),
+            description: t('auth.logoutSuccessMessage'),
+            variant: "default",
+          });
+          
+          // Immediately redirect to auth page
+          setLocation("/auth");
+        }
+      });
+    }
   };
 
   const baseNavItems = [
