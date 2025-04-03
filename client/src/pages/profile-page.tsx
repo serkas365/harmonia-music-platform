@@ -244,14 +244,85 @@ const ProfilePage = () => {
                                 type="file" 
                                 accept="image/*"
                                 className="mt-1"
-                                onChange={(e) => {
+                                onChange={async (e) => {
                                   const file = e.target.files?.[0];
                                   if (file) {
-                                    const reader = new FileReader();
-                                    reader.onload = (event) => {
-                                      field.onChange(event.target?.result);
+                                    // Create a helper function to resize image
+                                    const resizeImage = (file: File, maxWidth = 800, maxHeight = 800, quality = 0.7): Promise<string> => {
+                                      return new Promise((resolve, reject) => {
+                                        const img = new Image();
+                                        img.onload = () => {
+                                          // Calculate new dimensions while maintaining aspect ratio
+                                          let width = img.width;
+                                          let height = img.height;
+                                          
+                                          if (width > height) {
+                                            if (width > maxWidth) {
+                                              height = Math.round(height * maxWidth / width);
+                                              width = maxWidth;
+                                            }
+                                          } else {
+                                            if (height > maxHeight) {
+                                              width = Math.round(width * maxHeight / height);
+                                              height = maxHeight;
+                                            }
+                                          }
+                                          
+                                          // Create canvas and resize
+                                          const canvas = document.createElement('canvas');
+                                          canvas.width = width;
+                                          canvas.height = height;
+                                          
+                                          const ctx = canvas.getContext('2d');
+                                          if (!ctx) {
+                                            reject(new Error('Could not get canvas context'));
+                                            return;
+                                          }
+                                          
+                                          ctx.drawImage(img, 0, 0, width, height);
+                                          
+                                          // Convert to base64 data URL with reduced quality
+                                          resolve(canvas.toDataURL(file.type, quality));
+                                        };
+                                        
+                                        img.onerror = (err) => reject(err);
+                                        
+                                        // Create object URL for the file
+                                        img.src = URL.createObjectURL(file);
+                                      });
                                     };
-                                    reader.readAsDataURL(file);
+                                    
+                                    try {
+                                      // Show loading toast
+                                      toast({
+                                        title: t('profilePage.processingImage', 'Processing image...'),
+                                        description: t('profilePage.resizingImage', 'Optimizing image size...'),
+                                      });
+                                      
+                                      // Resize image
+                                      const resizedImageUrl = await resizeImage(file);
+                                      field.onChange(resizedImageUrl);
+                                      
+                                      // Show success toast
+                                      toast({
+                                        title: t('profilePage.imageReady', 'Image ready'),
+                                        description: t('profilePage.imageOptimized', 'Image has been optimized and is ready to save.'),
+                                      });
+                                    } catch (error) {
+                                      console.error('Error resizing image:', error);
+                                      toast({
+                                        title: t('profilePage.imageError', 'Image error'),
+                                        description: t('profilePage.imageProcessingError', 'There was an error processing your image.'),
+                                        variant: 'destructive',
+                                      });
+                                      
+                                      // Fallback to regular file reader if resize fails
+                                      const reader = new FileReader();
+                                      reader.onload = (event) => {
+                                        field.onChange(event.target?.result);
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
                                   }
                                 }} 
                               />
