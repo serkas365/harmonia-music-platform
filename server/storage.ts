@@ -172,6 +172,15 @@ export class MemStorage implements IStorage {
       createdAt: now,
       role: (restInsertUser.role || 'user') as 'user' | 'artist' | 'admin',
       artistId: typeof artistId === 'number' ? artistId : undefined,
+      city: undefined,
+      favoriteArtists: undefined,
+      socialMedia: {
+        instagram: '',
+        twitter: '',
+        facebook: '',
+        youtube: '',
+        soundcloud: ''
+      },
       preferences: {
         language: 'en',
         theme: 'dark',
@@ -184,7 +193,8 @@ export class MemStorage implements IStorage {
           playlists: true
         }
       },
-      subscriptionTier: 'free'
+      subscriptionTier: 'free',
+      firebaseUid: restInsertUser.firebaseUid || undefined
     };
     this.users.set(id, user);
     
@@ -604,6 +614,15 @@ export class MemStorage implements IStorage {
         displayName: 'Niki Johnson',
         role: 'user',
         profileImage: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100&h=100',
+        city: 'Los Angeles, CA',
+        favoriteArtists: 'Electric Dreams, Quantum Beats, Sonic Wave',
+        socialMedia: {
+          instagram: '@niki_music_lover',
+          twitter: '@niki23',
+          facebook: 'nikijohnson',
+          youtube: '',
+          soundcloud: 'niki23'
+        },
         createdAt: new Date('2023-01-01'),
         preferences: {
           language: 'en',
@@ -628,6 +647,15 @@ export class MemStorage implements IStorage {
         role: 'artist',
         artistId: 1, // Electric Dreams
         profileImage: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=100&h=100',
+        city: 'New York, NY',
+        favoriteArtists: 'Midnight Cruise, Nova Flames',
+        socialMedia: {
+          instagram: '@electricdreams',
+          twitter: '@electricdreams',
+          facebook: 'electricdreamsofficial',
+          youtube: 'ElectricDreamsMusic',
+          soundcloud: 'electricdreams'
+        },
         createdAt: new Date('2023-01-01'),
         preferences: {
           language: 'en',
@@ -652,6 +680,15 @@ export class MemStorage implements IStorage {
         role: 'artist',
         artistId: 3, // Quantum Beats
         profileImage: 'https://images.unsplash.com/photo-1573497161161-c3e73707e25c?auto=format&fit=crop&q=80&w=100&h=100',
+        city: 'London, UK',
+        favoriteArtists: 'Electric Dreams, Luna Shadows',
+        socialMedia: {
+          instagram: '@quantumbeats',
+          twitter: '@quantumbeats',
+          facebook: 'quantumbeatsmusic',
+          youtube: 'QuantumBeatsOfficial',
+          soundcloud: 'quantumbeats'
+        },
         createdAt: new Date('2023-01-01'),
         preferences: {
           language: 'en',

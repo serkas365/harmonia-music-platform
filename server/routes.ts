@@ -49,8 +49,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }) || user;
       }
       
+      // Add a password property to satisfy the Express.User interface
+      const userWithPassword = { ...user, password: "" } as any;
+      
       // Log in the user using session-based auth
-      req.login(user, (err) => {
+      req.login(userWithPassword, (err) => {
         if (err) {
           return res.status(500).json({ message: "Failed to create session" });
         }

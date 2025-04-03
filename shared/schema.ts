@@ -10,6 +10,9 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
   profileImage: text("profile_image"),
+  city: text("city"),
+  favoriteArtists: text("favorite_artists"),
+  socialMedia: jsonb("social_media").notNull().default({}),
   role: text("role").notNull().default("user"), // Can be 'user', 'artist', or 'admin'
   artistId: integer("artist_id").references(() => artists.id), // Only for artist users
   subscriptionTier: text("subscription_tier").notNull().default("free"),
@@ -163,6 +166,15 @@ export interface User {
   username: string;
   displayName: string;
   profileImage?: string;
+  city?: string;
+  favoriteArtists?: string;
+  socialMedia?: {
+    instagram?: string;
+    twitter?: string;
+    facebook?: string;
+    youtube?: string;
+    soundcloud?: string;
+  };
   role: 'user' | 'artist' | 'admin';
   artistId?: number;
   subscriptionTier: 'free' | 'premium' | 'ultimate';

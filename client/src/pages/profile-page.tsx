@@ -25,6 +25,15 @@ import { Redirect } from "wouter";
 const profileFormSchema = z.object({
   displayName: z.string().min(2, "Display name must be at least 2 characters"),
   profileImage: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
+  city: z.string().optional().or(z.literal('')),
+  socialMedia: z.object({
+    instagram: z.string().optional().or(z.literal('')),
+    twitter: z.string().optional().or(z.literal('')),
+    facebook: z.string().optional().or(z.literal('')),
+    youtube: z.string().optional().or(z.literal('')),
+    soundcloud: z.string().optional().or(z.literal('')),
+  }),
+  favoriteArtists: z.string().optional().or(z.literal('')),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -61,6 +70,15 @@ const ProfilePage = () => {
     defaultValues: {
       displayName: user.displayName || "",
       profileImage: user.profileImage || "",
+      city: user.city || "",
+      socialMedia: {
+        instagram: user.socialMedia?.instagram || "",
+        twitter: user.socialMedia?.twitter || "",
+        facebook: user.socialMedia?.facebook || "",
+        youtube: user.socialMedia?.youtube || "",
+        soundcloud: user.socialMedia?.soundcloud || "",
+      },
+      favoriteArtists: user.favoriteArtists || "",
     },
   });
 
@@ -175,13 +193,13 @@ const ProfilePage = () => {
   
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">{t('profile.title', 'My Profile')}</h1>
+      <h1 className="text-3xl font-bold mb-6">{t('profilePage.title', 'My Profile')}</h1>
       
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="profile">{t('profile.personalInfo', 'Personal Info')}</TabsTrigger>
-          <TabsTrigger value="preferences">{t('profile.preferences', 'Preferences')}</TabsTrigger>
-          <TabsTrigger value="account">{t('profile.account', 'Account')}</TabsTrigger>
+          <TabsTrigger value="profile">{t('profilePage.personalInfo', 'Personal Info')}</TabsTrigger>
+          <TabsTrigger value="preferences">{t('profilePage.preferences', 'Preferences')}</TabsTrigger>
+          <TabsTrigger value="account">{t('profilePage.account', 'Account')}</TabsTrigger>
         </TabsList>
         
         {/* Profile Tab */}
@@ -242,6 +260,116 @@ const ProfilePage = () => {
                       </FormItem>
                     )}
                   />
+
+                  <FormField
+                    control={profileForm.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('profile.city', 'City')}</FormLabel>
+                        <FormControl>
+                          <Input placeholder="New York, London, etc." {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          {t('profile.cityDesc', 'Your city or location')}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={profileForm.control}
+                    name="favoriteArtists"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('profile.favoriteArtists', 'Favorite Artists')}</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Artist names, separated by commas" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          {t('profile.favoriteArtistsDesc', 'Add your favorite artists, separated by commas')}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">{t('profile.socialMedia', 'Social Media')}</h3>
+                    
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <FormField
+                        control={profileForm.control}
+                        name="socialMedia.instagram"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Instagram</FormLabel>
+                            <FormControl>
+                              <Input placeholder="@username" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={profileForm.control}
+                        name="socialMedia.twitter"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Twitter</FormLabel>
+                            <FormControl>
+                              <Input placeholder="@username" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={profileForm.control}
+                        name="socialMedia.facebook"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Facebook</FormLabel>
+                            <FormControl>
+                              <Input placeholder="username or profile URL" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={profileForm.control}
+                        name="socialMedia.youtube"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>YouTube</FormLabel>
+                            <FormControl>
+                              <Input placeholder="channel name or URL" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={profileForm.control}
+                        name="socialMedia.soundcloud"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>SoundCloud</FormLabel>
+                            <FormControl>
+                              <Input placeholder="username" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
                 </CardContent>
                 <CardFooter>
                   <Button 
