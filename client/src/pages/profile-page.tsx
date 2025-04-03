@@ -584,7 +584,7 @@ const ProfilePage = () => {
                           {user.subscriptionTier === 'free' && (
                             <FormDescription>
                               {t('profilePage.upgradeForBetterAudio', 'Upgrade to Premium or Ultimate for better audio quality')}{' '}
-                              <Link href="/subscription" className="underline text-primary hover:text-primary/80">
+                              <Link href="/subscriptions" className="underline text-primary hover:text-primary/80">
                                 {t('profilePage.upgradeNow', 'Upgrade now')}
                               </Link>
                             </FormDescription>
@@ -780,7 +780,7 @@ const ProfilePage = () => {
                           </p>
                         )}
                       </div>
-                      <Link href="/subscription">
+                      <Link href="/subscriptions">
                         <Button variant="outline" size="sm">{t('profilePage.manageSub', 'Manage')}</Button>
                       </Link>
                     </div>
