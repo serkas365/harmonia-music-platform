@@ -830,6 +830,7 @@ export class MemStorage implements IStorage {
         displayName: 'Electric Dreams',
         role: 'artist',
         artistId: 1, // Electric Dreams
+        firebaseUid: 'qUPQo7ekEwf35uTUhvlBK77zv423', // UID from Firebase
         profileImage: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=100&h=100',
         city: 'New York, NY',
         favoriteArtists: 'Midnight Cruise, Nova Flames',
@@ -863,6 +864,7 @@ export class MemStorage implements IStorage {
         displayName: 'Quantum Beats',
         role: 'artist',
         artistId: 3, // Quantum Beats
+        firebaseUid: 'OZ2MUJR3QOQnfTW4pGy4WX43w0E3', // UID from Firebase
         profileImage: 'https://images.unsplash.com/photo-1573497161161-c3e73707e25c?auto=format&fit=crop&q=80&w=100&h=100',
         city: 'London, UK',
         favoriteArtists: 'Electric Dreams, Luna Shadows',
