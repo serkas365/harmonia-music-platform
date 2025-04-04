@@ -151,12 +151,46 @@ export const artistAnalytics = pgTable("artist_analytics", {
   followerCount: integer("follower_count").notNull().default(0),
   period: text("period").notNull(), // 'day', 'week', 'month', 'year', 'all'
   date: timestamp("date").notNull(),
+  // Added fields for more detailed analytics
+  trackId: integer("track_id").references(() => tracks.id),
+  albumId: integer("album_id").references(() => albums.id),
+  countryCode: text("country_code"),
+  platform: text("platform"),
 });
 
 export const artistFollowers = pgTable("artist_followers", {
   userId: integer("user_id").references(() => users.id).notNull(),
   artistId: integer("artist_id").references(() => artists.id).notNull(),
   followedAt: timestamp("followed_at").notNull().defaultNow(),
+});
+
+// Artist Uploads (for tracking upload status)
+export const artistUploads = pgTable("artist_uploads", {
+  id: serial("id").primaryKey(),
+  artistId: integer("artist_id").references(() => artists.id).notNull(),
+  uploadType: text("upload_type").notNull(), // 'track' or 'album'
+  title: text("title").notNull(),
+  status: text("status").notNull().default("pending"), // 'pending', 'processing', 'completed', 'failed'
+  details: jsonb("details").notNull().default({}), // For storing upload details
+  trackId: integer("track_id").references(() => tracks.id), // If a track was created
+  albumId: integer("album_id").references(() => albums.id), // If an album was created
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Artist Royalties
+export const artistRoyalties = pgTable("artist_royalties", {
+  id: serial("id").primaryKey(),
+  artistId: integer("artist_id").references(() => artists.id).notNull(),
+  amount: integer("amount").notNull(), // In cents
+  source: text("source").notNull(), // 'stream', 'purchase', etc.
+  description: text("description").notNull(),
+  trackId: integer("track_id").references(() => tracks.id),
+  albumId: integer("album_id").references(() => albums.id),
+  status: text("status").notNull().default("pending"), // 'pending', 'paid', 'cancelled'
+  transactionId: text("transaction_id"), // For payment processing reference
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  paidAt: timestamp("paid_at"),
 });
 
 // TypeScript interfaces
@@ -312,12 +346,50 @@ export interface ArtistAnalytics {
   followerCount: number;
   period: 'day' | 'week' | 'month' | 'year' | 'all';
   date: Date;
+  trackId?: number;
+  albumId?: number;
+  countryCode?: string;
+  platform?: string;
 }
 
 export interface ArtistFollower {
   userId: number;
   artistId: number;
   followedAt: Date;
+}
+
+export interface ArtistUpload {
+  id: number;
+  artistId: number;
+  uploadType: 'track' | 'album';
+  title: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  details: {
+    coverImage?: string;
+    audioFile?: string;
+    genres?: string[];
+    description?: string;
+    errorMessage?: string;
+    tracklist?: { title: string, audioFile: string, trackNumber: number }[];
+  };
+  trackId?: number;
+  albumId?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ArtistRoyalty {
+  id: number;
+  artistId: number;
+  amount: number;
+  source: 'stream' | 'purchase' | 'other';
+  description: string;
+  trackId?: number;
+  albumId?: number;
+  status: 'pending' | 'paid' | 'cancelled';
+  transactionId?: string;
+  createdAt: Date;
+  paidAt?: Date;
 }
 
 // Insert schemas
@@ -339,6 +411,8 @@ export const insertPlaylistSchema = createInsertSchema(playlists).omit({ id: tru
 export const insertPlaylistTrackSchema = createInsertSchema(playlistTracks).omit({ id: true, addedAt: true });
 export const insertArtistAnalyticsSchema = createInsertSchema(artistAnalytics).omit({ id: true });
 export const insertArtistFollowerSchema = createInsertSchema(artistFollowers).omit({ followedAt: true });
+export const insertArtistUploadSchema = createInsertSchema(artistUploads).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertArtistRoyaltySchema = createInsertSchema(artistRoyalties).omit({ id: true, createdAt: true, paidAt: true });
 
 // Insert types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -354,6 +428,8 @@ export type InsertPlaylist = z.infer<typeof insertPlaylistSchema>;
 export type InsertPlaylistTrack = z.infer<typeof insertPlaylistTrackSchema>;
 export type InsertArtistAnalytics = z.infer<typeof insertArtistAnalyticsSchema>;
 export type InsertArtistFollower = z.infer<typeof insertArtistFollowerSchema>;
+export type InsertArtistUpload = z.infer<typeof insertArtistUploadSchema>;
+export type InsertArtistRoyalty = z.infer<typeof insertArtistRoyaltySchema>;
 
 // Select types
 export type UserSelect = typeof users.$inferSelect;
@@ -369,6 +445,8 @@ export type PlaylistSelect = typeof playlists.$inferSelect;
 export type PlaylistTrackSelect = typeof playlistTracks.$inferSelect;
 export type ArtistAnalyticsSelect = typeof artistAnalytics.$inferSelect;
 export type ArtistFollowerSelect = typeof artistFollowers.$inferSelect;
+export type ArtistUploadSelect = typeof artistUploads.$inferSelect;
+export type ArtistRoyaltySelect = typeof artistRoyalties.$inferSelect;
 
 // Auth-specific schemas
 export const loginSchema = z.object({

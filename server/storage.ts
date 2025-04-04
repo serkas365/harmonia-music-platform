@@ -1,7 +1,9 @@
 import { 
   User, InsertUser, Track, Album, Artist, Playlist, 
   UserPreferences, UserSubscription, SubscriptionPlan,
-  ArtistAnalytics, ArtistFollower, InsertArtistAnalytics, InsertArtistFollower
+  ArtistAnalytics, ArtistFollower, InsertArtistAnalytics, InsertArtistFollower,
+  ArtistUpload, ArtistRoyalty, InsertArtistUpload, InsertTrack, InsertAlbum, 
+  InsertArtistRoyalty
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -73,6 +75,21 @@ export interface IStorage {
   unfollowArtist(userId: number, artistId: number): Promise<void>;
   isFollowingArtist(userId: number, artistId: number): Promise<boolean>;
   
+  // Artist Uploads
+  getArtistUploads(artistId: number): Promise<ArtistUpload[]>;
+  getArtistUpload(id: number): Promise<ArtistUpload | undefined>;
+  createArtistUpload(upload: InsertArtistUpload): Promise<ArtistUpload>;
+  updateArtistUpload(id: number, updates: Partial<ArtistUpload>): Promise<ArtistUpload | undefined>;
+  createTrackFromUpload(artistId: number, trackData: InsertTrack): Promise<Track>;
+  createAlbumFromUpload(artistId: number, albumData: InsertAlbum, tracks?: InsertTrack[]): Promise<Album>;
+  
+  // Artist Royalties
+  getArtistRoyalties(artistId: number): Promise<ArtistRoyalty[]>;
+  getArtistRoyalty(id: number): Promise<ArtistRoyalty | undefined>;
+  createArtistRoyalty(royalty: InsertArtistRoyalty): Promise<ArtistRoyalty>;
+  updateArtistRoyalty(id: number, updates: Partial<ArtistRoyalty>): Promise<ArtistRoyalty | undefined>;
+  getArtistTotalEarnings(artistId: number): Promise<number>; // Returns total earnings in cents
+  
   // Session Store
   sessionStore: Store;
 }
@@ -94,6 +111,8 @@ export class MemStorage implements IStorage {
   private defaultPlaylists: { name: string; coverImage: string; isPublic: boolean; tracks: any[] }[];
   private artistAnalytics: Map<number, ArtistAnalytics>; // Analytics by ID
   private artistFollowers: Map<number, Set<number>>; // artistId -> Set of userIds
+  private artistUploads: Map<number, ArtistUpload>; // Upload records by ID
+  private artistRoyalties: Map<number, ArtistRoyalty>; // Royalty records by ID
   
   currentUserId: number;
   currentTrackId: number;
@@ -103,6 +122,8 @@ export class MemStorage implements IStorage {
   currentSubscriptionPlanId: number;
   currentUserSubscriptionId: number;
   currentAnalyticsId: number;
+  currentUploadId: number;
+  currentRoyaltyId: number;
   
   sessionStore: Store;
 
@@ -123,6 +144,8 @@ export class MemStorage implements IStorage {
     this.defaultPlaylists = [];
     this.artistAnalytics = new Map();
     this.artistFollowers = new Map();
+    this.artistUploads = new Map();
+    this.artistRoyalties = new Map();
     
     this.currentUserId = 1;
     this.currentTrackId = 1;
@@ -132,6 +155,8 @@ export class MemStorage implements IStorage {
     this.currentSubscriptionPlanId = 1;
     this.currentUserSubscriptionId = 1;
     this.currentAnalyticsId = 1;
+    this.currentUploadId = 1;
+    this.currentRoyaltyId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // prune expired entries every 24h
@@ -598,6 +623,165 @@ export class MemStorage implements IStorage {
   async isFollowingArtist(userId: number, artistId: number): Promise<boolean> {
     const followers = this.artistFollowers.get(artistId) || new Set();
     return followers.has(userId);
+  }
+  
+  // Artist Uploads
+  async getArtistUploads(artistId: number): Promise<ArtistUpload[]> {
+    return Array.from(this.artistUploads.values())
+      .filter(upload => upload.artistId === artistId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Newest first
+  }
+  
+  async getArtistUpload(id: number): Promise<ArtistUpload | undefined> {
+    return this.artistUploads.get(id);
+  }
+  
+  async createArtistUpload(upload: InsertArtistUpload): Promise<ArtistUpload> {
+    const id = this.currentUploadId++;
+    const now = new Date();
+    const newUpload: ArtistUpload = {
+      ...upload,
+      id,
+      status: (upload.status || 'pending') as 'pending' | 'processing' | 'completed' | 'failed',
+      createdAt: now,
+      updatedAt: now,
+      details: upload.details || {
+        coverImage: '',
+        audioFile: '',
+        genres: [],
+        description: ''
+      }
+    };
+    
+    this.artistUploads.set(id, newUpload);
+    return newUpload;
+  }
+  
+  async updateArtistUpload(id: number, updates: Partial<ArtistUpload>): Promise<ArtistUpload | undefined> {
+    const upload = this.artistUploads.get(id);
+    if (!upload) return undefined;
+    
+    const updatedUpload = { 
+      ...upload, 
+      ...updates,
+      updatedAt: new Date() 
+    };
+    this.artistUploads.set(id, updatedUpload);
+    return updatedUpload;
+  }
+  
+  async createTrackFromUpload(artistId: number, trackData: InsertTrack): Promise<Track> {
+    const id = this.currentTrackId++;
+    const artist = await this.getArtist(artistId);
+    if (!artist) throw new Error('Artist not found');
+    
+    const track: Track = {
+      ...trackData,
+      id,
+      artistId,
+      artistName: artist.name,
+      albumTitle: trackData.albumTitle || 'Single',
+      purchaseAvailable: trackData.purchaseAvailable ?? true,
+      explicit: trackData.explicit ?? false
+    };
+    
+    this.tracks.set(id, track);
+    return track;
+  }
+  
+  async createAlbumFromUpload(artistId: number, albumData: InsertAlbum, tracks?: InsertTrack[]): Promise<Album> {
+    const id = this.currentAlbumId++;
+    const artist = await this.getArtist(artistId);
+    if (!artist) throw new Error('Artist not found');
+    
+    const album: Album = {
+      ...albumData,
+      id,
+      artistId,
+      artistName: artist.name
+    };
+    
+    this.albums.set(id, album);
+    
+    // Create associated tracks if provided
+    if (tracks && tracks.length > 0) {
+      let trackNumber = 1;
+      for (const trackData of tracks) {
+        const trackId = this.currentTrackId++;
+        const track: Track = {
+          ...trackData,
+          id: trackId,
+          artistId,
+          artistName: artist.name,
+          albumId: id,
+          albumTitle: album.title,
+          trackNumber: trackData.trackNumber || trackNumber++,
+          purchaseAvailable: trackData.purchaseAvailable ?? true,
+          explicit: trackData.explicit ?? false
+        };
+        this.tracks.set(trackId, track);
+      }
+    }
+    
+    return album;
+  }
+  
+  // Artist Royalties
+  async getArtistRoyalties(artistId: number): Promise<ArtistRoyalty[]> {
+    return Array.from(this.artistRoyalties.values())
+      .filter(royalty => royalty.artistId === artistId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Newest first
+  }
+  
+  async getArtistRoyalty(id: number): Promise<ArtistRoyalty | undefined> {
+    return this.artistRoyalties.get(id);
+  }
+  
+  async createArtistRoyalty(royalty: InsertArtistRoyalty): Promise<ArtistRoyalty> {
+    const id = this.currentRoyaltyId++;
+    const now = new Date();
+    const newRoyalty: ArtistRoyalty = {
+      ...royalty,
+      id,
+      status: (royalty.status || 'pending') as 'pending' | 'paid' | 'cancelled',
+      createdAt: now
+    };
+    
+    this.artistRoyalties.set(id, newRoyalty);
+    return newRoyalty;
+  }
+  
+  async updateArtistRoyalty(id: number, updates: Partial<ArtistRoyalty>): Promise<ArtistRoyalty | undefined> {
+    const royalty = this.artistRoyalties.get(id);
+    if (!royalty) return undefined;
+    
+    // If status is changing to paid, set the paidAt date
+    const paidAt = updates.status === 'paid' && royalty.status !== 'paid' 
+      ? new Date() 
+      : royalty.paidAt;
+    
+    const updatedRoyalty = { 
+      ...royalty, 
+      ...updates,
+      paidAt
+    };
+    
+    this.artistRoyalties.set(id, updatedRoyalty);
+    return updatedRoyalty;
+  }
+  
+  async getArtistTotalEarnings(artistId: number): Promise<number> {
+    const royalties = await this.getArtistRoyalties(artistId);
+    const totalPaid = royalties
+      .filter(r => r.status === 'paid')
+      .reduce((total, r) => total + r.amount, 0);
+    
+    const totalPending = royalties
+      .filter(r => r.status === 'pending')
+      .reduce((total, r) => total + r.amount, 0);
+    
+    // Return total amount (paid + pending)
+    return totalPaid + totalPending;
   }
   
   // Sample data initialization - this would be removed in a real application
