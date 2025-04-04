@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import LibraryPage from "@/pages/library-page";
+import SearchPage from "@/pages/search-page";
 import CartPage from "@/pages/cart-page";
 import CheckoutPage from "@/pages/checkout-page";
 import PaymentSuccessPage from "@/pages/payment-success-page";
@@ -75,6 +76,12 @@ function Router() {
       <ProtectedRoute path="/library/:section" component={() => (
         <AppLayout>
           <LibraryPage />
+        </AppLayout>
+      )} />
+      
+      <ProtectedRoute path="/search" component={() => (
+        <AppLayout>
+          <SearchPage />
         </AppLayout>
       )} />
       

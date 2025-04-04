@@ -22,7 +22,9 @@ interface LibraryState {
   addDownloadedTrack: (track: Track) => void;
   removeDownloadedTrack: (trackId: number) => void;
   addPurchasedTrack: (track: Track) => void;
+  removePurchasedTrack: (trackId: number) => void;
   addPurchasedAlbum: (album: Album) => void;
+  removePurchasedAlbum: (albumId: number) => void;
   clearLibrary: () => void;
 }
 
@@ -121,6 +123,14 @@ export const useLibraryStore = create<LibraryState>((set) => ({
   
   addPurchasedAlbum: (album) => set((state) => ({
     purchasedAlbums: [...state.purchasedAlbums.filter(a => a.id !== album.id), album]
+  })),
+  
+  removePurchasedTrack: (trackId) => set((state) => ({
+    purchasedTracks: state.purchasedTracks.filter(track => track.id !== trackId)
+  })),
+  
+  removePurchasedAlbum: (albumId) => set((state) => ({
+    purchasedAlbums: state.purchasedAlbums.filter(album => album.id !== albumId)
   })),
   
   clearLibrary: () => set({

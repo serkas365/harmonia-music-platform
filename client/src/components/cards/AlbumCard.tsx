@@ -13,9 +13,10 @@ interface AlbumCardProps {
   className?: string;
   showArtist?: boolean;
   showBuyButton?: boolean;
+  actionButton?: React.ReactNode;
 }
 
-const AlbumCard = ({ album, className, showArtist = true, showBuyButton = false }: AlbumCardProps) => {
+const AlbumCard = ({ album, className, showArtist = true, showBuyButton = false, actionButton }: AlbumCardProps) => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const playTracks = usePlayerStore((state) => state.playTracks);
@@ -58,6 +59,7 @@ const AlbumCard = ({ album, className, showArtist = true, showBuyButton = false 
           alt={`${album.title} by ${album.artistName}`} 
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
+        {actionButton}
         <button 
           className="absolute right-2 bottom-2 bg-primary text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
           onClick={(e) => {

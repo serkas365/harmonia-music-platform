@@ -14,9 +14,10 @@ interface TrackCardProps {
   className?: string;
   compact?: boolean;
   showBuyButton?: boolean;
+  actionButton?: React.ReactNode;
 }
 
-const TrackCard = ({ track, className, compact = false, showBuyButton = false }: TrackCardProps) => {
+const TrackCard = ({ track, className, compact = false, showBuyButton = false, actionButton }: TrackCardProps) => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const playTrack = usePlayerStore((state) => state.playTrack);
@@ -128,30 +129,36 @@ const TrackCard = ({ track, className, compact = false, showBuyButton = false }:
             </Button>
           )}
           
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-white h-8 w-8"
-            onClick={handleLike}
-          >
-            <Heart className="h-4 w-4" fill={isLiked ? "currentColor" : "none"} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-white h-8 w-8"
-            onClick={handleAddToPlaylist}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-white h-8 w-8"
-            onClick={handleAddToQueue}
-          >
-            <ListMusic className="h-4 w-4" />
-          </Button>
+          {/* Render custom action button if provided */}
+          {actionButton || (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-white h-8 w-8"
+                onClick={handleLike}
+              >
+                <Heart className="h-4 w-4" fill={isLiked ? "currentColor" : "none"} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-white h-8 w-8"
+                onClick={handleAddToPlaylist}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-white h-8 w-8"
+                onClick={handleAddToQueue}
+              >
+                <ListMusic className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+          
           <Button
             variant="default"
             size="icon"
