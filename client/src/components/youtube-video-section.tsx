@@ -56,7 +56,7 @@ const YoutubeVideoSection = ({ artistId, videos: initialVideos, channelId }: You
           <h2 className="text-xl font-bold">{t('common.latestVideos')}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[1, 2, 3, 4].map(i => (
+          {[1, 2].map(i => (
             <div key={i}>
               <Skeleton className="aspect-video w-full rounded-md mb-2" />
               <Skeleton className="h-4 w-2/3" />
@@ -90,8 +90,8 @@ const YoutubeVideoSection = ({ artistId, videos: initialVideos, channelId }: You
     return null;
   }
   
-  // Take only the first 4 videos
-  const displayVideos = videos.slice(0, 4);
+  // Take only the first 2 videos
+  const displayVideos = videos.slice(0, 2);
 
   return (
     <>
@@ -166,22 +166,29 @@ const YoutubeVideoSection = ({ artistId, videos: initialVideos, channelId }: You
         open={!!selectedVideoId} 
         onOpenChange={(open) => !open && setSelectedVideoId(null)}
       >
-        <DialogContent className="sm:max-w-[90vw] max-h-[90vh] p-0 bg-black border-0">
-          <DialogHeader className="p-4">
-            <DialogTitle className="text-white">
+        <DialogContent className="w-[95vw] sm:max-w-[90vw] max-h-[90vh] p-0 bg-black border-0" 
+          aria-describedby="video-player-description"
+        >
+          <DialogHeader className="p-2 sm:p-4">
+            <DialogTitle className="text-white text-sm sm:text-base">
               {selectedVideoId && videos.find(v => v.id === selectedVideoId)?.title}
             </DialogTitle>
+            <p id="video-player-description" className="sr-only">
+              {t('common.watchVideo')}
+            </p>
           </DialogHeader>
           {selectedVideoId && (
-            <div className="w-full aspect-video">
-              <iframe
-                src={getEmbedUrl(selectedVideoId)}
-                title={videos.find(v => v.id === selectedVideoId)?.title || "YouTube Video"}
-                className="w-full h-full"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
+            <div className="w-full h-auto">
+              <div className="relative w-full pb-[56.25%]">
+                <iframe
+                  src={getEmbedUrl(selectedVideoId)}
+                  title={videos.find(v => v.id === selectedVideoId)?.title || "YouTube Video"}
+                  className="absolute top-0 left-0 w-full h-full"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                ></iframe>
+              </div>
             </div>
           )}
         </DialogContent>
