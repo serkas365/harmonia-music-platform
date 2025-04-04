@@ -2,8 +2,8 @@ import {
   User, InsertUser, Track, Album, Artist, Playlist, 
   UserPreferences, UserSubscription, SubscriptionPlan,
   ArtistAnalytics, ArtistFollower, InsertArtistAnalytics, InsertArtistFollower,
-  ArtistUpload, ArtistRoyalty, InsertArtistUpload, InsertTrack, InsertAlbum, 
-  InsertArtistRoyalty
+  ArtistUpload, ArtistRoyalty, ArtistEvent, InsertArtistUpload, InsertTrack, InsertAlbum, 
+  InsertArtistRoyalty, InsertArtistEvent
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -90,6 +90,13 @@ export interface IStorage {
   updateArtistRoyalty(id: number, updates: Partial<ArtistRoyalty>): Promise<ArtistRoyalty | undefined>;
   getArtistTotalEarnings(artistId: number): Promise<number>; // Returns total earnings in cents
   
+  // Artist Events
+  getArtistEvents(artistId: number): Promise<ArtistEvent[]>;
+  getArtistEvent(id: number): Promise<ArtistEvent | undefined>;
+  createArtistEvent(event: InsertArtistEvent): Promise<ArtistEvent>;
+  updateArtistEvent(id: number, updates: Partial<ArtistEvent>): Promise<ArtistEvent | undefined>;
+  deleteArtistEvent(id: number): Promise<boolean>;
+  
   // Session Store
   sessionStore: Store;
 }
@@ -113,6 +120,7 @@ export class MemStorage implements IStorage {
   private artistFollowers: Map<number, Set<number>>; // artistId -> Set of userIds
   private artistUploads: Map<number, ArtistUpload>; // Upload records by ID
   private artistRoyalties: Map<number, ArtistRoyalty>; // Royalty records by ID
+  private artistEvents: Map<number, ArtistEvent>; // Event records by ID
   
   currentUserId: number;
   currentTrackId: number;
@@ -124,6 +132,7 @@ export class MemStorage implements IStorage {
   currentAnalyticsId: number;
   currentUploadId: number;
   currentRoyaltyId: number;
+  currentEventId: number;
   
   sessionStore: Store;
 
@@ -146,6 +155,7 @@ export class MemStorage implements IStorage {
     this.artistFollowers = new Map();
     this.artistUploads = new Map();
     this.artistRoyalties = new Map();
+    this.artistEvents = new Map();
     
     this.currentUserId = 1;
     this.currentTrackId = 1;
@@ -157,6 +167,7 @@ export class MemStorage implements IStorage {
     this.currentAnalyticsId = 1;
     this.currentUploadId = 1;
     this.currentRoyaltyId = 1;
+    this.currentEventId = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // prune expired entries every 24h
@@ -784,6 +795,46 @@ export class MemStorage implements IStorage {
     return totalPaid + totalPending;
   }
   
+  // Artist Events
+  async getArtistEvents(artistId: number): Promise<ArtistEvent[]> {
+    return Array.from(this.artistEvents.values())
+      .filter(event => event.artistId === artistId)
+      .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
+  }
+  
+  async getArtistEvent(id: number): Promise<ArtistEvent | undefined> {
+    return this.artistEvents.get(id);
+  }
+  
+  async createArtistEvent(event: InsertArtistEvent): Promise<ArtistEvent> {
+    const id = this.currentEventId++;
+    const now = new Date();
+    
+    const newEvent: ArtistEvent = {
+      ...event,
+      id,
+      createdAt: now,
+      // Ensure guestArtists is an array if not provided
+      guestArtists: event.guestArtists || []
+    };
+    
+    this.artistEvents.set(id, newEvent);
+    return newEvent;
+  }
+  
+  async updateArtistEvent(id: number, updates: Partial<ArtistEvent>): Promise<ArtistEvent | undefined> {
+    const event = this.artistEvents.get(id);
+    if (!event) return undefined;
+    
+    const updatedEvent = { ...event, ...updates };
+    this.artistEvents.set(id, updatedEvent);
+    return updatedEvent;
+  }
+  
+  async deleteArtistEvent(id: number): Promise<boolean> {
+    return this.artistEvents.delete(id);
+  }
+  
   // Sample data initialization - this would be removed in a real application
   // but is useful for development purposes
   private initializeSampleData() {
@@ -1305,6 +1356,78 @@ export class MemStorage implements IStorage {
     // Add tracks to storage
     tracks.forEach(track => {
       this.tracks.set(track.id, track);
+    });
+    
+    // Create sample artist events
+    const events = [
+      // Electric Dreams events
+      {
+        artistId: 1,
+        name: "Electric Dreams Summer Tour",
+        description: "Join Electric Dreams for an unforgettable summer night of electronic music at the iconic Sunset Amphitheater.",
+        eventDate: new Date("2025-07-15"),
+        eventTime: "20:00",
+        venue: "Sunset Amphitheater",
+        city: "Los Angeles",
+        country: "USA",
+        ticketLink: "https://ticketmaster.com/electric-dreams-tour",
+        tourName: "Cosmic Waves Tour 2025",
+        guestArtists: ["Luna Shadows", "Midnight Cruise"],
+        eventImage: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=600&h=400",
+        createdAt: new Date()
+      },
+      {
+        artistId: 1,
+        name: "Electronic Music Festival",
+        description: "Electric Dreams will be headlining the annual Electronic Music Festival, featuring the best in ambient and downtempo.",
+        eventDate: new Date("2025-08-20"),
+        eventTime: "18:30",
+        venue: "Central Park",
+        city: "New York",
+        country: "USA",
+        ticketLink: "https://ticketmaster.com/electronic-music-festival",
+        tourName: "Cosmic Waves Tour 2025",
+        guestArtists: ["Quantum Beats", "Nova Flames"],
+        eventImage: "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=600&h=400",
+        createdAt: new Date()
+      },
+      // Quantum Beats events
+      {
+        artistId: 3,
+        name: "Future Beats Showcase",
+        description: "Quantum Beats presents an evening of cutting-edge hip-hop and electronic fusion.",
+        eventDate: new Date("2025-06-10"),
+        eventTime: "21:00",
+        venue: "The Echo",
+        city: "Los Angeles",
+        country: "USA",
+        ticketLink: "https://ticketmaster.com/quantum-beats-showcase",
+        tourName: "Quantum Leap Tour",
+        guestArtists: ["Electric Dreams"],
+        eventImage: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80&w=600&h=400",
+        createdAt: new Date()
+      },
+      {
+        artistId: 3,
+        name: "London Underground",
+        description: "Quantum Beats returns to London for an intimate show featuring new material.",
+        eventDate: new Date("2025-09-05"),
+        eventTime: "20:30",
+        venue: "Roundhouse",
+        city: "London",
+        country: "UK",
+        ticketLink: "https://ticketmaster.co.uk/quantum-beats-underground",
+        tourName: "Quantum Leap Tour",
+        guestArtists: [],
+        eventImage: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&q=80&w=600&h=400",
+        createdAt: new Date()
+      }
+    ];
+    
+    // Add events to storage
+    events.forEach(event => {
+      const id = this.currentEventId++;
+      this.artistEvents.set(id, { ...event, id });
     });
     
     // Create default playlist templates that will be cloned for each new user

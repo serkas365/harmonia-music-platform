@@ -39,6 +39,10 @@ export const artists = pgTable("artists", {
   genres: text("genres").array().notNull(),
   socialLinks: jsonb("social_links").notNull().default({}),
   verified: boolean("verified").notNull().default(false),
+  youtubeChannelId: text("youtube_channel_id"),
+  twitterUsername: text("twitter_username"),
+  instagramUsername: text("instagram_username"),
+  monthlyListeners: integer("monthly_listeners").default(0),
 });
 
 export const albums = pgTable("albums", {
@@ -193,6 +197,24 @@ export const artistRoyalties = pgTable("artist_royalties", {
   paidAt: timestamp("paid_at"),
 });
 
+// Artist Events
+export const artistEvents = pgTable("artist_events", {
+  id: serial("id").primaryKey(),
+  artistId: integer("artist_id").references(() => artists.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  eventDate: timestamp("event_date").notNull(),
+  eventTime: text("event_time").notNull(),
+  venue: text("venue").notNull(),
+  city: text("city").notNull(),
+  country: text("country").notNull(),
+  ticketLink: text("ticket_link"),
+  tourName: text("tour_name"),
+  guestArtists: text("guest_artists").array(),
+  eventImage: text("event_image"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // TypeScript interfaces
 export interface User {
   id: number;
@@ -250,6 +272,10 @@ export interface Artist {
     soundcloud?: string;
   };
   verified: boolean;
+  youtubeChannelId?: string;
+  twitterUsername?: string;
+  instagramUsername?: string;
+  monthlyListeners?: number;
 }
 
 export interface Album {
@@ -392,6 +418,23 @@ export interface ArtistRoyalty {
   paidAt?: Date;
 }
 
+export interface ArtistEvent {
+  id: number;
+  artistId: number;
+  name: string;
+  description: string;
+  eventDate: Date;
+  eventTime: string;
+  venue: string;
+  city: string;
+  country: string;
+  ticketLink?: string;
+  tourName?: string;
+  guestArtists: string[];
+  eventImage?: string;
+  createdAt: Date;
+}
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -413,6 +456,7 @@ export const insertArtistAnalyticsSchema = createInsertSchema(artistAnalytics).o
 export const insertArtistFollowerSchema = createInsertSchema(artistFollowers).omit({ followedAt: true });
 export const insertArtistUploadSchema = createInsertSchema(artistUploads).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertArtistRoyaltySchema = createInsertSchema(artistRoyalties).omit({ id: true, createdAt: true, paidAt: true });
+export const insertArtistEventSchema = createInsertSchema(artistEvents).omit({ id: true, createdAt: true });
 
 // Insert types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -430,6 +474,7 @@ export type InsertArtistAnalytics = z.infer<typeof insertArtistAnalyticsSchema>;
 export type InsertArtistFollower = z.infer<typeof insertArtistFollowerSchema>;
 export type InsertArtistUpload = z.infer<typeof insertArtistUploadSchema>;
 export type InsertArtistRoyalty = z.infer<typeof insertArtistRoyaltySchema>;
+export type InsertArtistEvent = z.infer<typeof insertArtistEventSchema>;
 
 // Select types
 export type UserSelect = typeof users.$inferSelect;
@@ -447,6 +492,7 @@ export type ArtistAnalyticsSelect = typeof artistAnalytics.$inferSelect;
 export type ArtistFollowerSelect = typeof artistFollowers.$inferSelect;
 export type ArtistUploadSelect = typeof artistUploads.$inferSelect;
 export type ArtistRoyaltySelect = typeof artistRoyalties.$inferSelect;
+export type ArtistEventSelect = typeof artistEvents.$inferSelect;
 
 // Auth-specific schemas
 export const loginSchema = z.object({

@@ -18,6 +18,7 @@ import SubscriptionPage from "@/pages/subscription-page";
 import SubscriptionPaymentPage from "@/pages/subscription-payment-page";
 import ArtistDashboardPage from "@/pages/artist-dashboard-page";
 import ArtistProfilePage from "@/pages/artist-profile-page";
+import ArtistPage from "@/pages/artist-page";
 import ProfilePage from "@/pages/profile-page";
 import CreatePlaylistPage from "@/pages/create-playlist-page";
 import PlaylistPage from "@/pages/playlist-page";
@@ -146,6 +147,12 @@ function Router() {
       <ProtectedRoute path="/playlists/:id" component={() => (
         <AppLayout>
           <PlaylistPage />
+        </AppLayout>
+      )} />
+      
+      <ProtectedRoute path="/artists/:id" component={() => (
+        <AppLayout>
+          <ArtistPage />
         </AppLayout>
       )} />
       

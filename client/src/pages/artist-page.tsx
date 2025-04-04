@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Artist, Album, Track } from "@shared/schema";
+import { Artist, Album, Track, ArtistEvent } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BadgeCheck, ExternalLink, Calendar, Music } from "lucide-react";
+import { BadgeCheck, ExternalLink, Calendar, Music, MapPin, Clock, Users, Ticket } from "lucide-react";
 import AlbumCard from "@/components/cards/AlbumCard";
 import TrackCard from "@/components/cards/TrackCard";
 import { formatDate } from "@/lib/utils";
@@ -43,6 +43,16 @@ const ArtistPage = () => {
     error: tracksError,
   } = useQuery<Track[]>({
     queryKey: [`/api/artists/${id}/tracks`],
+    enabled: !!id,
+  });
+  
+  // Fetch artist's events
+  const {
+    data: events,
+    isLoading: isLoadingEvents,
+    error: eventsError,
+  } = useQuery<ArtistEvent[]>({
+    queryKey: [`/api/artists/${id}/events`],
     enabled: !!id,
   });
   
@@ -136,6 +146,7 @@ const ArtistPage = () => {
           <TabsTrigger value="overview">{t('common.overview')}</TabsTrigger>
           <TabsTrigger value="albums">{t('common.albums')}</TabsTrigger>
           <TabsTrigger value="tracks">{t('common.tracks')}</TabsTrigger>
+          <TabsTrigger value="events">{t('common.events')}</TabsTrigger>
           <TabsTrigger value="about">{t('common.about')}</TabsTrigger>
         </TabsList>
         
@@ -211,6 +222,72 @@ const ArtistPage = () => {
               </div>
             )}
           </section>
+          
+          {/* Upcoming Events Section */}
+          {events && events.length > 0 && (
+            <section>
+              <h2 className="text-xl font-bold mb-4">{t('common.upcomingEvents')}</h2>
+              <div className="space-y-4">
+                {events.slice(0, 3).map(event => (
+                  <div key={event.id} className="bg-background-elevated rounded-lg p-4 hover:bg-background-highlight transition-colors">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      {/* Event Image */}
+                      <div className="md:col-span-1">
+                        <img 
+                          src={event.eventImage || 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80&w=600&h=400'} 
+                          alt={event.name}
+                          className="w-full h-40 object-cover rounded-md"
+                        />
+                      </div>
+                      
+                      {/* Event Details */}
+                      <div className="md:col-span-3">
+                        <h3 className="text-lg font-bold mb-2">{event.name}</h3>
+                        <p className="text-sm text-muted-foreground mb-3">{event.description}</p>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mb-4">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-primary" />
+                            <span>{formatDate(new Date(event.eventDate))}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-primary" />
+                            <span>{event.eventTime}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-primary" />
+                            <span>{event.venue}, {event.city}, {event.country}</span>
+                          </div>
+                          {event.guestArtists.length > 0 && (
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-primary" />
+                              <span>{t('common.with')} {event.guestArtists.join(', ')}</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {event.ticketLink && (
+                          <Button size="sm" asChild>
+                            <a href={event.ticketLink} target="_blank" rel="noopener noreferrer">
+                              <Ticket className="mr-1 h-4 w-4" /> {t('common.getTickets')}
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {events.length > 3 && (
+                  <div className="text-center mt-4">
+                    <Button variant="outline" onClick={() => setActiveTab("events")}>
+                      {t('common.seeAllEvents')}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
         </TabsContent>
         
         {/* Albums Tab */}
@@ -266,6 +343,99 @@ const ArtistPage = () => {
               </div>
             )}
           </div>
+        </TabsContent>
+        
+        {/* Events Tab */}
+        <TabsContent value="events">
+          <h2 className="text-xl font-bold mb-4">{t('common.allEvents')}</h2>
+          
+          {isLoadingEvents ? (
+            // Loading skeletons
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="bg-background-elevated rounded-lg p-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="md:col-span-1">
+                    <Skeleton className="w-full h-40 rounded-md" />
+                  </div>
+                  <div className="md:col-span-3">
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-full mb-3" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+                      <Skeleton className="h-4 w-1/3" />
+                      <Skeleton className="h-4 w-1/3" />
+                      <Skeleton className="h-4 w-2/3" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+                    <Skeleton className="h-8 w-24" />
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : events && events.length > 0 ? (
+            <div className="space-y-4">
+              {events.map(event => (
+                <div key={event.id} className="bg-background-elevated rounded-lg p-4 hover:bg-background-highlight transition-colors">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {/* Event Image */}
+                    <div className="md:col-span-1">
+                      <img 
+                        src={event.eventImage || 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80&w=600&h=400'} 
+                        alt={event.name}
+                        className="w-full h-40 object-cover rounded-md"
+                      />
+                    </div>
+                    
+                    {/* Event Details */}
+                    <div className="md:col-span-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-bold">{event.name}</h3>
+                        {event.tourName && (
+                          <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">
+                            {event.tourName}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <p className="text-sm text-muted-foreground mb-3">{event.description}</p>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mb-4">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-primary" />
+                          <span>{formatDate(new Date(event.eventDate))}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-primary" />
+                          <span>{event.eventTime}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          <span>{event.venue}, {event.city}, {event.country}</span>
+                        </div>
+                        {event.guestArtists.length > 0 && (
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-primary" />
+                            <span>{t('common.with')} {event.guestArtists.join(', ')}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {event.ticketLink && (
+                        <Button size="sm" asChild>
+                          <a href={event.ticketLink} target="_blank" rel="noopener noreferrer">
+                            <Ticket className="mr-1 h-4 w-4" /> {t('common.getTickets')}
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 text-muted-foreground bg-background-elevated rounded-lg">
+              <p>{t('common.noUpcomingEvents')}</p>
+            </div>
+          )}
         </TabsContent>
         
         {/* About Tab */}

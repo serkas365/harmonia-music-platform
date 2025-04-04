@@ -792,6 +792,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Artist Events
+  app.get("/api/artist-dashboard/events", ensureArtistRole, async (req, res) => {
+    try {
+      // Verify the user has an artist profile
+      if (!req.user!.artistId) {
+        return res.status(404).json({ message: "Artist profile not found" });
+      }
+      
+      const events = await storage.getArtistEvents(req.user!.artistId);
+      res.json(events);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch artist events" });
+    }
+  });
+  
+  app.get("/api/artist-dashboard/events/:id", ensureArtistRole, async (req, res) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      const event = await storage.getArtistEvent(eventId);
+      
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      // Verify the requesting artist is the owner of this event
+      if (event.artistId !== req.user!.artistId) {
+        return res.status(403).json({ message: "Not authorized to access this event" });
+      }
+      
+      res.json(event);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch event details" });
+    }
+  });
+  
+  app.post("/api/artist-dashboard/events", ensureArtistRole, async (req, res) => {
+    try {
+      // Verify the user has an artist profile
+      if (!req.user!.artistId) {
+        return res.status(404).json({ message: "Artist profile not found" });
+      }
+      
+      const eventData = {
+        ...req.body,
+        artistId: req.user!.artistId
+      };
+      
+      const event = await storage.createArtistEvent(eventData);
+      res.status(201).json(event);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create event" });
+    }
+  });
+  
+  app.put("/api/artist-dashboard/events/:id", ensureArtistRole, async (req, res) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      const event = await storage.getArtistEvent(eventId);
+      
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      // Verify the requesting artist is the owner of this event
+      if (event.artistId !== req.user!.artistId) {
+        return res.status(403).json({ message: "Not authorized to modify this event" });
+      }
+      
+      const updatedEvent = await storage.updateArtistEvent(eventId, req.body);
+      res.json(updatedEvent);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update event" });
+    }
+  });
+  
+  app.delete("/api/artist-dashboard/events/:id", ensureArtistRole, async (req, res) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      const event = await storage.getArtistEvent(eventId);
+      
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      // Verify the requesting artist is the owner of this event
+      if (event.artistId !== req.user!.artistId) {
+        return res.status(403).json({ message: "Not authorized to delete this event" });
+      }
+      
+      await storage.deleteArtistEvent(eventId);
+      res.json({ message: "Event deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete event" });
+    }
+  });
+  
+  // Public events endpoint to get events for a specific artist
+  app.get("/api/artists/:id/events", async (req, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const events = await storage.getArtistEvents(artistId);
+      
+      // Sort events by date (upcoming first)
+      const sortedEvents = events.sort((a, b) => 
+        new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
+      );
+      
+      res.json(sortedEvents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch artist events" });
+    }
+  });
+  
   // Artist Follow/Unfollow
   app.post("/api/artists/:id/follow", ensureAuthenticated, async (req, res) => {
     try {
