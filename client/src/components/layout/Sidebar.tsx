@@ -115,12 +115,11 @@ const Sidebar = ({ className }: SidebarProps) => {
     { icon: ShoppingCart, label: t('common.cart'), path: '/cart' },
   ];
   
-  // Add Artist Dashboard and Profile links for users with artist role
+  // Add Artist Dashboard link for users with artist role
   const navItems = user?.role === 'artist' 
     ? [
         ...baseNavItems, 
-        { icon: BarChart, label: t('common.artistDashboard'), path: '/artist-dashboard' },
-        { icon: User, label: t('common.artistProfile'), path: '/artist-profile' }
+        { icon: BarChart, label: t('common.artistDashboard'), path: '/artist-dashboard' }
       ]
     : baseNavItems;
 
@@ -442,34 +441,19 @@ const Sidebar = ({ className }: SidebarProps) => {
         
         {/* Artist Dashboard Button - Only for artists */}
         {user?.role === 'artist' && (
-          <>
-            <Link href="/artist-dashboard">
-              <div 
-                className={cn(
-                  "flex flex-col items-center justify-center py-2 cursor-pointer",
-                  location === '/artist-dashboard'
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <BarChart className="h-5 w-5 mb-1" />
-                <span className="text-xs">{t('common.artistDashboard')}</span>
-              </div>
-            </Link>
-            <Link href="/artist-profile">
-              <div 
-                className={cn(
-                  "flex flex-col items-center justify-center py-2 cursor-pointer",
-                  location === '/artist-profile'
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <User className="h-5 w-5 mb-1" />
-                <span className="text-xs">{t('common.artistProfile')}</span>
-              </div>
-            </Link>
-          </>
+          <Link href="/artist-dashboard">
+            <div 
+              className={cn(
+                "flex flex-col items-center justify-center py-2 cursor-pointer",
+                location === '/artist-dashboard'
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <BarChart className="h-5 w-5 mb-1" />
+              <span className="text-xs">{t('common.artistDashboard')}</span>
+            </div>
+          </Link>
         )}
       </div>
     </>
