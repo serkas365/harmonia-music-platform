@@ -234,14 +234,19 @@ const ArtistPage = () => {
       {/* Artist Header */}
       <div className="mb-8 -mx-4 md:-mx-6">
         {isLoadingArtist ? (
-          <div className="p-4 md:p-8 pt-8 md:pt-12">
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-              <Skeleton className="w-64 h-64 shrink-0" />
-              <div className="flex-1 space-y-4">
-                <Skeleton className="h-6 w-32 mb-2" />
-                <Skeleton className="h-16 w-72 mb-2" />
-                <Skeleton className="h-5 w-48 mb-4" />
-                <div className="flex gap-4">
+          <div>
+            {/* Banner skeleton */}
+            <div className="relative w-full h-80 md:h-96 lg:h-[500px] overflow-hidden">
+              <Skeleton className="w-full h-full" />
+            </div>
+            
+            {/* Content skeleton */}
+            <div className="relative p-4 md:p-8 -mt-32 md:-mt-44">
+              <div className="text-center md:text-left space-y-4">
+                <Skeleton className="h-6 w-32 mb-2 mx-auto md:mx-0" />
+                <Skeleton className="h-16 w-72 mb-2 mx-auto md:mx-0" />
+                <Skeleton className="h-5 w-48 mb-4 mx-auto md:mx-0" />
+                <div className="flex gap-4 justify-center md:justify-start">
                   <Skeleton className="h-12 w-12 rounded-full" />
                   <Skeleton className="h-12 w-24" />
                 </div>
@@ -251,90 +256,80 @@ const ArtistPage = () => {
         ) : artist && (
           <div className="relative">
             {/* Background gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-background z-0"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-background z-0"></div>
             
-            {/* Background image - blurred version of artist image */}
-            <div 
-              className="absolute inset-0 bg-cover bg-center opacity-30 z-[-1]" 
-              style={{ 
-                backgroundImage: `url(${artist.image})`,
-                filter: 'blur(100px)'
-              }}
-            ></div>
+            {/* Artist Banner Image */}
+            <div className="relative w-full h-80 md:h-96 lg:h-[500px] overflow-hidden">
+              <img 
+                src={artist.image} 
+                alt={artist.name}
+                className="w-full h-full object-cover object-center"
+              />
+              
+              {/* Gradient overlay on the image for better text contrast */}
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/90"></div>
+            </div>
             
-            <div className="relative z-10 p-4 md:p-8 pt-8 md:pt-12">
-              {/* Flex container for the header content */}
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-                {/* Artist Image */}
-                <div className="shrink-0 z-10">
-                  <img 
-                    src={artist.image} 
-                    alt={artist.name}
-                    className="w-64 h-64 object-cover shadow-2xl"
-                    style={{ aspectRatio: '1/1' }}
-                  />
+            {/* Artist Info - positioned at the bottom of the banner */}
+            <div className="relative z-10 p-4 md:p-8 -mt-32 md:-mt-44">
+              <div className="text-center md:text-left">
+                {/* Verified Artist badge */}
+                {artist.verified && (
+                  <div className="flex items-center gap-2 text-white bg-primary/90 px-3 py-1 rounded-full w-fit mb-4 mx-auto md:mx-0">
+                    <BadgeCheck className="h-4 w-4" />
+                    <span className="text-sm font-medium">{t('common.verifiedArtist')}</span>
+                  </div>
+                )}
+                
+                {/* Artist name */}
+                <h1 className="text-5xl md:text-7xl font-bold text-white mb-2">{artist.name}</h1>
+                
+                {/* Monthly listeners */}
+                <p className="text-white/80 mb-8 text-lg">
+                  {artist.monthlyListeners?.toLocaleString() || '500,000'} {t('common.monthlyListeners')}
+                </p>
+                
+                {/* Action buttons */}
+                <div className="flex items-center gap-4 mb-8 justify-center md:justify-start">
+                  <Button size="lg" className="rounded-full px-8 shadow-lg">
+                    <span className="sr-only">{t('common.play')}</span>
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                      <path d="M8 5.14v14l11-7-11-7z" />
+                    </svg>
+                  </Button>
+                  <Button variant="outline" size="lg" className="rounded-full border-white/20 text-white bg-white/10 hover:bg-white/20">
+                    {t('common.follow')}
+                  </Button>
+                  <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-white/10">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                      <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm1-11h-2v3H8v2h3v3h2v-3h3v-2h-3z" />
+                    </svg>
+                  </Button>
                 </div>
                 
-                {/* Artist Info */}
-                <div className="flex-1 z-10 text-center md:text-left">
-                  {/* Verified Artist badge */}
-                  {artist.verified && (
-                    <div className="flex items-center gap-2 text-white bg-primary/90 px-3 py-1 rounded-full w-fit mb-4 mx-auto md:mx-0">
-                      <BadgeCheck className="h-4 w-4" />
-                      <span className="text-sm font-medium">{t('common.verifiedArtist')}</span>
-                    </div>
+                {/* Social links in a more subtle position */}
+                <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                  {artist.socialLinks.youtube && (
+                    <Button variant="ghost" size="sm" asChild className="bg-white/10 hover:bg-white/20 text-white">
+                      <a href={artist.socialLinks.youtube} target="_blank" rel="noopener noreferrer">
+                        YouTube <ExternalLink className="ml-1 h-3 w-3" />
+                      </a>
+                    </Button>
                   )}
-                  
-                  {/* Artist name */}
-                  <h1 className="text-5xl md:text-7xl font-bold text-white mb-2">{artist.name}</h1>
-                  
-                  {/* Monthly listeners */}
-                  <p className="text-white/80 mb-8 text-lg">
-                    {artist.monthlyListeners?.toLocaleString() || '500,000'} {t('common.monthlyListeners')}
-                  </p>
-                  
-                  {/* Action buttons */}
-                  <div className="flex items-center gap-4 mb-8 justify-center md:justify-start">
-                    <Button size="lg" className="rounded-full px-8 shadow-lg">
-                      <span className="sr-only">{t('common.play')}</span>
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                        <path d="M8 5.14v14l11-7-11-7z" />
-                      </svg>
+                  {artist.socialLinks.instagram && (
+                    <Button variant="ghost" size="sm" asChild className="bg-white/10 hover:bg-white/20 text-white">
+                      <a href={artist.socialLinks.instagram} target="_blank" rel="noopener noreferrer">
+                        Instagram <ExternalLink className="ml-1 h-3 w-3" />
+                      </a>
                     </Button>
-                    <Button variant="outline" size="lg" className="rounded-full border-white/20 text-white bg-white/10 hover:bg-white/20">
-                      {t('common.follow')}
+                  )}
+                  {artist.socialLinks.twitter && (
+                    <Button variant="ghost" size="sm" asChild className="bg-white/10 hover:bg-white/20 text-white">
+                      <a href={artist.socialLinks.twitter} target="_blank" rel="noopener noreferrer">
+                        Twitter <ExternalLink className="ml-1 h-3 w-3" />
+                      </a>
                     </Button>
-                    <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-white/10">
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                        <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm1-11h-2v3H8v2h3v3h2v-3h3v-2h-3z" />
-                      </svg>
-                    </Button>
-                  </div>
-                  
-                  {/* Social links in a more subtle position */}
-                  <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                    {artist.socialLinks.youtube && (
-                      <Button variant="ghost" size="sm" asChild className="bg-white/10 hover:bg-white/20 text-white">
-                        <a href={artist.socialLinks.youtube} target="_blank" rel="noopener noreferrer">
-                          YouTube <ExternalLink className="ml-1 h-3 w-3" />
-                        </a>
-                      </Button>
-                    )}
-                    {artist.socialLinks.instagram && (
-                      <Button variant="ghost" size="sm" asChild className="bg-white/10 hover:bg-white/20 text-white">
-                        <a href={artist.socialLinks.instagram} target="_blank" rel="noopener noreferrer">
-                          Instagram <ExternalLink className="ml-1 h-3 w-3" />
-                        </a>
-                      </Button>
-                    )}
-                    {artist.socialLinks.twitter && (
-                      <Button variant="ghost" size="sm" asChild className="bg-white/10 hover:bg-white/20 text-white">
-                        <a href={artist.socialLinks.twitter} target="_blank" rel="noopener noreferrer">
-                          Twitter <ExternalLink className="ml-1 h-3 w-3" />
-                        </a>
-                      </Button>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
