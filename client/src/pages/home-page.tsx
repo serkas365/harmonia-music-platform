@@ -12,6 +12,32 @@ import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 
+// Separate component for loading playlist tracks to avoid hooks rule violations
+const PlaylistCardWithTracks = ({ playlist }: { playlist: Playlist }) => {
+  // Fetch tracks for this specific playlist
+  const { data: playlistData } = useQuery<{ tracks: Track[] }>({
+    queryKey: [`/api/playlists/${playlist.id}`],
+    queryFn: async () => {
+      const response = await fetch(`/api/playlists/${playlist.id}`);
+      if (!response.ok) throw new Error('Failed to fetch playlist details');
+      return await response.json();
+    },
+    // Don't refetch on window focus to avoid unnecessary requests
+    refetchOnWindowFocus: false,
+  });
+  
+  // Extract tracks or use empty array if still loading
+  const tracks = playlistData?.tracks || [];
+  
+  return (
+    <PlaylistCard 
+      playlist={playlist} 
+      overlayTitle={playlist.name}
+      tracks={tracks}
+    />
+  );
+};
+
 // Mock hero data (would be fetched from API)
 const heroData = {
   title: "The Weekend",
@@ -260,12 +286,7 @@ const HomePage = () => {
             ))
           ) : playlists.length > 0 ? (
             playlists.map((playlist) => (
-              <PlaylistCard 
-                key={playlist.id} 
-                playlist={playlist} 
-                overlayTitle={playlist.name}
-                tracks={[]} // Empty tracks array for now until we have proper playlist tracks
-              />
+              <PlaylistCardWithTracks key={playlist.id} playlist={playlist} />
             ))
           ) : (
             <div className="col-span-full text-center py-8 text-muted-foreground">

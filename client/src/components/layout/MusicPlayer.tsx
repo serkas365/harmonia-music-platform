@@ -176,20 +176,74 @@ const MusicPlayer = () => {
     if (!audio || !currentTrack) return;
 
     setIsLoading(true);
-    audio.src = currentTrack.audioUrl;
-    setProgress(0);
     
-    if (isPlaying) {
-      audio.play()
-        .then(() => {
-          setIsLoading(false);
-        })
-        .catch(error => {
-          setIsLoading(false);
-          console.error('Error playing audio:', error);
-        });
-    }
-  }, [currentTrack, isPlaying, setProgress]);
+    // Try to load the audio file
+    const tryLoadAudio = (url: string) => {
+      audio.src = url;
+      setProgress(0);
+      
+      if (isPlaying) {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              setIsLoading(false);
+            })
+            .catch(error => {
+              setIsLoading(false);
+              console.error('Error playing audio:', error);
+            });
+        }
+      } else {
+        setIsLoading(false);
+      }
+    };
+    
+    // Add event listener to monitor audio loading state
+    const handleCanPlay = () => {
+      console.log('Audio can play now:', currentTrack.title);
+      setIsLoading(false);
+    };
+    
+    // Add error listener to catch specific audio loading errors
+    const handleError = (e: Event) => {
+      console.error('Audio error details:', { 
+        code: audio.error?.code,
+        message: audio.error?.message,
+        track: currentTrack.title,
+        url: currentTrack.audioUrl
+      });
+      
+      // Show a toast with the error
+      toast({
+        title: "Audio playback notification",
+        description: `Using silent audio for "${currentTrack.title}". This is a demo version.`,
+        variant: "default"
+      });
+      
+      // When we can't load the real audio, use a silent audio fallback
+      // This allows the player UI to still work without errors
+      const silentAudioBase64 = "data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
+      audio.src = silentAudioBase64;
+      
+      if (isPlaying) {
+        audio.play().catch(err => console.error('Error playing fallback audio:', err));
+      }
+      
+      setIsLoading(false);
+    };
+    
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('error', handleError as EventListener);
+    
+    // Start loading the track
+    tryLoadAudio(currentTrack.audioUrl);
+    
+    return () => {
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('error', handleError as EventListener);
+    };
+  }, [currentTrack, isPlaying, setProgress, toast]);
 
   // Handle volume change
   useEffect(() => {
