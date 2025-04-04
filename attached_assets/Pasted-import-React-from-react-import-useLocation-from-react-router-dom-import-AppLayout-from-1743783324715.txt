@@ -1,0 +1,160 @@
+import React from "react";
+import { useLocation } from "react-router-dom";
+import { AppLayout } from "components/AppLayout";
+import { ArtistHeader } from "components/ArtistHeader";
+import { TrackCard } from "components/TrackCard";
+import { YoutubeVideoSection } from "components/YoutubeVideoSection";
+import { SocialMediaFeed } from "components/SocialMediaFeed";
+import { UpcomingEvents } from "components/UpcomingEvents";
+import { DiscographySection } from "components/DiscographySection";
+import { NewReleases } from "components/NewReleases";
+import { FeaturedArtists } from "components/FeaturedArtists";
+import { ProviderWrapper } from "components/ProviderWrapper";
+import { useLanguageStore } from "utils/useLanguageStore";
+import { useMusicPlayer } from "utils/MusicContext";
+// Mock data import - in a real app, we would fetch data from an API
+import { 
+  artistDetails, 
+  artistTracks, 
+  youtubeVideos, 
+  socialMediaPosts,
+  upcomingEvents,
+  artistAlbums,
+  newReleases,
+  collaborations 
+} from "utils/artistData";
+
+export default function ArtistProfile() {
+  // In a real app, we would use the ID to fetch the specific artist data
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const artistId = searchParams.get('id');
+  const { playTrack } = useMusicPlayer();
+  const { t } = useLanguageStore();
+  
+  // We'd typically fetch artist data by ID here
+  // For demo purposes, we're using mock data regardless of the artistId
+  console.log(`Loading artist profile for ID: ${artistId}`);
+
+  // Find the first track to play when clicking "Play" on the artist header
+  const handlePlayAll = () => {
+    if (artistTracks.length > 0) {
+      playTrack(artistTracks[0]);
+    }
+  };
+
+  return (
+    <ProviderWrapper>
+      <AppLayout>
+        <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
+          <ArtistHeader 
+            name={artistDetails.name}
+            imageUrl={artistDetails.imageUrl}
+            bannerImageUrl={artistDetails.bannerImageUrl}
+            genres={artistDetails.genres}
+            followers={artistDetails.followers}
+            monthlyListeners={artistDetails.monthlyListeners}
+            onPlay={handlePlayAll}
+          />
+
+          <main className="container mx-auto px-4 py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left column - Artist info and popular tracks */}
+              <div className="lg:col-span-2 space-y-10">
+                {/* Artist bio */}
+                <div className="bg-gray-900/40 backdrop-blur-sm rounded-lg p-6 mb-8 border border-gray-800">
+                  <h2 className="text-2xl font-bold text-white mb-4">{t('artist.about')}</h2>
+                  <p className="text-gray-300">{artistDetails.bio}</p>
+                  
+                  {/* Additional artist info */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
+                    <div>
+                      <div className="text-gray-500 text-sm">Member since</div>
+                      <div className="text-white">{new Date(artistDetails.memberSince).getFullYear()}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-sm">Location</div>
+                      <div className="text-white">{artistDetails.location}</div>
+                    </div>
+                    {artistDetails.websiteUrl && (
+                      <div>
+                        <div className="text-gray-500 text-sm">Website</div>
+                        <a 
+                          href={artistDetails.websiteUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-purple-400 hover:text-purple-300 transition-colors"
+                        >
+                          {artistDetails.websiteUrl.replace(/(https?:\/\/)/i, '')}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* New Releases */}
+                <NewReleases releases={newReleases} />
+                
+                {/* Popular tracks */}
+                <div className="mb-10">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-white">{t('artist.popularTracks')}</h2>
+                    <button className="text-sm text-purple-400 hover:text-purple-300 transition-colors">
+                      {t('artist.viewAll')}
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    {artistTracks.map((track, index) => (
+                      <TrackCard 
+                        key={track.id} 
+                        track={track} 
+                        position={index + 1}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Upcoming Events */}
+                <UpcomingEvents events={upcomingEvents} />
+
+                {/* Featured with other artists */}
+                <FeaturedArtists collaborations={collaborations} />
+
+                {/* Youtube videos embedded */}
+                <YoutubeVideoSection videos={youtubeVideos} />
+              </div>
+
+              {/* Right column - Social media feed */}
+              <div className="space-y-6">
+                {/* Discography */}
+                <DiscographySection albums={artistAlbums} />
+
+                {/* Social media feed */}
+                <SocialMediaFeed posts={socialMediaPosts} />
+                
+                {/* Social links */}
+                <div className="bg-gray-900/40 backdrop-blur-sm rounded-lg p-6 border border-gray-800">
+                  <h3 className="text-xl font-bold text-white mb-4">Connect</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {Object.entries(artistDetails.socialLinks).map(([platform, url]) => (
+                      <a 
+                        key={platform}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors"
+                      >
+                        <span className="capitalize">{platform}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </AppLayout>
+    </ProviderWrapper>
+  );
+}
