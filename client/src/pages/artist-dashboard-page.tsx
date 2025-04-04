@@ -228,11 +228,21 @@ const ArtistDashboardPage = () => {
       
       <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
         <TabsList className="mb-6">
-          <TabsTrigger value="overview">{t('artistDashboard.overview')}</TabsTrigger>
-          <TabsTrigger value="analytics">{t('artistDashboard.analytics')}</TabsTrigger>
-          <TabsTrigger value="profile">{t('artistDashboard.profile')}</TabsTrigger>
-          <TabsTrigger value="uploads">{t('artistDashboard.uploads')}</TabsTrigger>
-          <TabsTrigger value="royalties">{t('artistDashboard.royalties')}</TabsTrigger>
+          <TabsTrigger value="overview" className="flex items-center gap-1">
+            <TrendingUp className="h-4 w-4" /> {t('artistDashboard.overview')}
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-1">
+            <Users className="h-4 w-4" /> {t('artistDashboard.analytics')}
+          </TabsTrigger>
+          <TabsTrigger value="profile" className="flex items-center gap-1">
+            <User className="h-4 w-4" /> {t('artistDashboard.profile')}
+          </TabsTrigger>
+          <TabsTrigger value="uploads" className="flex items-center gap-1">
+            <Upload className="h-4 w-4" /> {t('artistDashboard.uploads')}
+          </TabsTrigger>
+          <TabsTrigger value="royalties" className="flex items-center gap-1">
+            <DollarSign className="h-4 w-4" /> {t('artistDashboard.royalties')}
+          </TabsTrigger>
         </TabsList>
         
         {/* Overview Tab */}
@@ -783,8 +793,9 @@ const ArtistDashboardPage = () => {
         {/* Uploads Tab */}
         <TabsContent value="uploads">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle>{t('artistDashboard.uploads')}</CardTitle>
+              <Upload className="h-5 w-5 text-muted-foreground" />
               <CardDescription>
                 Upload and manage your music
               </CardDescription>
@@ -806,8 +817,9 @@ const ArtistDashboardPage = () => {
         {/* Royalties Tab */}
         <TabsContent value="royalties">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle>{t('artistDashboard.royalties')}</CardTitle>
+              <DollarSign className="h-5 w-5 text-muted-foreground" />
               <CardDescription>
                 Track your earnings and payment history
               </CardDescription>
