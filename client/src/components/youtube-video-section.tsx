@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Youtube, Maximize2, Minimize2, RefreshCw } from "lucide-react";
+import { Youtube, Maximize2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -21,7 +21,6 @@ interface YoutubeVideoSectionProps {
 const YoutubeVideoSection = ({ artistId, videos: initialVideos, channelId }: YoutubeVideoSectionProps) => {
   const { t } = useTranslation();
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
-  const [expandedVideo, setExpandedVideo] = useState<string | null>(null);
   
   // Fetch videos from API if artistId is provided and videos are not provided as props
   const { data: fetchedVideos, isLoading, isError } = useQuery({
@@ -118,64 +117,45 @@ const YoutubeVideoSection = ({ artistId, videos: initialVideos, channelId }: You
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {displayVideos.map(video => (
             <div key={video.id} className="group">
-              {expandedVideo === video.id ? (
-                <div className="aspect-video mb-2">
-                  <div className="relative w-full h-full">
-                    <iframe
-                      src={getEmbedUrl(video.id)}
-                      title={video.title}
-                      className="w-full h-full rounded-md"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    ></iframe>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => setExpandedVideo(null)}
-                      className="absolute top-2 right-2 bg-background/80 hover:bg-background"
-                      title={t('common.minimize')}
-                    >
-                      <Minimize2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="relative aspect-video overflow-hidden rounded-md bg-background-highlight mb-2">
-                  <div 
-                    className="cursor-pointer"
-                    onClick={() => setExpandedVideo(video.id)}
-                    title={t('common.watchVideo')}
-                  >
-                    <img 
-                      src={video.thumbnailUrl} 
-                      alt={video.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="w-12 h-12 bg-primary/90 rounded-full flex items-center justify-center">
-                        <Youtube className="h-6 w-6 text-white" />
-                      </div>
+              <div className="relative aspect-video overflow-hidden rounded-md bg-background-highlight mb-2">
+                <div 
+                  className="cursor-pointer"
+                  onClick={() => setSelectedVideoId(video.id)}
+                  title={t('common.watchVideo')}
+                >
+                  <img 
+                    src={video.thumbnailUrl} 
+                    alt={video.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-16 h-16 bg-primary/90 rounded-full flex items-center justify-center">
+                      <Youtube className="h-8 w-8 text-white" />
                     </div>
                   </div>
-                  
-                  <div className="absolute bottom-2 right-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedVideoId(video.id);
-                      }}
-                      className="bg-background/80 hover:bg-background"
-                      title={t('common.fullscreen')}
-                    >
-                      <Maximize2 className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </div>
-              )}
-              <h3 className="font-medium text-sm line-clamp-2">{video.title}</h3>
+                
+                <div className="absolute bottom-2 right-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedVideoId(video.id);
+                    }}
+                    className="bg-background/80 hover:bg-background"
+                    title={t('common.fullscreen')}
+                  >
+                    <Maximize2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <h3 
+                className="font-medium text-sm line-clamp-2 cursor-pointer hover:text-primary transition-colors"
+                onClick={() => setSelectedVideoId(video.id)}
+              >
+                {video.title}
+              </h3>
             </div>
           ))}
         </div>
@@ -186,7 +166,7 @@ const YoutubeVideoSection = ({ artistId, videos: initialVideos, channelId }: You
         open={!!selectedVideoId} 
         onOpenChange={(open) => !open && setSelectedVideoId(null)}
       >
-        <DialogContent className="sm:max-w-[90vw] max-h-[90vh] p-0 bg-black">
+        <DialogContent className="sm:max-w-[90vw] max-h-[90vh] p-0 bg-black border-0">
           <DialogHeader className="p-4">
             <DialogTitle className="text-white">
               {selectedVideoId && videos.find(v => v.id === selectedVideoId)?.title}
