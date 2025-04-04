@@ -73,8 +73,15 @@ const ArtistProfilePage = () => {
       return res.json();
     },
     onSuccess: () => {
-      // Invalidate cache to refresh data
+      // Invalidate all related caches to refresh data across the app
       queryClient.invalidateQueries({ queryKey: ['/api/me/artist-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/artists'] }); // Invalidate top artists on home page
+      
+      // Also invalidate any specific artist endpoints that might be cached
+      if (artistProfile?.id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/artists/${artistProfile.id}`] });
+      }
+      
       toast({
         title: t('artistProfile.updateSuccess'),
         description: t('artistProfile.profileUpdated'),
