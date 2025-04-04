@@ -352,12 +352,11 @@ const ArtistPage = () => {
               </section>
               
               {/* YouTube Videos Section */}
-              {videos && videos.length > 0 && (
-                <YoutubeVideoSection 
-                  videos={videos} 
-                  channelId={artist?.socialLinks?.youtube?.split('/').pop() || undefined}
-                />
-              )}
+              <YoutubeVideoSection 
+                artistId={Number(id)}
+                videos={videos} 
+                channelId={artist?.socialLinks?.youtube?.split('/').pop() || undefined}
+              />
               
               {/* Albums Section */}
               <section>
@@ -683,12 +682,11 @@ const ArtistPage = () => {
                 </section>
                 
                 {/* YouTube Videos Section */}
-                {videos && videos.length > 0 && (
-                  <YoutubeVideoSection 
-                    videos={videos} 
-                    channelId={artist?.socialLinks?.youtube?.split('/').pop() || undefined}
-                  />
-                )}
+                <YoutubeVideoSection 
+                  artistId={Number(id)}
+                  videos={videos} 
+                  channelId={artist?.socialLinks?.youtube?.split('/').pop() || undefined}
+                />
               </div>
               
               {/* Sidebar - 1/3 width */}

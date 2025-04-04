@@ -935,6 +935,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to check follow status" });
     }
   });
+  
+  // API endpoint to get YouTube videos for an artist
+  app.get("/api/artists/:id/youtube-videos", async (req, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const artist = await storage.getArtist(artistId);
+      
+      if (!artist) {
+        return res.status(404).json({ message: "Artist not found" });
+      }
+      
+      // Sample YouTube videos for demonstration purposes
+      // In a real app, this would fetch from YouTube API using the artist's YouTube channel ID
+      const videos = [
+        {
+          id: "dQw4w9WgXcQ", // Sample YouTube video ID
+          title: `${artist.name} - Official Music Video`,
+          thumbnailUrl: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        },
+        {
+          id: "jNQXAC9IVRw", // Sample YouTube video ID
+          title: `${artist.name} - Live at Madison Square Garden`,
+          thumbnailUrl: "https://img.youtube.com/vi/jNQXAC9IVRw/maxresdefault.jpg"
+        },
+        {
+          id: "VYOjWnS4cMY", // Sample YouTube video ID
+          title: `${artist.name} - Acoustic Session`,
+          thumbnailUrl: "https://img.youtube.com/vi/VYOjWnS4cMY/maxresdefault.jpg"
+        },
+        {
+          id: "9bZkp7q19f0", // Sample YouTube video ID
+          title: `${artist.name} - Behind the Scenes`,
+          thumbnailUrl: "https://img.youtube.com/vi/9bZkp7q19f0/maxresdefault.jpg"
+        }
+      ];
+      
+      res.json(videos);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch YouTube videos" });
+    }
+  });
+  
+  // API endpoint to get videos for an artist (alternate endpoint for backward compatibility)
+  app.get("/api/artists/:id/videos", async (req, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const artist = await storage.getArtist(artistId);
+      
+      if (!artist) {
+        return res.status(404).json({ message: "Artist not found" });
+      }
+      
+      // Use same sample videos as the youtube-videos endpoint
+      const videos = [
+        {
+          id: "dQw4w9WgXcQ",
+          title: `${artist.name} - Official Music Video`,
+          thumbnailUrl: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        },
+        {
+          id: "jNQXAC9IVRw",
+          title: `${artist.name} - Live at Madison Square Garden`,
+          thumbnailUrl: "https://img.youtube.com/vi/jNQXAC9IVRw/maxresdefault.jpg"
+        },
+        {
+          id: "VYOjWnS4cMY",
+          title: `${artist.name} - Acoustic Session`,
+          thumbnailUrl: "https://img.youtube.com/vi/VYOjWnS4cMY/maxresdefault.jpg"
+        },
+        {
+          id: "9bZkp7q19f0",
+          title: `${artist.name} - Behind the Scenes`,
+          thumbnailUrl: "https://img.youtube.com/vi/9bZkp7q19f0/maxresdefault.jpg"
+        }
+      ];
+      
+      res.json(videos);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch videos" });
+    }
+  });
 
   const httpServer = createServer(app);
 
