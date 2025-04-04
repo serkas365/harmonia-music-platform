@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Redirect } from 'wouter';
 import { ArtistAnalytics, ArtistFollower, Artist } from '@shared/schema';
 import { 
-  Loader2, TrendingUp, Users, User, Calendar, Save, 
+  Loader2, TrendingUp, Users, User, Calendar, Save, Upload, DollarSign,
   Globe, Instagram, Twitter, Youtube, Facebook, Link2 
 } from 'lucide-react';
 import {
@@ -229,8 +229,10 @@ const ArtistDashboardPage = () => {
       <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="overview">{t('artistDashboard.overview')}</TabsTrigger>
-          <TabsTrigger value="profile">{t('artistProfile.title')}</TabsTrigger>
           <TabsTrigger value="analytics">{t('artistDashboard.analytics')}</TabsTrigger>
+          <TabsTrigger value="profile">{t('artistDashboard.profile')}</TabsTrigger>
+          <TabsTrigger value="uploads">{t('artistDashboard.uploads')}</TabsTrigger>
+          <TabsTrigger value="royalties">{t('artistDashboard.royalties')}</TabsTrigger>
         </TabsList>
         
         {/* Overview Tab */}
@@ -776,6 +778,52 @@ const ArtistDashboardPage = () => {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+        
+        {/* Uploads Tab */}
+        <TabsContent value="uploads">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('artistDashboard.uploads')}</CardTitle>
+              <CardDescription>
+                Upload and manage your music
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">
+                  This feature is coming soon. You'll be able to upload tracks and albums directly.
+                </p>
+                <Button disabled>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload Music
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Royalties Tab */}
+        <TabsContent value="royalties">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('artistDashboard.royalties')}</CardTitle>
+              <CardDescription>
+                Track your earnings and payment history
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">
+                  This feature is coming soon. You'll be able to view detailed royalty reports and payment history.
+                </p>
+                <Button disabled>
+                  <DollarSign className="mr-2 h-4 w-4" />
+                  Set up Payment Methods
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

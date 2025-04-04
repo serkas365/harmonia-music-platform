@@ -123,6 +123,11 @@ const enTranslations = {
     noPurchasedAlbums: "You haven't purchased any albums yet",
   },
   artistDashboard: {
+    overview: "Overview",
+    analytics: "Analytics",
+    profile: "Profile",
+    uploads: "Uploads",
+    royalties: "Royalties",
     totalStreams: "Total Streams",
     totalPurchases: "Total Purchases",
     totalRevenue: "Total Revenue",
@@ -587,6 +592,11 @@ const frTranslations = {
     creating: "Création en cours...",
   },
   artistDashboard: {
+    overview: "Aperçu",
+    analytics: "Analyses",
+    profile: "Profil",
+    uploads: "Téléchargements",
+    royalties: "Redevances",
     totalStreams: "Streams Totaux",
     totalPurchases: "Achats Totaux",
     totalRevenue: "Revenus Totaux",
