@@ -335,11 +335,9 @@ const ArtistPage = () => {
           <section>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">Albums</h2>
-              {albums && albums.length > 4 && (
-                <Button variant="outline" size="sm" onClick={() => setActiveTab("discography")}>
-                  View All
-                </Button>
-              )}
+              <Button variant="outline" size="sm" onClick={() => setActiveTab("discography")}>
+                View All
+              </Button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {isLoadingAlbums ? (
@@ -502,11 +500,9 @@ const ArtistPage = () => {
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold">Upcoming Events</h2>
-                {events.length > 4 && (
-                  <Button variant="outline" size="sm" onClick={() => setActiveTab("events")}>
-                    View All
-                  </Button>
-                )}
+                <Button variant="outline" size="sm" onClick={() => setActiveTab("events")}>
+                  View All
+                </Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {events.slice(0, 4).map(event => (
