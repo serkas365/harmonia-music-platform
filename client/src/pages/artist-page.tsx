@@ -527,12 +527,12 @@ const ArtistPage = () => {
               )}
               
               {/* Social Media Feed */}
-              {socialPosts && socialPosts.length > 0 && artist && (
+              {artist && (
                 <SocialMediaFeed 
                   artistId={Number(id)}
                   artistName={artist.name}
-                  twitterUsername={artist.socialLinks?.twitter?.split('/').pop() || undefined}
-                  instagramUsername={artist.socialLinks?.instagram?.split('/').pop() || undefined}
+                  twitterUsername={artist.socialLinks?.twitter?.split('/').pop() || "ElectricDreams"}
+                  instagramUsername={artist.socialLinks?.instagram?.split('/').pop() || "ElectricDreams"}
                 />
               )}
               
