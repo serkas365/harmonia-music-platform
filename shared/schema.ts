@@ -53,6 +53,7 @@ export const albums = pgTable("albums", {
   coverImage: text("cover_image").notNull(),
   releaseDate: timestamp("release_date").notNull(),
   genres: text("genres").array().notNull(),
+  type: text("type"), // 'album', 'single', 'ep', etc.
 });
 
 export const tracks = pgTable("tracks", {
@@ -68,6 +69,7 @@ export const tracks = pgTable("tracks", {
   purchaseAvailable: boolean("purchase_available").notNull().default(false),
   explicit: boolean("explicit").notNull().default(false),
   trackNumber: integer("track_number").notNull(),
+  featuring: integer("featuring").array(), // Array of artist IDs that are featured on this track
 });
 
 // Purchase-related tables
@@ -286,6 +288,7 @@ export interface Album {
   coverImage: string;
   releaseDate: Date;
   genres: string[];
+  type?: string; // 'album', 'single', 'ep', etc.
   tracks?: Track[];
 }
 
@@ -302,6 +305,7 @@ export interface Track {
   purchaseAvailable: boolean;
   explicit: boolean;
   trackNumber: number;
+  featuring?: number[]; // Array of artist IDs that are featured on this track
 }
 
 export interface Purchase {
