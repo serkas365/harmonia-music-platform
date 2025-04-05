@@ -319,7 +319,7 @@ const ArtistPage = () => {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">Albums</h2>
               {albums && albums.length > 4 && (
-                <Button variant="link" className="text-primary" onClick={() => setActiveTab("discography")}>
+                <Button variant="outline" size="sm" onClick={() => setActiveTab("discography")}>
                   View All
                 </Button>
               )}
@@ -486,7 +486,7 @@ const ArtistPage = () => {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold">Upcoming Events</h2>
                 {events.length > 4 && (
-                  <Button variant="link" className="text-primary" onClick={() => setActiveTab("events")}>
+                  <Button variant="outline" size="sm" onClick={() => setActiveTab("events")}>
                     View All
                   </Button>
                 )}
@@ -527,20 +527,186 @@ const ArtistPage = () => {
           )}
         </TabsContent>
         
-        {/* Other tabs remain unchanged */}
+        {/* Discography Tab */}
         <TabsContent value="discography">
-          {/* Discography tab content */}
           <div className="space-y-8">
             <h2 className="text-2xl font-bold">{t('common.discography')}</h2>
-            <p>{t('common.discographyDescription')}</p>
+            
+            {/* Albums Section */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold">{t('common.albums')}</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {isLoadingAlbums ? (
+                  // Loading skeletons
+                  Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="bg-background-elevated rounded-lg overflow-hidden">
+                      <Skeleton className="aspect-square w-full" />
+                      <div className="p-3">
+                        <Skeleton className="h-4 w-3/4 mb-2" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                    </div>
+                  ))
+                ) : albums && albums.length > 0 ? (
+                  albums.map(album => (
+                    <AlbumCard key={album.id} album={album} showArtist={false} />
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-8 text-muted-foreground bg-background-elevated rounded-lg">
+                    <p>{t('common.noAlbums')}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Singles & EPs Section */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold">{t('common.singlesAndEPs')}</h3>
+              <div className="space-y-2">
+                {isLoadingTracks ? (
+                  // Loading skeletons
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="bg-background-elevated rounded-lg p-3 flex items-center">
+                      <Skeleton className="w-12 h-12 rounded mr-3 flex-shrink-0" />
+                      <div className="flex-1">
+                        <Skeleton className="h-4 w-3/4 mb-2" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                      <Skeleton className="w-16 h-8 rounded-md" />
+                    </div>
+                  ))
+                ) : tracks && tracks.length > 0 ? (
+                  tracks
+                    .filter(track => !track.albumId) // Only show singles (tracks without albums)
+                    .map(track => (
+                      <TrackCard key={track.id} track={track} />
+                    ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground bg-background-elevated rounded-lg">
+                    <p>{t('common.noSingles')}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Featured On Section */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold">{t('common.featuredOn')}</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {isLoadingTracks ? (
+                  // Loading skeletons
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="bg-background-elevated rounded-lg overflow-hidden">
+                      <Skeleton className="aspect-square w-full" />
+                      <div className="p-3">
+                        <Skeleton className="h-4 w-3/4 mb-2" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                    </div>
+                  ))
+                ) : collaborations && collaborations.length > 0 ? (
+                  collaborations.map(collab => (
+                    <div key={collab.id} className="bg-background-elevated rounded-lg overflow-hidden">
+                      <div className="aspect-square relative overflow-hidden">
+                        <img 
+                          src={collab.imageUrl || defaultAlbumCover} 
+                          alt={collab.name} 
+                          className="w-full h-full object-cover transition-transform hover:scale-105" 
+                        />
+                        <Button 
+                          size="icon"
+                          variant="default"
+                          className="absolute bottom-2 right-2 h-8 w-8 rounded-full bg-primary text-primary-foreground"
+                        >
+                          <Play className="h-4 w-4" />
+                          <span className="sr-only">{t('common.play')}</span>
+                        </Button>
+                      </div>
+                      <div className="p-3">
+                        <h4 className="font-medium text-sm line-clamp-1">{collab.trackTitle}</h4>
+                        <p className="text-muted-foreground text-xs line-clamp-1">
+                          {t('common.with')} {collab.name}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-8 text-muted-foreground bg-background-elevated rounded-lg">
+                    <p>{t('common.noCollaborations')}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </TabsContent>
         
+        {/* Events Tab */}
         <TabsContent value="events">
-          {/* Events tab content */}
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold">{t('common.allEvents')}</h2>
-            <p>{t('common.eventsDescription')}</p>
+            <h2 className="text-2xl font-bold">{t('common.upcomingEvents')}</h2>
+            
+            {events && events.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {events.map(event => (
+                  <div key={event.id} className="bg-background-elevated rounded-lg p-6 space-y-4">
+                    <h3 className="text-lg font-bold">{event.name}</h3>
+                    
+                    <div className="grid gap-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-primary" />
+                        <span>{formatDate(new Date(event.eventDate))}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-primary" />
+                        <span>{event.eventTime}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        <span>{event.venue}, {event.city}</span>
+                      </div>
+                      {event.description && (
+                        <div className="flex items-start gap-2 mt-1">
+                          <Info className="h-4 w-4 text-primary mt-1" />
+                          <p className="text-muted-foreground">{event.description}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex gap-3 pt-2">
+                      {event.ticketLink && (
+                        <Button size="sm" asChild>
+                          <a href={event.ticketLink} target="_blank" rel="noopener noreferrer">
+                            <Ticket className="mr-1 h-4 w-4" /> {t('common.getTickets')}
+                          </a>
+                        </Button>
+                      )}
+                      
+                      {event.eventLink && (
+                        <Button size="sm" variant="outline" asChild>
+                          <a href={event.eventLink} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="mr-1 h-4 w-4" /> {t('common.moreInfo')}
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-background-elevated rounded-lg">
+                <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-medium mb-2">{t('common.noEvents')}</h3>
+                <p className="text-muted-foreground">{t('common.checkBackLater')}</p>
+              </div>
+            )}
+            
+            {/* Past Events Section */}
+            <h2 className="text-2xl font-bold mt-12">{t('common.pastEvents')}</h2>
+            <div className="text-center py-12 bg-background-elevated rounded-lg">
+              <History className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-medium mb-2">{t('common.noPastEvents')}</h3>
+              <p className="text-muted-foreground">{t('common.pastEventsDescription')}</p>
+            </div>
           </div>
         </TabsContent>
         
