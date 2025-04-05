@@ -226,7 +226,9 @@ const ArtistPage = () => {
         <TabsContent value="overview" className="space-y-12">
           {/* 1. Latest Releases Section */}
           <section>
-            <h2 className="text-2xl font-bold mb-6">{t('common.latestReleases')}</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Latest Releases</h2>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {isLoadingTracks || isLoadingAlbums ? (
                 // Loading skeletons
@@ -243,8 +245,11 @@ const ArtistPage = () => {
                 // Combine latest tracks and albums, sort by release date, and take the 4 most recent
                 [...(tracks || []), ...(albums || [])]
                   .sort((a, b) => {
-                    const dateA = new Date(a.releaseDate || 0);
-                    const dateB = new Date(b.releaseDate || 0);
+                    // Use a type guard to handle the difference between Album and Track
+                    const dateA = new Date('releaseDate' in a && a.releaseDate ? a.releaseDate : 
+                                           'createdAt' in a && a.createdAt ? a.createdAt : 0);
+                    const dateB = new Date('releaseDate' in b && b.releaseDate ? b.releaseDate : 
+                                           'createdAt' in b && b.createdAt ? b.createdAt : 0);
                     return dateB.getTime() - dateA.getTime();
                   })
                   .slice(0, 4)
@@ -267,7 +272,14 @@ const ArtistPage = () => {
           
           {/* 2. Popular Tracks Section */}
           <section>
-            <h2 className="text-2xl font-bold mb-6">{t('common.popularTracks')}</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Popular Tracks</h2>
+              {tracks && tracks.length > 5 && (
+                <Button variant="link" className="text-primary" onClick={() => setActiveTab("discography")}>
+                  View All
+                </Button>
+              )}
+            </div>
             <div className="space-y-2">
               {isLoadingTracks ? (
                 // Loading skeletons
@@ -292,13 +304,7 @@ const ArtistPage = () => {
               )}
             </div>
             
-            {tracks && tracks.length > 5 && (
-              <div className="mt-4 text-right">
-                <Button variant="outline" onClick={() => setActiveTab("discography")}>
-                  {t('common.seeAllTracks')}
-                </Button>
-              </div>
-            )}
+
           </section>
           
           {/* 3. Latest Music Videos Section */}
@@ -310,7 +316,14 @@ const ArtistPage = () => {
           
           {/* 4. Albums Section */}
           <section>
-            <h2 className="text-2xl font-bold mb-6">{t('common.albums')}</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Albums</h2>
+              {albums && albums.length > 4 && (
+                <Button variant="link" className="text-primary" onClick={() => setActiveTab("discography")}>
+                  View All
+                </Button>
+              )}
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {isLoadingAlbums ? (
                 // Loading skeletons
@@ -334,19 +347,13 @@ const ArtistPage = () => {
               )}
             </div>
             
-            {albums && albums.length > 4 && (
-              <div className="mt-4 text-right">
-                <Button variant="outline" onClick={() => setActiveTab("discography")}>
-                  {t('common.seeAllAlbums')}
-                </Button>
-              </div>
-            )}
+
           </section>
           
           {/* 5. About Section */}
           {artist && (
             <section className="bg-background-elevated rounded-lg p-6 space-y-4">
-              <h2 className="text-2xl font-bold mb-4">{t('common.about')}</h2>
+              <h2 className="text-2xl font-bold mb-4">About</h2>
               
               {/* Biography */}
               <div className="flex items-start gap-2">
@@ -463,7 +470,7 @@ const ArtistPage = () => {
           {/* 6. Social Media Feed */}
           {artist && (
             <section>
-              <h2 className="text-2xl font-bold mb-6">{t('common.socialMedia')}</h2>
+              <h2 className="text-2xl font-bold mb-6">Social Media</h2>
               <SocialMediaFeed 
                 artistId={Number(id)}
                 artistName={artist.name}
@@ -476,7 +483,14 @@ const ArtistPage = () => {
           {/* 7. Upcoming Events Section */}
           {events && events.length > 0 && (
             <section>
-              <h2 className="text-2xl font-bold mb-6">{t('common.upcomingEvents')}</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Upcoming Events</h2>
+                {events.length > 4 && (
+                  <Button variant="link" className="text-primary" onClick={() => setActiveTab("events")}>
+                    View All
+                  </Button>
+                )}
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {events.slice(0, 4).map(event => (
                   <div key={event.id} className="bg-background-elevated rounded-lg p-6 space-y-3">
@@ -508,13 +522,7 @@ const ArtistPage = () => {
                 ))}
               </div>
               
-              {events.length > 4 && (
-                <div className="text-center mt-4">
-                  <Button variant="outline" onClick={() => setActiveTab("events")}>
-                    {t('common.seeAllEvents')}
-                  </Button>
-                </div>
-              )}
+
             </section>
           )}
         </TabsContent>
