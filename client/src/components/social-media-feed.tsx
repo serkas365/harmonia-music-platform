@@ -2,12 +2,9 @@ import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, MessageCircle, Share2, ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
 export interface SocialMediaPost {
@@ -41,35 +38,58 @@ export default function SocialMediaFeed({
   const { t } = useTranslation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [posts, setPosts] = useState<SocialMediaPost[]>([]);
-  const [activeTab, setActiveTab] = useState<'twitter' | 'instagram'>(
-    twitterUsername ? 'twitter' : (instagramUsername ? 'instagram' : 'twitter')
-  );
+  const [twitterPosts, setTwitterPosts] = useState<SocialMediaPost[]>([]);
+  const [instagramPosts, setInstagramPosts] = useState<SocialMediaPost[]>([]);
 
   const fetchSocialPosts = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/artists/${artistId}/social-posts?platform=${activeTab}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch social posts');
+      // Fetch Twitter posts
+      if (twitterUsername) {
+        const twitterResponse = await fetch(`/api/artists/${artistId}/social-posts?platform=twitter`);
+        
+        if (!twitterResponse.ok) {
+          throw new Error('Failed to fetch Twitter posts');
+        }
+        
+        let twitterData: SocialMediaPost[] = [];
+        
+        if (twitterResponse.headers.get('content-length') === '0' || !twitterResponse.headers.get('content-type')?.includes('application/json')) {
+          twitterData = generatePlaceholderPosts(artistId, artistName, 'twitter');
+        } else {
+          twitterData = await twitterResponse.json();
+        }
+        
+        setTwitterPosts(twitterData.slice(0, 4)); // Show only 4 posts
       }
       
-      // If we don't have actual data yet, use placeholder data
-      let data: SocialMediaPost[] = [];
-      
-      if (response.headers.get('content-length') === '0' || !response.headers.get('content-type')?.includes('application/json')) {
-        // Generate sample social posts if API returns empty
-        data = generatePlaceholderPosts(artistId, artistName, activeTab);
-      } else {
-        data = await response.json();
+      // Fetch Instagram posts
+      if (instagramUsername) {
+        const instagramResponse = await fetch(`/api/artists/${artistId}/social-posts?platform=instagram`);
+        
+        if (!instagramResponse.ok) {
+          throw new Error('Failed to fetch Instagram posts');
+        }
+        
+        let instagramData: SocialMediaPost[] = [];
+        
+        if (instagramResponse.headers.get('content-length') === '0' || !instagramResponse.headers.get('content-type')?.includes('application/json')) {
+          instagramData = generatePlaceholderPosts(artistId, artistName, 'instagram');
+        } else {
+          instagramData = await instagramResponse.json();
+        }
+        
+        setInstagramPosts(instagramData.slice(0, 4)); // Show only 4 posts
       }
-      
-      setPosts(data);
     } catch (error) {
       console.error('Error fetching social posts:', error);
       // Generate placeholder data on error for development purposes
-      setPosts(generatePlaceholderPosts(artistId, artistName, activeTab));
+      if (twitterUsername) {
+        setTwitterPosts(generatePlaceholderPosts(artistId, artistName, 'twitter').slice(0, 4));
+      }
+      if (instagramUsername) {
+        setInstagramPosts(generatePlaceholderPosts(artistId, artistName, 'instagram').slice(0, 4));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +97,7 @@ export default function SocialMediaFeed({
 
   useEffect(() => {
     fetchSocialPosts();
-  }, [artistId, activeTab]);
+  }, [artistId, twitterUsername, instagramUsername]);
 
   const handleLike = async (post: SocialMediaPost) => {
     try {
@@ -97,15 +117,27 @@ export default function SocialMediaFeed({
       }
       
       // Optimistically update the UI
-      setPosts(prev => prev.map(p => 
-        p.id === post.id 
-          ? { 
-              ...p, 
-              likes: post.userLiked ? p.likes - 1 : p.likes + 1,
-              userLiked: !post.userLiked 
-            } 
-          : p
-      ));
+      if (post.platform === 'twitter') {
+        setTwitterPosts(prev => prev.map(p => 
+          p.id === post.id 
+            ? { 
+                ...p, 
+                likes: post.userLiked ? p.likes - 1 : p.likes + 1,
+                userLiked: !post.userLiked 
+              } 
+            : p
+        ));
+      } else {
+        setInstagramPosts(prev => prev.map(p => 
+          p.id === post.id 
+            ? { 
+                ...p, 
+                likes: post.userLiked ? p.likes - 1 : p.likes + 1,
+                userLiked: !post.userLiked 
+              } 
+            : p
+        ));
+      }
       
       toast({
         title: post.userLiked 
@@ -152,15 +184,27 @@ export default function SocialMediaFeed({
         });
         
         // Update the share count optimistically
-        setPosts(prev => prev.map(p => 
-          p.id === post.id 
-            ? { 
-                ...p, 
-                shares: p.shares + 1,
-                userShared: true 
-              } 
-            : p
-        ));
+        if (post.platform === 'twitter') {
+          setTwitterPosts(prev => prev.map(p => 
+            p.id === post.id 
+              ? { 
+                  ...p, 
+                  shares: p.shares + 1,
+                  userShared: true 
+                } 
+              : p
+          ));
+        } else {
+          setInstagramPosts(prev => prev.map(p => 
+            p.id === post.id 
+              ? { 
+                  ...p, 
+                  shares: p.shares + 1,
+                  userShared: true 
+                } 
+              : p
+          ));
+        }
       } else {
         // Fallback for browsers that don't support the Web Share API
         await navigator.clipboard.writeText(post.url);
@@ -194,274 +238,205 @@ export default function SocialMediaFeed({
 
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-bold">{t('socialMedia.latestNews')}</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold">Social Media</h2>
+        <Button variant="link" className="text-purple-600">
+          View all
+        </Button>
+      </div>
       
-      <Tabs 
-        value={activeTab} 
-        onValueChange={(value) => setActiveTab(value as 'twitter' | 'instagram')}
-        className="w-full"
-      >
-        <TabsList className="grid w-full grid-cols-2">
-          {twitterUsername && (
-            <TabsTrigger value="twitter" disabled={!twitterUsername}>
-              <span className="flex items-center">
-                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path 
-                    fill="currentColor" 
-                    d="M21.543 7.104c.015.211.015.423.015.636 0 6.507-4.954 14.01-14.01 14.01v-.003A13.94 13.94 0 0 1 0 19.539a9.88 9.88 0 0 0 7.287-2.041 4.93 4.93 0 0 1-4.6-3.42 4.916 4.916 0 0 0 2.223-.084A4.926 4.926 0 0 1 .96 9.167v-.062a4.887 4.887 0 0 0 2.235.616A4.928 4.928 0 0 1 1.67 3.148 13.98 13.98 0 0 0 11.82 8.292a4.929 4.929 0 0 1 8.39-4.49 9.868 9.868 0 0 0 3.128-1.196 4.941 4.941 0 0 1-2.165 2.724A9.828 9.828 0 0 0 24 4.555a10.019 10.019 0 0 1-2.457 2.549z" 
-                  />
-                </svg>
-                Twitter
-              </span>
-            </TabsTrigger>
-          )}
-          
-          {instagramUsername && (
-            <TabsTrigger value="instagram" disabled={!instagramUsername}>
-              <span className="flex items-center">
-                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path 
-                    fill="currentColor" 
-                    d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z" 
-                  />
-                </svg>
-                Instagram
-              </span>
-            </TabsTrigger>
-          )}
-        </TabsList>
-        
-        <TabsContent value="twitter" className="mt-4">
-          {isLoading ? (
-            // Skeleton loaders for Twitter posts
-            Array.from({ length: 4 }).map((_, i) => (
-              <Card key={`twitter-skeleton-${i}`} className="mb-4">
-                <CardHeader className="pb-2">
-                  <div className="flex">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <div className="ml-3 space-y-1 flex-1">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-3 w-16" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Twitter Posts */}
+        {twitterUsername && twitterPosts.length > 0 && (
+          <Card className="overflow-hidden border-0 bg-[#132133]">
+            <CardHeader className="pb-3">
+              <div className="flex items-start">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={`https://unavatar.io/twitter/${twitterUsername}`} alt={artistName} />
+                  <AvatarFallback>{artistName[0]}</AvatarFallback>
+                </Avatar>
+                <div className="ml-3 flex-1">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-white">{artistName}</p>
+                      <p className="text-xs text-[#9ca3af]">@{twitterUsername}</p>
+                    </div>
+                    <div className="text-blue-400 text-sm">
+                      {new Date(twitterPosts[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="pb-3">
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-4 w-5/6 mb-2" />
-                  <Skeleton className="h-4 w-4/6" />
-                </CardContent>
-                <CardFooter className="pt-0">
-                  <div className="flex justify-between w-full">
-                    <Skeleton className="h-8 w-16" />
-                    <Skeleton className="h-8 w-16" />
-                    <Skeleton className="h-8 w-16" />
-                  </div>
-                </CardFooter>
-              </Card>
-            ))
-          ) : posts.length > 0 ? (
-            <div className="space-y-4">
-              {posts.map(post => (
-                <Card key={post.id} className="overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={`https://unavatar.io/twitter/${twitterUsername}`} alt={artistName} />
-                        <AvatarFallback>{artistName[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="ml-3 flex-1">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold">{artistName}</p>
-                            <p className="text-xs text-muted-foreground">@{twitterUsername}</p>
-                          </div>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => openPost(post.url)}
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pb-3">
-                    <p className="whitespace-pre-wrap">{post.content}</p>
-                    {post.imageUrl && (
-                      <img 
-                        src={post.imageUrl} 
-                        alt=""
-                        className="w-full h-auto rounded-md mt-3 object-cover"
-                      />
-                    )}
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {new Date(post.date).toLocaleString()}
-                    </p>
-                  </CardContent>
-                  <CardFooter className="border-t pt-3">
-                    <div className="flex justify-between w-full">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleLike(post)}
-                        className={post.userLiked ? "text-red-500" : ""}
-                      >
-                        <Heart className={`h-4 w-4 mr-1 ${post.userLiked ? "fill-current" : ""}`} />
-                        {post.likes}
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleComment(post)}
-                      >
-                        <MessageCircle className="h-4 w-4 mr-1" />
-                        {post.comments}
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleShare(post)}
-                      >
-                        <Share2 className="h-4 w-4 mr-1" />
-                        {post.shares}
-                      </Button>
-                    </div>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 bg-background-elevated rounded-lg">
-              <p className="text-muted-foreground">
-                {twitterUsername 
-                  ? t('socialMedia.noTweets', { username: twitterUsername }) 
-                  : t('socialMedia.noTwitterAccount')}
-              </p>
-            </div>
-          )}
-        </TabsContent>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pb-3">
+              <p className="whitespace-pre-wrap text-white">{twitterPosts[0].content}</p>
+              {twitterPosts[0].imageUrl && (
+                <img 
+                  src={twitterPosts[0].imageUrl} 
+                  alt=""
+                  className="w-full h-auto rounded-md mt-3 object-cover"
+                />
+              )}
+            </CardContent>
+            <CardFooter className="border-t border-[#37415180] pt-3">
+              <div className="flex justify-between w-full text-[#9ca3af]">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => handleLike(twitterPosts[0])}
+                  className={twitterPosts[0].userLiked ? "text-red-500" : "text-[#9ca3af] hover:text-white"}
+                >
+                  <Heart className={`h-4 w-4 mr-1 ${twitterPosts[0].userLiked ? "fill-current" : ""}`} />
+                  {twitterPosts[0].likes.toLocaleString()}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => handleComment(twitterPosts[0])}
+                  className="text-[#9ca3af] hover:text-white"
+                >
+                  <MessageCircle className="h-4 w-4 mr-1" />
+                  {twitterPosts[0].comments.toLocaleString()}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => handleShare(twitterPosts[0])}
+                  className="text-[#9ca3af] hover:text-white"
+                >
+                  <Share2 className="h-4 w-4 mr-1" />
+                  {twitterPosts[0].shares.toLocaleString()}
+                </Button>
+              </div>
+            </CardFooter>
+          </Card>
+        )}
         
-        <TabsContent value="instagram" className="mt-4">
-          {isLoading ? (
-            // Skeleton loaders for Instagram posts
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Card key={`instagram-skeleton-${i}`}>
-                  <CardHeader className="pb-2">
-                    <div className="flex">
-                      <Skeleton className="h-10 w-10 rounded-full" />
-                      <div className="ml-3 space-y-1 flex-1">
-                        <Skeleton className="h-4 w-24" />
-                      </div>
+        {/* Instagram Posts */}
+        {instagramUsername && instagramPosts.length > 0 && (
+          <Card className="overflow-hidden border-0 bg-[#1e1e1e]">
+            <CardHeader className="pb-3">
+              <div className="flex items-center">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage 
+                    src={`https://unavatar.io/instagram/${instagramUsername}`} 
+                    alt={artistName} 
+                  />
+                  <AvatarFallback>{artistName[0]}</AvatarFallback>
+                </Avatar>
+                <div className="ml-3 flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold text-white">{artistName}</p>
+                    <div className="text-gray-400 text-sm">
+                      {new Date(instagramPosts[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </div>
-                  </CardHeader>
-                  <CardContent className="pb-3 space-y-3">
-                    <Skeleton className="h-64 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                  </CardContent>
-                  <CardFooter className="pt-0">
-                    <div className="flex justify-between w-full">
-                      <Skeleton className="h-8 w-16" />
-                      <Skeleton className="h-8 w-16" />
-                      <Skeleton className="h-8 w-16" />
-                    </div>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          ) : posts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {posts.map(post => (
-                <Card key={post.id} className="overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage 
-                          src={`https://unavatar.io/instagram/${instagramUsername}`} 
-                          alt={artistName} 
-                        />
-                        <AvatarFallback>{artistName[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="ml-3 flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="font-semibold">{artistName}</p>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => openPost(post.url)}
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  {post.imageUrl && (
-                    <div className="relative aspect-square">
-                      <img 
-                        src={post.imageUrl} 
-                        alt=""
-                        className="absolute inset-0 w-full h-full object-cover"
-                        onClick={() => openPost(post.url)}
-                      />
-                    </div>
-                  )}
-                  <CardContent className="pt-4 pb-3">
-                    <p className="text-sm whitespace-pre-wrap">{post.content}</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {new Date(post.date).toLocaleString()}
-                    </p>
-                  </CardContent>
-                  <CardFooter className="border-t pt-3">
-                    <div className="flex justify-between w-full">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleLike(post)}
-                        className={post.userLiked ? "text-red-500" : ""}
-                      >
-                        <Heart className={`h-4 w-4 mr-1 ${post.userLiked ? "fill-current" : ""}`} />
-                        {post.likes}
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleComment(post)}
-                      >
-                        <MessageCircle className="h-4 w-4 mr-1" />
-                        {post.comments}
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleShare(post)}
-                      >
-                        <Share2 className="h-4 w-4 mr-1" />
-                        {post.shares}
-                      </Button>
-                    </div>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 bg-background-elevated rounded-lg">
-              <p className="text-muted-foreground">
-                {instagramUsername 
-                  ? t('socialMedia.noInstagramPosts', { username: instagramUsername }) 
-                  : t('socialMedia.noInstagramAccount')}
-              </p>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            {instagramPosts[0].imageUrl && (
+              <div>
+                <img 
+                  src={instagramPosts[0].imageUrl} 
+                  alt=""
+                  className="w-full object-cover"
+                  onClick={() => openPost(instagramPosts[0].url)}
+                />
+              </div>
+            )}
+            <CardContent className="pt-4 pb-3">
+              <p className="text-sm whitespace-pre-wrap text-white">{instagramPosts[0].content}</p>
+            </CardContent>
+            <CardFooter className="border-t border-[#37415180] pt-3">
+              <div className="flex justify-between w-full text-gray-400">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => handleLike(instagramPosts[0])}
+                  className={instagramPosts[0].userLiked ? "text-red-500" : "text-gray-400 hover:text-white"}
+                >
+                  <Heart className={`h-4 w-4 mr-1 ${instagramPosts[0].userLiked ? "fill-current" : ""}`} />
+                  {instagramPosts[0].likes.toLocaleString()}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => handleComment(instagramPosts[0])}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <MessageCircle className="h-4 w-4 mr-1" />
+                  {instagramPosts[0].comments.toLocaleString()}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => handleShare(instagramPosts[0])}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <Share2 className="h-4 w-4 mr-1" />
+                  {instagramPosts[0].shares.toLocaleString()}
+                </Button>
+              </div>
+            </CardFooter>
+          </Card>
+        )}
+
+        {/* Loading skeletons */}
+        {isLoading && (
+          <>
+            <Card className="border bg-[#132133]">
+              <CardHeader className="pb-2">
+                <div className="flex">
+                  <Skeleton className="h-10 w-10 rounded-full bg-gray-700" />
+                  <div className="ml-3 space-y-1 flex-1">
+                    <Skeleton className="h-4 w-24 bg-gray-700" />
+                    <Skeleton className="h-3 w-16 bg-gray-700" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pb-3">
+                <Skeleton className="h-4 w-full mb-2 bg-gray-700" />
+                <Skeleton className="h-4 w-5/6 mb-2 bg-gray-700" />
+                <Skeleton className="h-4 w-4/6 bg-gray-700" />
+              </CardContent>
+              <CardFooter className="pt-0">
+                <div className="flex justify-between w-full">
+                  <Skeleton className="h-6 w-14 bg-gray-700" />
+                  <Skeleton className="h-6 w-14 bg-gray-700" />
+                  <Skeleton className="h-6 w-14 bg-gray-700" />
+                </div>
+              </CardFooter>
+            </Card>
+            
+            <Card className="border bg-[#1e1e1e]">
+              <CardHeader className="pb-2">
+                <div className="flex">
+                  <Skeleton className="h-10 w-10 rounded-full bg-gray-700" />
+                  <div className="ml-3 space-y-1 flex-1">
+                    <Skeleton className="h-4 w-24 bg-gray-700" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pb-3 space-y-3">
+                <Skeleton className="h-64 w-full bg-gray-700" />
+                <Skeleton className="h-4 w-full bg-gray-700" />
+                <Skeleton className="h-4 w-5/6 bg-gray-700" />
+              </CardContent>
+              <CardFooter className="pt-0">
+                <div className="flex justify-between w-full">
+                  <Skeleton className="h-6 w-14 bg-gray-700" />
+                  <Skeleton className="h-6 w-14 bg-gray-700" />
+                  <Skeleton className="h-6 w-14 bg-gray-700" />
+                </div>
+              </CardFooter>
+            </Card>
+          </>
+        )}
+      </div>
     </section>
   );
 }
 
-// Helper function to generate placeholder posts for development
 function generatePlaceholderPosts(
   artistId: number, 
   artistName: string, 
@@ -475,12 +450,13 @@ function generatePlaceholderPosts(
       {
         id: `twitter-${artistId}-1`,
         platform: 'twitter',
-        content: `Just finished recording our new single! Can't wait for you all to hear it. 🎵 #NewMusic #ComingSoon`,
+        content: `Thank you to all the fans around the world for making RENAISSANCE the biggest global album release of 2022 so far. It feels like we're experiencing an abundance of joy and surprise.`,
+        imageUrl: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
         url: 'https://twitter.com',
-        date: new Date(now.getTime() - 2 * day).toISOString(),
-        likes: 128,
-        comments: 24,
-        shares: 15,
+        date: new Date(now.getTime() - 15 * day).toISOString(),
+        likes: 3500000,
+        comments: 42000,
+        shares: 18000,
         userLiked: false,
         userCommented: false,
         userShared: false
@@ -488,13 +464,12 @@ function generatePlaceholderPosts(
       {
         id: `twitter-${artistId}-2`,
         platform: 'twitter',
-        content: `Tickets for our summer tour are now available! Get them before they sell out. Link in bio. 🎫 #Tour #LiveMusic`,
-        imageUrl: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
+        content: `Today is the first day of Black History Month. Let's celebrate the excellence of Black Americans. Each day this month we'll be sharing art and black artists that inspire us.`,
         url: 'https://twitter.com',
-        date: new Date(now.getTime() - 4 * day).toISOString(),
-        likes: 245,
-        comments: 42,
-        shares: 78,
+        date: new Date(now.getTime() - 1 * day).toISOString(),
+        likes: 650000,
+        comments: 14000,
+        shares: 75000,
         userLiked: false,
         userCommented: false,
         userShared: false
@@ -505,9 +480,9 @@ function generatePlaceholderPosts(
         content: `Thank you to everyone who came to our show last night! You were amazing! ❤️`,
         url: 'https://twitter.com',
         date: new Date(now.getTime() - 6 * day).toISOString(),
-        likes: 312,
-        comments: 18,
-        shares: 5,
+        likes: 312000,
+        comments: 18000,
+        shares: 5000,
         userLiked: false,
         userCommented: false,
         userShared: false
@@ -519,9 +494,9 @@ function generatePlaceholderPosts(
         imageUrl: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
         url: 'https://twitter.com',
         date: new Date(now.getTime() - 8 * day).toISOString(),
-        likes: 518,
-        comments: 64,
-        shares: 93,
+        likes: 518000,
+        comments: 64000,
+        shares: 93000,
         userLiked: false,
         userCommented: false,
         userShared: false
@@ -536,9 +511,9 @@ function generatePlaceholderPosts(
         imageUrl: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1528&q=80',
         url: 'https://instagram.com',
         date: new Date(now.getTime() - 1 * day).toISOString(),
-        likes: 2458,
-        comments: 143,
-        shares: 56,
+        likes: 2458000,
+        comments: 143000,
+        shares: 56000,
         userLiked: false,
         userCommented: false,
         userShared: false
@@ -550,9 +525,9 @@ function generatePlaceholderPosts(
         imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
         url: 'https://instagram.com',
         date: new Date(now.getTime() - 3 * day).toISOString(),
-        likes: 3124,
-        comments: 198,
-        shares: 73,
+        likes: 3124000,
+        comments: 198000,
+        shares: 73000,
         userLiked: false,
         userCommented: false,
         userShared: false
@@ -564,9 +539,9 @@ function generatePlaceholderPosts(
         imageUrl: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
         url: 'https://instagram.com',
         date: new Date(now.getTime() - 5 * day).toISOString(),
-        likes: 1893,
-        comments: 87,
-        shares: 41,
+        likes: 1893000,
+        comments: 87000,
+        shares: 41000,
         userLiked: false,
         userCommented: false,
         userShared: false
@@ -578,9 +553,9 @@ function generatePlaceholderPosts(
         imageUrl: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
         url: 'https://instagram.com',
         date: new Date(now.getTime() - 7 * day).toISOString(),
-        likes: 2751,
-        comments: 124,
-        shares: 38,
+        likes: 2751000,
+        comments: 124000,
+        shares: 38000,
         userLiked: false,
         userCommented: false,
         userShared: false
