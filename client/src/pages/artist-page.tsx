@@ -6,13 +6,14 @@ import { Artist, Album, Track, ArtistEvent } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BadgeCheck, ExternalLink, Calendar, Music, MapPin, Clock, Users, Ticket, Globe } from "lucide-react";
+import { BadgeCheck, ExternalLink, Calendar, Music, MapPin, Clock, Users, Ticket, Globe, User } from "lucide-react";
 import AlbumCard from "@/components/cards/AlbumCard";
 import TrackCard from "@/components/cards/TrackCard";
 import { formatDate } from "@/lib/utils";
 import YoutubeVideoSection from "@/components/youtube-video-section";
 import SocialMediaFeed from "@/components/social-media-feed";
 import FeaturedArtists from "@/components/featured-artists";
+import { Badge } from "@/components/ui/badge";
 
 // Video interface matching YoutubeVideoSection props
 interface Video {
@@ -413,6 +414,34 @@ const ArtistPage = () => {
                 <section className="bg-background-elevated rounded-lg p-6 space-y-4">
                   <h2 className="text-xl font-bold">{t('common.about')}</h2>
                   
+                  {/* Biography */}
+                  <div className="flex items-start gap-2">
+                    <User className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium text-sm">{t('common.biography')}</h3>
+                      <p className="text-muted-foreground text-sm">{artist.bio || "This artist has not provided a biography yet."}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Genres */}
+                  <div className="flex items-start gap-2">
+                    <Music className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium text-sm">{t('common.genres')}</h3>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {artist.genres && artist.genres.length > 0 ? (
+                          artist.genres.map((genre, index) => (
+                            <Badge key={index} variant="outline" className="rounded-full">
+                              {genre}
+                            </Badge>
+                          ))
+                        ) : (
+                          <p className="text-muted-foreground text-sm">No genres specified</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div className="flex items-start gap-2">
                     <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                     <div>
@@ -498,11 +527,12 @@ const ArtistPage = () => {
               )}
               
               {/* Social Media Feed */}
-              {socialPosts && socialPosts.length > 0 && (
+              {socialPosts && socialPosts.length > 0 && artist && (
                 <SocialMediaFeed 
-                  posts={socialPosts} 
-                  twitterUsername={artist?.socialLinks?.twitter?.split('/').pop() || undefined}
-                  instagramUsername={artist?.socialLinks?.instagram?.split('/').pop() || undefined}
+                  artistId={Number(id)}
+                  artistName={artist.name}
+                  twitterUsername={artist.socialLinks?.twitter?.split('/').pop() || undefined}
+                  instagramUsername={artist.socialLinks?.instagram?.split('/').pop() || undefined}
                 />
               )}
               

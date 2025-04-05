@@ -3,6 +3,22 @@ import { initReactI18next } from "react-i18next";
 
 // English translations
 const enTranslations = {
+  socialMedia: {
+    latestNews: "Latest News",
+    noSocialAccounts: "No social media accounts connected",
+    noTwitterAccount: "No Twitter account found",
+    noInstagramAccount: "No Instagram account found",
+    noTweets: "No tweets found for @{{username}}",
+    noInstagramPosts: "No Instagram posts found for {{username}}",
+    liked: "Liked",
+    unliked: "Unliked",
+    likeToggled: "Your like has been toggled",
+    redirecting: "Redirecting",
+    openingPostOnPlatform: "Opening post on {{platform}}",
+    actionFailed: "Action failed. Please try again.",
+    linkCopied: "Link Copied",
+    postLinkCopied: "Post link copied to clipboard",
+  },
   profilePage: {
     title: "My Profile",
     personalInfo: "Personal Info",
@@ -522,6 +538,22 @@ const enTranslations = {
 
 // French translations
 const frTranslations = {
+  socialMedia: {
+    latestNews: "Dernières Nouvelles",
+    noSocialAccounts: "Aucun compte de médias sociaux connecté",
+    noTwitterAccount: "Aucun compte Twitter trouvé",
+    noInstagramAccount: "Aucun compte Instagram trouvé",
+    noTweets: "Aucun tweet trouvé pour @{{username}}",
+    noInstagramPosts: "Aucun post Instagram trouvé pour {{username}}",
+    liked: "Aimé",
+    unliked: "Je n'aime plus",
+    likeToggled: "Votre like a été basculé",
+    redirecting: "Redirection",
+    openingPostOnPlatform: "Ouverture du post sur {{platform}}",
+    actionFailed: "Action échouée. Veuillez réessayer.",
+    linkCopied: "Lien Copié",
+    postLinkCopied: "Lien du post copié dans le presse-papiers",
+  },
   profilePage: {
     title: "Mon Profil",
     personalInfo: "Informations Personnelles",

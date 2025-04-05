@@ -1016,6 +1016,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch videos" });
     }
   });
+  
+  // Get artist's social media posts (Twitter/Instagram)
+  app.get("/api/artists/:id/social-posts", async (req, res) => {
+    try {
+      const artistId = parseInt(req.params.id);
+      const platform = req.query.platform as string || 'twitter';
+      const artist = await storage.getArtist(artistId);
+      
+      if (!artist) {
+        return res.status(404).json({ message: "Artist not found" });
+      }
+      
+      const now = new Date();
+      const day = 24 * 60 * 60 * 1000; // 1 day in milliseconds
+      
+      if (platform === 'twitter' && artist.twitterUsername) {
+        const twitterPosts = [
+          {
+            id: `twitter-${artistId}-1`,
+            platform: 'twitter',
+            content: `Just finished recording our new single! Can't wait for you all to hear it. 🎵 #NewMusic #ComingSoon`,
+            url: 'https://twitter.com',
+            date: new Date(now.getTime() - 2 * day).toISOString(),
+            likes: 128,
+            comments: 24,
+            shares: 15,
+            userLiked: false,
+            userCommented: false,
+            userShared: false
+          },
+          {
+            id: `twitter-${artistId}-2`,
+            platform: 'twitter',
+            content: `Tickets for our summer tour are now available! Get them before they sell out. Link in bio. 🎫 #Tour #LiveMusic`,
+            imageUrl: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
+            url: 'https://twitter.com',
+            date: new Date(now.getTime() - 4 * day).toISOString(),
+            likes: 245,
+            comments: 42,
+            shares: 78,
+            userLiked: false,
+            userCommented: false,
+            userShared: false
+          },
+          {
+            id: `twitter-${artistId}-3`,
+            platform: 'twitter',
+            content: `Thank you to everyone who came to our show last night! You were amazing! ❤️`,
+            url: 'https://twitter.com',
+            date: new Date(now.getTime() - 6 * day).toISOString(),
+            likes: 312,
+            comments: 18,
+            shares: 5,
+            userLiked: false,
+            userCommented: false,
+            userShared: false
+          },
+          {
+            id: `twitter-${artistId}-4`,
+            platform: 'twitter',
+            content: `We're excited to announce we'll be performing at @MusicFestival this year! See you there! 🎉 #Festival #LiveMusic`,
+            imageUrl: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
+            url: 'https://twitter.com',
+            date: new Date(now.getTime() - 8 * day).toISOString(),
+            likes: 518,
+            comments: 64,
+            shares: 93,
+            userLiked: false,
+            userCommented: false,
+            userShared: false
+          }
+        ];
+        
+        return res.json(twitterPosts);
+      } else if (platform === 'instagram' && artist.instagramUsername) {
+        const instagramPosts = [
+          {
+            id: `instagram-${artistId}-1`,
+            platform: 'instagram',
+            content: `Studio session today. Working on something special for you all. 🎧 #StudioLife`,
+            imageUrl: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1528&q=80',
+            url: 'https://instagram.com',
+            date: new Date(now.getTime() - 1 * day).toISOString(),
+            likes: 2458,
+            comments: 143,
+            shares: 56,
+            userLiked: false,
+            userCommented: false,
+            userShared: false
+          },
+          {
+            id: `instagram-${artistId}-2`,
+            platform: 'instagram',
+            content: `Behind the scenes from our latest music video shoot. 🎬 #BTS #MusicVideo`,
+            imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
+            url: 'https://instagram.com',
+            date: new Date(now.getTime() - 3 * day).toISOString(),
+            likes: 3124,
+            comments: 198,
+            shares: 73,
+            userLiked: false,
+            userCommented: false,
+            userShared: false
+          },
+          {
+            id: `instagram-${artistId}-3`,
+            platform: 'instagram',
+            content: `New merch drop! Link in bio to shop. 👕 #MerchDrop`,
+            imageUrl: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
+            url: 'https://instagram.com',
+            date: new Date(now.getTime() - 5 * day).toISOString(),
+            likes: 1893,
+            comments: 87,
+            shares: 41,
+            userLiked: false,
+            userCommented: false,
+            userShared: false
+          },
+          {
+            id: `instagram-${artistId}-4`,
+            platform: 'instagram',
+            content: `Soundcheck for tonight's show. See you soon! 🎤 #TourLife`,
+            imageUrl: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80',
+            url: 'https://instagram.com',
+            date: new Date(now.getTime() - 7 * day).toISOString(),
+            likes: 2751,
+            comments: 124,
+            shares: 38,
+            userLiked: false,
+            userCommented: false,
+            userShared: false
+          }
+        ];
+        
+        return res.json(instagramPosts);
+      }
+      
+      return res.json([]);
+    } catch (error) {
+      console.error('Error fetching social posts:', error);
+      res.status(500).json({ message: "Failed to fetch social posts" });
+    }
+  });
+  
+  // Handle social media interactions
+  app.post("/api/social/like", async (req, res) => {
+    try {
+      // In a real app, this would interact with the social platform's API
+      // or track user likes in our database
+      
+      // For now, just return success
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error processing social interaction:', error);
+      res.status(500).json({ message: "Failed to process interaction" });
+    }
+  });
 
   const httpServer = createServer(app);
 
