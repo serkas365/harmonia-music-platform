@@ -252,18 +252,18 @@ const ArtistPage = () => {
                     // Safe type checking and date conversion
                     let dateA: Date;
                     if ('releaseDate' in a && a.releaseDate) {
-                      dateA = new Date(a.releaseDate as string);
+                      dateA = new Date(String(a.releaseDate));
                     } else if ('createdAt' in a && a.createdAt) {
-                      dateA = new Date(a.createdAt as string);
+                      dateA = new Date(String(a.createdAt));
                     } else {
                       dateA = new Date(0);
                     }
                     
                     let dateB: Date;
                     if ('releaseDate' in b && b.releaseDate) {
-                      dateB = new Date(b.releaseDate as string);
+                      dateB = new Date(String(b.releaseDate));
                     } else if ('createdAt' in b && b.createdAt) {
-                      dateB = new Date(b.createdAt as string);
+                      dateB = new Date(String(b.createdAt));
                     } else {
                       dateB = new Date(0);
                     }
