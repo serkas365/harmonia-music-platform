@@ -83,9 +83,8 @@ const TrackCard = ({ track, className, compact = false, showBuyButton = false, a
       className
     )}>
       <div className="w-14 h-14 rounded overflow-hidden mr-3 flex-shrink-0">
-        {/* This would typically be the album cover */}
         <div className="w-full h-full bg-background-highlight flex items-center justify-center">
-          <span className="text-xs truncate">{track.albumTitle}</span>
+          <span className="text-xs truncate px-1">{track.albumTitle}</span>
         </div>
       </div>
       <div className="flex-1 min-w-0">

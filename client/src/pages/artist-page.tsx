@@ -168,6 +168,12 @@ const ArtistPage = () => {
                 src={artist.image} 
                 alt={artist.name}
                 className="w-full h-full object-cover object-center"
+                fetchPriority="high" 
+                loading="eager"
+                onError={(e) => {
+                  e.currentTarget.src = 'https://placehold.co/1200x500/3a3a3a/FFFFFF?text=Artist+Banner';
+                  e.currentTarget.onerror = null;
+                }}
               />
               
               {/* Gradient overlay on the image for better text contrast */}
