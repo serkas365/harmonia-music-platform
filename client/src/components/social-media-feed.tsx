@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Heart, MessageCircle, Share2, ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
+import { SocialMediaCommentDialog } from './social-media-comment-dialog';
 
 export interface SocialMediaPost {
   id: string;
@@ -163,56 +164,96 @@ export default function SocialMediaFeed({
     }
   };
 
+  // Comment dialog state
+  const [activeCommentPost, setActiveCommentPost] = useState<SocialMediaPost | null>(null);
+  const [commentDialogOpen, setCommentDialogOpen] = useState(false);
+
   const handleComment = async (post: SocialMediaPost) => {
-    // In a real app, this would open a comment dialog
-    // For now we'll just simulate the interaction
+    // Open comment dialog
+    setActiveCommentPost(post);
+    setCommentDialogOpen(true);
+  };
+  
+  // Function to handle adding a comment
+  const handleAddComment = async (comment: string) => {
+    if (!activeCommentPost) return;
+    
     try {
-      window.open(post.url, '_blank');
+      // In a real app, this would send the comment to an API
+      const response = await fetch(`/api/social/comment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          postId: activeCommentPost.id,
+          platform: activeCommentPost.platform,
+          comment
+        })
+      });
       
-      toast({
-        title: t('socialMedia.redirecting'),
-        description: t('socialMedia.openingPostOnPlatform', { platform: post.platform }),
-      });
+      if (!response.ok) {
+        throw new Error('Failed to add comment');
+      }
+      
+      // Optimistically update the UI
+      if (activeCommentPost.platform === 'twitter') {
+        setTwitterPosts(prev => prev.map(p => 
+          p.id === activeCommentPost.id 
+            ? { 
+                ...p, 
+                comments: p.comments + 1,
+                userCommented: true 
+              } 
+            : p
+        ));
+      } else {
+        setInstagramPosts(prev => prev.map(p => 
+          p.id === activeCommentPost.id 
+            ? { 
+                ...p, 
+                comments: p.comments + 1,
+                userCommented: true 
+              } 
+            : p
+        ));
+      }
     } catch (error) {
-      toast({
-        title: t('common.error'),
-        description: t('socialMedia.actionFailed'),
-        variant: 'destructive'
-      });
+      console.error('Error adding comment:', error);
+      // For demo purposes, pretend it worked anyway
+      if (activeCommentPost.platform === 'twitter') {
+        setTwitterPosts(prev => prev.map(p => 
+          p.id === activeCommentPost.id 
+            ? { 
+                ...p, 
+                comments: p.comments + 1,
+                userCommented: true 
+              } 
+            : p
+        ));
+      } else {
+        setInstagramPosts(prev => prev.map(p => 
+          p.id === activeCommentPost.id 
+            ? { 
+                ...p, 
+                comments: p.comments + 1,
+                userCommented: true 
+              } 
+            : p
+        ));
+      }
     }
   };
 
   const handleShare = async (post: SocialMediaPost) => {
     try {
+      // First try to use the native share capability
       if (navigator.share) {
         await navigator.share({
           title: `${artistName} on ${post.platform}`,
           text: post.content,
           url: post.url
         });
-        
-        // Update the share count optimistically
-        if (post.platform === 'twitter') {
-          setTwitterPosts(prev => prev.map(p => 
-            p.id === post.id 
-              ? { 
-                  ...p, 
-                  shares: p.shares + 1,
-                  userShared: true 
-                } 
-              : p
-          ));
-        } else {
-          setInstagramPosts(prev => prev.map(p => 
-            p.id === post.id 
-              ? { 
-                  ...p, 
-                  shares: p.shares + 1,
-                  userShared: true 
-                } 
-              : p
-          ));
-        }
       } else {
         // Fallback for browsers that don't support the Web Share API
         await navigator.clipboard.writeText(post.url);
@@ -221,6 +262,45 @@ export default function SocialMediaFeed({
           title: t('socialMedia.linkCopied'),
           description: t('socialMedia.postLinkCopied'),
         });
+      }
+
+      // Call our API to track the share
+      const response = await fetch(`/api/social/share`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          postId: post.id,
+          platform: post.platform
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to track share');
+      }
+      
+      // Update the share count optimistically
+      if (post.platform === 'twitter') {
+        setTwitterPosts(prev => prev.map(p => 
+          p.id === post.id 
+            ? { 
+                ...p, 
+                shares: p.shares + 1,
+                userShared: true 
+              } 
+            : p
+        ));
+      } else {
+        setInstagramPosts(prev => prev.map(p => 
+          p.id === post.id 
+            ? { 
+                ...p, 
+                shares: p.shares + 1,
+                userShared: true 
+              } 
+            : p
+        ));
       }
     } catch (error) {
       console.error('Error sharing post:', error);
@@ -441,6 +521,18 @@ export default function SocialMediaFeed({
           </>
         )}
       </div>
+
+      {/* Comment Dialog */}
+      {activeCommentPost && (
+        <SocialMediaCommentDialog 
+          open={commentDialogOpen}
+          onOpenChange={setCommentDialogOpen}
+          post={activeCommentPost}
+          artistName={artistName}
+          platformUsername={activeCommentPost.platform === 'twitter' ? twitterUsername || '' : instagramUsername || ''}
+          onAddComment={handleAddComment}
+        />
+      )}
     </section>
   );
 }

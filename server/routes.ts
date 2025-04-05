@@ -1174,6 +1174,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Handle social media comments
+  app.post("/api/social/comment", async (req, res) => {
+    try {
+      const { postId, platform, comment } = req.body;
+      
+      if (!postId || !platform || !comment) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // In a real app, this would store the comment in a database
+      // and potentially forward to the social platform's API
+      console.log(`New comment on ${platform} post ${postId}: ${comment}`);
+      
+      // Mock successful response
+      res.status(200).json({ 
+        success: true,
+        comment: {
+          id: `comment-${Date.now()}`,
+          content: comment,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      res.status(500).json({ message: "Failed to add comment" });
+    }
+  });
+  
+  // Handle social media shares
+  app.post("/api/social/share", async (req, res) => {
+    try {
+      const { postId, platform } = req.body;
+      
+      if (!postId || !platform) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // In a real app, this would track shares in the database
+      // and potentially integrate with the social platform's sharing API
+      console.log(`Sharing ${platform} post ${postId}`);
+      
+      // Mock successful response
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Error sharing post:", error);
+      res.status(500).json({ message: "Failed to share post" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
