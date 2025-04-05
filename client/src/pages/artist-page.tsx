@@ -6,7 +6,7 @@ import { Artist, Album, Track, ArtistEvent } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BadgeCheck, ExternalLink, Calendar, Music, MapPin, Clock, Users, Ticket, Globe, User, Info, Play, History } from "lucide-react";
+import { BadgeCheck, ExternalLink, Calendar, Music, MapPin, Clock, Users, Ticket, Globe, User, Info, Play, History, Youtube, Instagram, Twitter, Facebook } from "lucide-react";
 import AlbumCard from "@/components/cards/AlbumCard";
 import TrackCard from "@/components/cards/TrackCard";
 import { formatDate } from "@/lib/utils";
@@ -252,18 +252,18 @@ const ArtistPage = () => {
                     // Safe type checking and date conversion
                     let dateA: Date;
                     if ('releaseDate' in a && a.releaseDate) {
-                      dateA = new Date(a.releaseDate);
+                      dateA = new Date(a.releaseDate as string);
                     } else if ('createdAt' in a && a.createdAt) {
-                      dateA = new Date(a.createdAt);
+                      dateA = new Date(a.createdAt as string);
                     } else {
                       dateA = new Date(0);
                     }
                     
                     let dateB: Date;
                     if ('releaseDate' in b && b.releaseDate) {
-                      dateB = new Date(b.releaseDate);
+                      dateB = new Date(b.releaseDate as string);
                     } else if ('createdAt' in b && b.createdAt) {
-                      dateB = new Date(b.createdAt);
+                      dateB = new Date(b.createdAt as string);
                     } else {
                       dateB = new Date(0);
                     }
@@ -725,7 +725,76 @@ const ArtistPage = () => {
           {/* About tab content */}
           <div className="space-y-8">
             <h2 className="text-2xl font-bold">About</h2>
-            <p className="text-muted-foreground">{artist?.bio || 'This artist has not added a bio yet.'}</p>
+            
+            {/* Biography */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">Biography</h3>
+              <p className="text-muted-foreground">{artist?.bio || 'This artist has not added a bio yet.'}</p>
+            </div>
+            
+            {/* Genres */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">Genres</h3>
+              <div className="flex flex-wrap gap-2">
+                {artist?.genres && artist.genres.length > 0 ? (
+                  artist.genres.map((genre, index) => (
+                    <Badge key={index} variant="outline" className="rounded-full">
+                      {genre}
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground">No genres specified</p>
+                )}
+              </div>
+            </div>
+            
+            {/* Social Links */}
+            {artist?.socialLinks && Object.values(artist.socialLinks).some(link => !!link) && (
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">On the web</h3>
+                <div className="flex gap-4">
+                  {artist.socialLinks.youtube && (
+                    <a href={artist.socialLinks.youtube} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                        <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
+                        <path d="m10 15 5-3-5-3z" />
+                      </svg>
+                    </a>
+                  )}
+                  {artist.socialLinks.instagram && (
+                    <a href={artist.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                        <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                      </svg>
+                    </a>
+                  )}
+                  {artist.socialLinks.twitter && (
+                    <a href={artist.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                        <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
+                      </svg>
+                    </a>
+                  )}
+                  {artist.socialLinks.facebook && (
+                    <a href={artist.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                      </svg>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Monthly Listeners */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">Monthly Listeners</h3>
+              <p className="text-muted-foreground">
+                {artist?.monthlyListeners?.toLocaleString() || '500,000'} listeners
+              </p>
+            </div>
           </div>
         </TabsContent>
       </Tabs>
