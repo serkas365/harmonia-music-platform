@@ -547,11 +547,11 @@ const ArtistPage = () => {
         {/* Discography Tab */}
         <TabsContent value="discography">
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold">{t('common.discography')}</h2>
+            <h2 className="text-2xl font-bold">Discography</h2>
             
             {/* Albums Section */}
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold">{t('common.albums')}</h3>
+              <h3 className="text-xl font-semibold">Albums</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {isLoadingAlbums ? (
                   // Loading skeletons
@@ -570,7 +570,7 @@ const ArtistPage = () => {
                   ))
                 ) : (
                   <div className="col-span-full text-center py-8 text-muted-foreground bg-background-elevated rounded-lg">
-                    <p>{t('common.noAlbums')}</p>
+                    <p>No albums available</p>
                   </div>
                 )}
               </div>
@@ -578,7 +578,7 @@ const ArtistPage = () => {
             
             {/* Singles & EPs Section */}
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold">{t('common.singlesAndEPs')}</h3>
+              <h3 className="text-xl font-semibold">Singles & EPs</h3>
               <div className="space-y-2">
                 {isLoadingTracks ? (
                   // Loading skeletons
@@ -600,7 +600,7 @@ const ArtistPage = () => {
                     ))
                 ) : (
                   <div className="text-center py-8 text-muted-foreground bg-background-elevated rounded-lg">
-                    <p>{t('common.noSingles')}</p>
+                    <p>No singles available</p>
                   </div>
                 )}
               </div>
@@ -608,7 +608,7 @@ const ArtistPage = () => {
             
             {/* Featured On Section */}
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold">{t('common.featuredOn')}</h3>
+              <h3 className="text-xl font-semibold">Featured On</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {isLoadingTracks ? (
                   // Loading skeletons
@@ -636,20 +636,20 @@ const ArtistPage = () => {
                           className="absolute bottom-2 right-2 h-8 w-8 rounded-full bg-primary text-primary-foreground"
                         >
                           <Play className="h-4 w-4" />
-                          <span className="sr-only">{t('common.play')}</span>
+                          <span className="sr-only">Play</span>
                         </Button>
                       </div>
                       <div className="p-3">
                         <h4 className="font-medium text-sm line-clamp-1">{collab.trackTitle}</h4>
                         <p className="text-muted-foreground text-xs line-clamp-1">
-                          {t('common.with')} {collab.name}
+                          with {collab.name}
                         </p>
                       </div>
                     </div>
                   ))
                 ) : (
                   <div className="col-span-full text-center py-8 text-muted-foreground bg-background-elevated rounded-lg">
-                    <p>{t('common.noCollaborations')}</p>
+                    <p>No collaborations available</p>
                   </div>
                 )}
               </div>
@@ -660,7 +660,7 @@ const ArtistPage = () => {
         {/* Events Tab */}
         <TabsContent value="events">
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold">{t('common.upcomingEvents')}</h2>
+            <h2 className="text-2xl font-bold">Upcoming Events</h2>
             
             {events && events.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -693,7 +693,7 @@ const ArtistPage = () => {
                       {event.ticketLink && (
                         <Button size="sm" asChild>
                           <a href={event.ticketLink} target="_blank" rel="noopener noreferrer">
-                            <Ticket className="mr-1 h-4 w-4" /> {t('common.getTickets')}
+                            <Ticket className="mr-1 h-4 w-4" /> Get Tickets
                           </a>
                         </Button>
                       )}
@@ -706,17 +706,17 @@ const ArtistPage = () => {
             ) : (
               <div className="text-center py-12 bg-background-elevated rounded-lg">
                 <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">{t('common.noEvents')}</h3>
-                <p className="text-muted-foreground">{t('common.checkBackLater')}</p>
+                <h3 className="text-lg font-medium mb-2">No Events</h3>
+                <p className="text-muted-foreground">Check back later for upcoming events</p>
               </div>
             )}
             
             {/* Past Events Section */}
-            <h2 className="text-2xl font-bold mt-12">{t('common.pastEvents')}</h2>
+            <h2 className="text-2xl font-bold mt-12">Past Events</h2>
             <div className="text-center py-12 bg-background-elevated rounded-lg">
               <History className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">{t('common.noPastEvents')}</h3>
-              <p className="text-muted-foreground">{t('common.pastEventsDescription')}</p>
+              <h3 className="text-lg font-medium mb-2">No Past Events</h3>
+              <p className="text-muted-foreground">Past events will be archived here</p>
             </div>
           </div>
         </TabsContent>
@@ -724,8 +724,8 @@ const ArtistPage = () => {
         <TabsContent value="about">
           {/* About tab content */}
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold">{t('common.about')}</h2>
-            <p>{t('common.aboutArtistDescription')}</p>
+            <h2 className="text-2xl font-bold">About</h2>
+            <p className="text-muted-foreground">{artist?.bio || 'This artist has not added a bio yet.'}</p>
           </div>
         </TabsContent>
       </Tabs>
