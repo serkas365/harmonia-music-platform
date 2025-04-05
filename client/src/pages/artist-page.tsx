@@ -6,7 +6,7 @@ import { Artist, Album, Track, ArtistEvent } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BadgeCheck, ExternalLink, Calendar, Music, MapPin, Clock, Users, Ticket, Globe, User } from "lucide-react";
+import { BadgeCheck, ExternalLink, Calendar, Music, MapPin, Clock, Users, Ticket, Globe, User, Info, Play, History } from "lucide-react";
 import AlbumCard from "@/components/cards/AlbumCard";
 import TrackCard from "@/components/cards/TrackCard";
 import { formatDate } from "@/lib/utils";
@@ -43,6 +43,9 @@ interface Collaboration {
   trackTitle: string;
   trackId: number;
 }
+
+// Default placeholder image for albums without cover art
+const defaultAlbumCover = "https://placehold.co/400x400/333/FFF?text=No+Cover";
 
 const ArtistPage = () => {
   const { id } = useParams();
@@ -246,10 +249,24 @@ const ArtistPage = () => {
                 [...(tracks || []), ...(albums || [])]
                   .sort((a, b) => {
                     // Use a type guard to handle the difference between Album and Track
-                    const dateA = new Date('releaseDate' in a && a.releaseDate ? a.releaseDate : 
-                                           'createdAt' in a && a.createdAt ? a.createdAt : 0);
-                    const dateB = new Date('releaseDate' in b && b.releaseDate ? b.releaseDate : 
-                                           'createdAt' in b && b.createdAt ? b.createdAt : 0);
+                    // Safe type checking and date conversion
+                    let dateA: Date;
+                    if ('releaseDate' in a && a.releaseDate) {
+                      dateA = new Date(a.releaseDate);
+                    } else if ('createdAt' in a && a.createdAt) {
+                      dateA = new Date(a.createdAt);
+                    } else {
+                      dateA = new Date(0);
+                    }
+                    
+                    let dateB: Date;
+                    if ('releaseDate' in b && b.releaseDate) {
+                      dateB = new Date(b.releaseDate);
+                    } else if ('createdAt' in b && b.createdAt) {
+                      dateB = new Date(b.createdAt);
+                    } else {
+                      dateB = new Date(0);
+                    }
                     return dateB.getTime() - dateA.getTime();
                   })
                   .slice(0, 4)
@@ -681,13 +698,7 @@ const ArtistPage = () => {
                         </Button>
                       )}
                       
-                      {event.eventLink && (
-                        <Button size="sm" variant="outline" asChild>
-                          <a href={event.eventLink} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="mr-1 h-4 w-4" /> {t('common.moreInfo')}
-                          </a>
-                        </Button>
-                      )}
+                      {/* Additional event info button removed as eventLink is not in the schema */}
                     </div>
                   </div>
                 ))}
