@@ -58,6 +58,10 @@ export default function SocialMediaFeed({
           twitterData = generatePlaceholderPosts(artistId, artistName, 'twitter');
         } else {
           twitterData = await twitterResponse.json();
+          // If the API returns an empty array, use placeholder data instead
+          if (Array.isArray(twitterData) && twitterData.length === 0) {
+            twitterData = generatePlaceholderPosts(artistId, artistName, 'twitter');
+          }
         }
         
         setTwitterPosts(twitterData.slice(0, 4)); // Show only 4 posts
@@ -77,6 +81,10 @@ export default function SocialMediaFeed({
           instagramData = generatePlaceholderPosts(artistId, artistName, 'instagram');
         } else {
           instagramData = await instagramResponse.json();
+          // If the API returns an empty array, use placeholder data instead
+          if (Array.isArray(instagramData) && instagramData.length === 0) {
+            instagramData = generatePlaceholderPosts(artistId, artistName, 'instagram');
+          }
         }
         
         setInstagramPosts(instagramData.slice(0, 4)); // Show only 4 posts
