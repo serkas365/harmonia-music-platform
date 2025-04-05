@@ -316,8 +316,7 @@ const ArtistPage = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="overview">{t('common.overview')}</TabsTrigger>
-          <TabsTrigger value="albums">{t('common.albums')}</TabsTrigger>
-          <TabsTrigger value="tracks">{t('common.tracks')}</TabsTrigger>
+          <TabsTrigger value="discography">{t('common.discography')}</TabsTrigger>
           <TabsTrigger value="events">{t('common.events')}</TabsTrigger>
           <TabsTrigger value="about">{t('common.about')}</TabsTrigger>
         </TabsList>
@@ -357,7 +356,7 @@ const ArtistPage = () => {
                 
                 {tracks && tracks.length > 5 && (
                   <div className="mt-4 text-center">
-                    <Button variant="outline" onClick={() => setActiveTab("tracks")}>
+                    <Button variant="outline" onClick={() => setActiveTab("discography")}>
                       {t('common.seeAllTracks')}
                     </Button>
                   </div>
@@ -399,7 +398,7 @@ const ArtistPage = () => {
                 
                 {albums && albums.length > 4 && (
                   <div className="mt-4 text-center">
-                    <Button variant="outline" onClick={() => setActiveTab("albums")}>
+                    <Button variant="outline" onClick={() => setActiveTab("discography")}>
                       {t('common.seeAllAlbums')}
                     </Button>
                   </div>
@@ -561,58 +560,118 @@ const ArtistPage = () => {
           </div>
         </TabsContent>
         
-        {/* Albums Tab */}
-        <TabsContent value="albums">
-          <h2 className="text-xl font-bold mb-4">{t('common.discography')}</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {isLoadingAlbums ? (
-              // Loading skeletons
-              Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="bg-background-elevated rounded-lg overflow-hidden">
-                  <Skeleton className="aspect-square w-full" />
-                  <div className="p-3">
-                    <Skeleton className="h-4 w-3/4 mb-2" />
-                    <Skeleton className="h-3 w-1/2" />
+        {/* Discography Tab */}
+        <TabsContent value="discography">
+          <div className="space-y-10">
+            {/* Category selector pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+              <div className="bg-background-elevated rounded-full px-4 py-2 font-medium text-sm">
+                Albums
+              </div>
+              <div className="bg-card/50 hover:bg-card/80 transition-colors rounded-full px-4 py-2 font-medium text-sm cursor-pointer">
+                Singles and EPs
+              </div>
+              <div className="bg-card/50 hover:bg-card/80 transition-colors rounded-full px-4 py-2 font-medium text-sm cursor-pointer">
+                Featured on
+              </div>
+            </div>
+          
+            {/* Latest Release Section */}
+            <section>
+              <h2 className="text-xl font-bold mb-4">Latest release</h2>
+              {isLoadingAlbums ? (
+                <div className="flex gap-4 items-center">
+                  <Skeleton className="w-36 h-36 flex-shrink-0" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-4 w-24" />
                   </div>
                 </div>
-              ))
-            ) : albums && albums.length > 0 ? (
-              albums.map(album => (
-                <AlbumCard key={album.id} album={album} showArtist={false} />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-8 text-muted-foreground bg-background-elevated rounded-lg">
-                <p>{t('common.noAlbums')}</p>
-              </div>
-            )}
-          </div>
-        </TabsContent>
-        
-        {/* Tracks Tab */}
-        <TabsContent value="tracks">
-          <h2 className="text-xl font-bold mb-4">{t('common.allTracks')}</h2>
-          <div className="space-y-2">
-            {isLoadingTracks ? (
-              // Loading skeletons
-              Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="bg-background-elevated rounded-lg p-3 flex items-center">
-                  <Skeleton className="w-12 h-12 rounded mr-3 flex-shrink-0" />
-                  <div className="flex-1">
-                    <Skeleton className="h-4 w-3/4 mb-2" />
-                    <Skeleton className="h-3 w-1/2" />
+              ) : albums && albums.length > 0 ? (
+                <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
+                  <div className="w-36 h-36 flex-shrink-0">
+                    <img 
+                      src={albums[0].coverImage} 
+                      alt={albums[0].title}
+                      className="w-full h-full object-cover shadow-md"
+                    />
                   </div>
-                  <Skeleton className="w-16 h-8 rounded-md" />
+                  <div className="space-y-1 text-center sm:text-left">
+                    <h3 className="text-xl font-bold">{albums[0].title}</h3>
+                    <p className="text-muted-foreground">{new Date(albums[0].releaseDate).getFullYear()}</p>
+                  </div>
                 </div>
-              ))
-            ) : tracks && tracks.length > 0 ? (
-              tracks.map(track => (
-                <TrackCard key={track.id} track={track} />
-              ))
-            ) : (
-              <div className="text-center py-8 text-muted-foreground bg-background-elevated rounded-lg">
-                <p>{t('common.noTracks')}</p>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground bg-background-elevated rounded-lg">
+                  <p>{t('common.noAlbums')}</p>
+                </div>
+              )}
+            </section>
+            
+            {/* Albums Section */}
+            <section>
+              <h2 className="text-xl font-bold mb-4">Albums</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {isLoadingAlbums ? (
+                  // Loading skeletons
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex gap-3 items-center">
+                      <Skeleton className="w-16 h-16 rounded flex-shrink-0" />
+                      <div className="space-y-2 flex-1">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </div>
+                  ))
+                ) : albums && albums.length > 0 ? (
+                  albums.map(album => (
+                    <div key={album.id} className="flex gap-3 items-center group cursor-pointer hover:bg-background-elevated rounded-md p-2 transition-colors">
+                      <img 
+                        src={album.coverImage} 
+                        alt={album.title} 
+                        className="w-16 h-16 object-cover rounded shadow-sm"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm text-foreground truncate group-hover:text-primary transition-colors">{album.title}</h3>
+                        <p className="text-xs text-muted-foreground">{new Date(album.releaseDate).getFullYear()}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-8 text-muted-foreground bg-background-elevated rounded-lg">
+                    <p>{t('common.noAlbums')}</p>
+                  </div>
+                )}
               </div>
-            )}
+            </section>
+            
+            {/* Popular Tracks Section */}
+            <section>
+              <h2 className="text-xl font-bold mb-4">Popular tracks</h2>
+              <div className="space-y-2">
+                {isLoadingTracks ? (
+                  // Loading skeletons
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="bg-background-elevated rounded-lg p-3 flex items-center">
+                      <Skeleton className="w-12 h-12 rounded mr-3 flex-shrink-0" />
+                      <div className="flex-1">
+                        <Skeleton className="h-4 w-3/4 mb-2" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                      <Skeleton className="w-16 h-8 rounded-md" />
+                    </div>
+                  ))
+                ) : tracks && tracks.length > 0 ? (
+                  tracks.slice(0, 5).map(track => (
+                    <TrackCard key={track.id} track={track} />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground bg-background-elevated rounded-lg">
+                    <p>{t('common.noTracks')}</p>
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
         </TabsContent>
         
