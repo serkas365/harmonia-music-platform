@@ -617,7 +617,20 @@ const ArtistDashboardPage = () => {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">{t('common.artistDashboard')}</h1>
       
-      {/* Upload Dialog - Removed */}
+      {/* Upload Dialog */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent className="w-[90%] sm:max-w-[550px] max-h-[85vh] overflow-y-auto p-6">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-xl">
+              {editingUpload ? t('artistDashboard.editUpload') : t('artistDashboard.newUpload')}
+            </DialogTitle>
+            <DialogDescription className="mt-2">
+              {editingUpload 
+                ? t('artistDashboard.editUploadDescription')
+                : t('artistDashboard.newUploadDescription')
+              }
+            </DialogDescription>
+          </DialogHeader>
           
           <div className="space-y-8 py-4">
             <div className="space-y-2">
@@ -1081,6 +1094,22 @@ const ArtistDashboardPage = () => {
               </div>
             )}
           </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button 
+              onClick={() => handleSaveUpload()} 
+              disabled={isPendingUpload || !uploadFormData.title}
+            >
+              {isPendingUpload ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('common.processing')}</>
+              ) : editingUpload ? t('common.update') : t('common.create')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
         <TabsList className="mb-6 grid grid-cols-5 w-full overflow-visible">
@@ -1658,6 +1687,13 @@ const ArtistDashboardPage = () => {
                       {t('artistDashboard.manageYourMusic')}
                     </CardDescription>
                   </div>
+                  <Button 
+                    onClick={() => setShowUploadDialog(true)}
+                    className="flex gap-2 items-center"
+                  >
+                    <Upload className="h-4 w-4" />
+                    {t('artistDashboard.uploadMusic')}
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
