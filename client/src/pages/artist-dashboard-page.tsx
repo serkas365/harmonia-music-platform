@@ -619,7 +619,7 @@ const ArtistDashboardPage = () => {
       
       {/* Upload Dialog */}
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-        <DialogContent className="max-w-2xl w-[95%] mx-auto max-h-[90vh] overflow-y-auto p-6 m-4">
+        <DialogContent className="w-[90%] sm:max-w-[550px] max-h-[85vh] overflow-y-auto p-4 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
           <DialogHeader className="mb-6">
             <DialogTitle className="text-xl">
               {editingUpload ? t('artistDashboard.editUpload') : t('artistDashboard.newUpload')}
@@ -1112,7 +1112,7 @@ const ArtistDashboardPage = () => {
       </Dialog>
       
       <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="mb-6 flex flex-nowrap overflow-x-auto w-full pb-2 gap-1">
+        <TabsList className="mb-6 grid grid-cols-5 w-full overflow-visible">
           <TabsTrigger value="overview" className="flex-shrink-0 flex items-center gap-1 px-3">
             <TrendingUp className="h-4 w-4" /> {t('artistDashboard.overview')}
           </TabsTrigger>
@@ -1299,7 +1299,7 @@ const ArtistDashboardPage = () => {
         {/* Profile Tab */}
         <TabsContent value="profile">
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="mb-6 flex-nowrap overflow-x-auto w-full">
+            <TabsList className="mb-6 grid grid-cols-2 w-full overflow-visible">
               <TabsTrigger value="general">{t('artistProfile.generalInfo')}</TabsTrigger>
               <TabsTrigger value="social">{t('artistProfile.socialMedia')}</TabsTrigger>
             </TabsList>
@@ -1698,7 +1698,7 @@ const ArtistDashboardPage = () => {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="all">
-                  <TabsList className="mb-4 flex-nowrap overflow-x-auto w-full">
+                  <TabsList className="mb-4 grid grid-cols-5 w-full overflow-visible">
                     <TabsTrigger value="all">{t('common.all')}</TabsTrigger>
                     <TabsTrigger value="tracks">{t('common.tracks')}</TabsTrigger>
                     <TabsTrigger value="albums">{t('common.albums')}</TabsTrigger>
