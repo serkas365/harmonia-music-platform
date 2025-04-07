@@ -619,12 +619,12 @@ const ArtistDashboardPage = () => {
       
       {/* Upload Dialog */}
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-        <DialogContent className="max-w-2xl mx-auto max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="max-w-2xl mx-auto max-h-[90vh] overflow-y-auto p-6">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-xl">
               {editingUpload ? t('artistDashboard.editUpload') : t('artistDashboard.newUpload')}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="mt-2">
               {editingUpload 
                 ? t('artistDashboard.editUploadDescription')
                 : t('artistDashboard.newUploadDescription')
@@ -632,7 +632,7 @@ const ArtistDashboardPage = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-6 py-4">
+          <div className="space-y-8 py-4">
             <div className="space-y-2">
               <Label htmlFor="upload-title">{t('artistDashboard.uploadTitle')}</Label>
               <Input 
@@ -804,8 +804,13 @@ const ArtistDashboardPage = () => {
                         details: {...uploadFormData.details, coverImage: e.target.value}
                       })}
                       placeholder="https://example.com/image.jpg"
-                      className="mb-2"
+                      className="mb-2 w-full text-sm truncate"
                     />
+                    {uploadFormData.details.coverImage && (
+                      <div className="text-xs mb-2 p-1 bg-muted rounded truncate" title={uploadFormData.details.coverImage}>
+                        {uploadFormData.details.coverImage}
+                      </div>
+                    )}
                     <p className="text-xs text-muted-foreground">{t('artistDashboard.imageHelp')}</p>
                   </div>
                 </div>
@@ -868,7 +873,13 @@ const ArtistDashboardPage = () => {
                         details: {...uploadFormData.details, audioFile: e.target.value}
                       })}
                       placeholder="https://example.com/track.mp3"
+                      className="mb-2 w-full text-sm truncate"
                     />
+                    {uploadFormData.details.audioFile && (
+                      <div className="text-xs mb-2 p-1 bg-muted rounded truncate" title={uploadFormData.details.audioFile}>
+                        {uploadFormData.details.audioFile}
+                      </div>
+                    )}
                     <p className="text-xs text-muted-foreground">{t('artistDashboard.fileHelp')}</p>
                   </div>
                   
@@ -948,13 +959,43 @@ const ArtistDashboardPage = () => {
                     </div>
                   ) : (
                     (uploadFormData.details.tracklist || []).map((track, index) => (
-                      <div key={index} className="flex gap-4 p-4 border rounded-md">
-                        <div className="flex flex-col justify-center items-center min-w-[40px]">
-                          <span className="font-bold text-xl">{track.trackNumber}</span>
+                      <div key={index} className="flex flex-col p-6 border rounded-md">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <Badge variant="outline" className="h-8 w-8 rounded-full flex items-center justify-center p-0 text-lg font-bold">
+                              {track.trackNumber}
+                            </Badge>
+                            <h4 className="text-lg font-medium">{track.title || t('common.untitledTrack')}</h4>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              const newTracklist = [...(uploadFormData.details.tracklist || [])];
+                              newTracklist.splice(index, 1);
+                              // Renumber remaining tracks
+                              newTracklist.forEach((t, i) => {
+                                t.trackNumber = i + 1;
+                              });
+                              setUploadFormData({
+                                ...uploadFormData,
+                                details: {
+                                  ...uploadFormData.details,
+                                  tracklist: newTracklist
+                                }
+                              });
+                            }}
+                            className="text-muted-foreground hover:text-destructive transition-colors"
+                          >
+                            <Trash className="h-5 w-5" />
+                            <span className="sr-only">Remove track</span>
+                          </Button>
                         </div>
-                        <div className="flex-1 space-y-3">
+                        
+                        <div className="space-y-4">
                           <div>
-                            <Label htmlFor={`track-title-${index}`}>{t('common.title')}</Label>
+                            <Label htmlFor={`track-title-${index}`} className="font-medium">{t('common.title')}</Label>
                             <Input
                               id={`track-title-${index}`}
                               value={track.title}
@@ -970,62 +1011,75 @@ const ArtistDashboardPage = () => {
                                 });
                               }}
                               placeholder={t('artistDashboard.titlePlaceholder')}
+                              className="mt-1"
                             />
                           </div>
+                          
                           <div>
-                            <Label htmlFor={`track-audio-${index}`}>{t('common.audioFile')}</Label>
-                            <div className="flex gap-2 mt-1">
-                              <Button 
-                                type="button" 
-                                variant="outline" 
-                                size="sm" 
-                                className="flex-1"
-                                onClick={() => {
-                                  const input = document.createElement('input');
-                                  input.type = 'file';
-                                  input.accept = 'audio/*';
-                                  input.onchange = (e) => {
-                                    const file = (e.target as HTMLInputElement).files?.[0];
-                                    if (file) {
-                                      // In a real app, we'd upload this to storage
-                                      const audioUrl = URL.createObjectURL(file);
-                                      const newTracklist = [...(uploadFormData.details.tracklist || [])];
-                                      newTracklist[index].audioFile = audioUrl;
-                                      setUploadFormData({
-                                        ...uploadFormData,
-                                        details: {
-                                          ...uploadFormData.details,
-                                          tracklist: newTracklist
-                                        }
-                                      });
-                                    }
-                                  };
-                                  input.click();
-                                }}
-                              >
-                                {t('common.uploadFromDevice')}
-                              </Button>
-                              <Input
-                                id={`track-audio-${index}`}
-                                value={track.audioFile}
-                                onChange={(e) => {
-                                  const newTracklist = [...(uploadFormData.details.tracklist || [])];
-                                  newTracklist[index].audioFile = e.target.value;
-                                  setUploadFormData({
-                                    ...uploadFormData,
-                                    details: {
-                                      ...uploadFormData.details,
-                                      tracklist: newTracklist
-                                    }
-                                  });
-                                }}
-                                placeholder="https://example.com/track.mp3"
-                              />
+                            <Label htmlFor={`track-audio-${index}`} className="font-medium">{t('common.audioFile')}</Label>
+                            <div className="flex flex-col gap-2 mt-1">
+                              <div className="flex gap-2">
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="flex-1"
+                                  onClick={() => {
+                                    const input = document.createElement('input');
+                                    input.type = 'file';
+                                    input.accept = 'audio/*';
+                                    input.onchange = (e) => {
+                                      const file = (e.target as HTMLInputElement).files?.[0];
+                                      if (file) {
+                                        // In a real app, we'd upload this to storage
+                                        const audioUrl = URL.createObjectURL(file);
+                                        const newTracklist = [...(uploadFormData.details.tracklist || [])];
+                                        newTracklist[index].audioFile = audioUrl;
+                                        setUploadFormData({
+                                          ...uploadFormData,
+                                          details: {
+                                            ...uploadFormData.details,
+                                            tracklist: newTracklist
+                                          }
+                                        });
+                                      }
+                                    };
+                                    input.click();
+                                  }}
+                                >
+                                  {t('common.uploadFromDevice')}
+                                </Button>
+                                <span className="flex items-center font-medium text-sm">OR</span>
+                                <Input
+                                  id={`track-audio-${index}`}
+                                  value={track.audioFile}
+                                  onChange={(e) => {
+                                    const newTracklist = [...(uploadFormData.details.tracklist || [])];
+                                    newTracklist[index].audioFile = e.target.value;
+                                    setUploadFormData({
+                                      ...uploadFormData,
+                                      details: {
+                                        ...uploadFormData.details,
+                                        tracklist: newTracklist
+                                      }
+                                    });
+                                  }}
+                                  placeholder="https://example.com/track.mp3"
+                                  className="flex-1"
+                                />
+                              </div>
+                              
+                              {track.audioFile && (
+                                <div className="text-xs p-1 bg-muted rounded truncate" title={track.audioFile}>
+                                  {track.audioFile}
+                                </div>
+                              )}
                             </div>
+                            
                             {track.audioFile && (
                               <audio 
                                 controls 
-                                className="w-full mt-2" 
+                                className="w-full mt-3" 
                                 src={track.audioFile}
                               >
                                 {t('common.audioNotSupported')}
@@ -1033,29 +1087,6 @@ const ArtistDashboardPage = () => {
                             )}
                           </div>
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            const newTracklist = [...(uploadFormData.details.tracklist || [])];
-                            newTracklist.splice(index, 1);
-                            // Renumber remaining tracks
-                            newTracklist.forEach((t, i) => {
-                              t.trackNumber = i + 1;
-                            });
-                            setUploadFormData({
-                              ...uploadFormData,
-                              details: {
-                                ...uploadFormData.details,
-                                tracklist: newTracklist
-                              }
-                            });
-                          }}
-                        >
-                          <Trash className="h-4 w-4" />
-                          <span className="sr-only">Remove track</span>
-                        </Button>
                       </div>
                     ))
                   )}
