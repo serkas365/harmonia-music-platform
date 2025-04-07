@@ -6,7 +6,7 @@ import { Artist, Album, Track, ArtistEvent } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BadgeCheck, ExternalLink, Calendar, Music, MapPin, Clock, Users, Ticket, Globe, User, Info, Play, History, Youtube, Instagram, Twitter, Facebook } from "lucide-react";
+import { BadgeCheck, ExternalLink, Calendar, Music, MapPin, Clock, Users, Ticket, Globe, User, Info as InfoIcon, Play, History, Youtube, Instagram, Twitter, Facebook } from "lucide-react";
 import AlbumCard from "@/components/cards/AlbumCard";
 import TrackCard from "@/components/cards/TrackCard";
 import { formatDate } from "@/lib/utils";
@@ -685,7 +685,7 @@ const ArtistPage = () => {
                       </div>
                       {event.description && (
                         <div className="flex items-start gap-2 mt-1">
-                          <Info className="h-4 w-4 text-primary mt-1" />
+                          <InfoIcon className="h-4 w-4 text-primary mt-1" />
                           <p className="text-muted-foreground">{event.description}</p>
                         </div>
                       )}

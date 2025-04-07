@@ -95,6 +95,9 @@ const ArtistDashboardPage = () => {
   
   const [activeTab, setActiveTab] = useState(getInitialTab);
   const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'year' | 'all'>('month');
+  
+  // States to manage pending upload operations (simulating upload process)
+  const [isPendingUpload, setIsPendingUpload] = useState(false);
 
   // States for artist profile data
   const [name, setName] = useState('');
@@ -454,9 +457,6 @@ const ArtistDashboardPage = () => {
       </div>
     );
   }
-
-  // States to manage pending upload operations (simulating upload process)
-  const [isPendingUpload, setIsPendingUpload] = useState(false);
   
   return (
     <div className="container mx-auto px-4 py-8">
