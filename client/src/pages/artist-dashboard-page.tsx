@@ -602,7 +602,12 @@ const ArtistDashboardPage = () => {
                         uploadType: 'album',
                         details: {
                           ...uploadFormData.details,
-                          audioFile: undefined
+                          audioFile: undefined,
+                          tracklist: [{
+                            title: '',
+                            audioFile: '',
+                            trackNumber: 1
+                          }]
                         }
                       })}
                       className="h-4 w-4 text-primary"
