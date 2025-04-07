@@ -121,7 +121,8 @@ const ArtistDashboardPage = () => {
       description: '',
       genres: [],
       coverImage: '',
-      audioFile: ''
+      audioFile: '',
+      tracklist: []
     }
   });
 
@@ -597,19 +598,22 @@ const ArtistDashboardPage = () => {
                       type="radio"
                       id="type-album"
                       checked={uploadFormData.uploadType === 'album'}
-                      onChange={() => setUploadFormData({
-                        ...uploadFormData,
-                        uploadType: 'album',
-                        details: {
-                          ...uploadFormData.details,
-                          audioFile: undefined,
-                          tracklist: [{
-                            title: '',
-                            audioFile: '',
-                            trackNumber: 1
-                          }]
-                        }
-                      })}
+                      onChange={() => {
+                        console.log("Switching to album type");
+                        setUploadFormData({
+                          ...uploadFormData,
+                          uploadType: 'album',
+                          details: {
+                            ...uploadFormData.details,
+                            audioFile: undefined,
+                            tracklist: [{
+                              title: '',
+                              audioFile: '',
+                              trackNumber: 1
+                            }]
+                          }
+                        });
+                      }}
                       className="h-4 w-4 text-primary"
                     />
                     <Label htmlFor="type-album" className="cursor-pointer">
