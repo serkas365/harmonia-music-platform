@@ -3,7 +3,35 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Redirect } from 'wouter';
-import { ArtistAnalytics, ArtistFollower, Artist, ArtistUpload } from '@shared/schema';
+import { ArtistAnalytics, ArtistFollower, Artist } from '@shared/schema';
+
+// Extended ArtistUpload type to match our implementation
+interface ArtistUpload {
+  id: number;
+  artistId: number;
+  title: string;
+  uploadType: string;
+  status: string;
+  details: {
+    description?: string;
+    genres?: string[];
+    coverImage?: string;
+    audioFile?: string;
+    tracklist?: { title: string; audioFile: string; trackNumber: number; }[];
+    tracks?: { 
+      title: string; 
+      audioFile?: string; 
+      audioUrl?: string;
+      trackNumber: number;
+      duration?: number;
+      price?: number;
+      explicit?: boolean;
+    }[];
+    [key: string]: any;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
 import { 
   Loader2, TrendingUp, Users, User, Calendar, Save, Upload, DollarSign,
   Globe, Instagram, Twitter, Youtube, Facebook, Link2, Plus, Trash,
@@ -74,7 +102,15 @@ interface UploadFormData {
     duration?: number;
     price?: number;
     explicit?: boolean;
-    tracks?: any[];
+    tracks?: { 
+      title: string; 
+      audioFile?: string; 
+      audioUrl?: string;
+      trackNumber: number;
+      duration?: number;
+      price?: number;
+      explicit?: boolean;
+    }[];
     errorMessage?: string;
     tracklist?: { title: string; audioFile: string; trackNumber: number; }[];
   };
@@ -125,6 +161,9 @@ const ArtistDashboardPage = () => {
       tracklist: []
     }
   });
+  
+  // For debugging
+  const [debugLog, setDebugLog] = useState<string[]>([]);
 
   // Redirect if not an artist
   if (!user || user.role !== 'artist') {
