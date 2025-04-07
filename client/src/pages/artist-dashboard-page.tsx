@@ -342,7 +342,12 @@ const ArtistDashboardPage = () => {
         description: '',
         genres: [],
         coverImage: '',
-        audioFile: type === 'track' ? '' : undefined
+        audioFile: type === 'track' ? '' : undefined,
+        tracklist: type === 'album' ? [{
+          title: '',
+          audioFile: '',
+          trackNumber: 1
+        }] : undefined
       }
     });
     setShowUploadDialog(true);
@@ -358,13 +363,37 @@ const ArtistDashboardPage = () => {
         description: upload.details.description || '',
         genres: upload.details.genres || [],
         coverImage: upload.details.coverImage || '',
-        audioFile: upload.details.audioFile || ''
+        audioFile: upload.details.audioFile || '',
+        // If it's an album, also load any existing tracklist or create a default one
+        tracklist: upload.uploadType === 'album' 
+          ? (upload.details.tracklist || upload.details.tracks?.map((track: any, index: number) => ({
+              title: track.title || '',
+              audioFile: track.audioFile || track.audioUrl || '',
+              trackNumber: track.trackNumber || index + 1
+            })) || [{
+              title: '',
+              audioFile: '',
+              trackNumber: 1
+            }])
+          : undefined
       }
     });
     setShowUploadDialog(true);
   };
   
   const handleSaveUpload = () => {
+    console.log("Saving upload form data:", JSON.stringify(uploadFormData, null, 2));
+    
+    // If it's an album upload, make sure we handle the tracklist properly
+    if (uploadFormData.uploadType === 'album') {
+      // Add tracklist data to the standard tracks field for backend compatibility
+      uploadFormData.details.tracks = uploadFormData.details.tracklist?.map(track => ({
+        title: track.title,
+        audioFile: track.audioFile,
+        trackNumber: track.trackNumber
+      })) || [];
+    }
+    
     if (editingUpload) {
       // Update existing upload
       updateUploadMutation.mutate({
@@ -415,42 +444,54 @@ const ArtistDashboardPage = () => {
   };
   
   const handleSubmitUpload = (upload: ArtistUpload) => {
+    console.log("Submitting upload:", JSON.stringify(upload, null, 2));
     const processData: any = { id: upload.id };
     
     if (upload.uploadType === 'track') {
       // Prepare track data
       processData.trackData = {
         title: upload.title,
-        description: upload.details.description,
-        genres: upload.details.genres,
-        imageUrl: upload.details.coverImage,
-        audioUrl: upload.details.audioFile,
-        releaseDate: upload.details.releaseDate || new Date().toISOString(),
-        duration: upload.details.duration || 180, // Default 3 minutes
-        price: upload.details.price || 99, // Default 0.99
+        description: upload.details.description || '',
+        genres: upload.details.genres || [],
+        imageUrl: upload.details.coverImage || '',
+        audioUrl: upload.details.audioFile || '',
+        releaseDate: new Date().toISOString(),
+        duration: 180, // Default 3 minutes
+        price: 99, // Default 0.99
         purchaseAvailable: true,
         downloadAvailable: true,
-        explicit: upload.details.explicit || false
+        explicit: false
       };
     } else {
       // Prepare album data
       processData.albumData = {
         title: upload.title,
-        description: upload.details.description,
-        genres: upload.details.genres,
-        coverImage: upload.details.coverImage,
-        releaseDate: upload.details.releaseDate || new Date().toISOString(),
-        price: upload.details.price || 999, // Default 9.99
+        description: upload.details.description || '',
+        genres: upload.details.genres || [],
+        coverImage: upload.details.coverImage || '',
+        releaseDate: new Date().toISOString(),
+        price: 999, // Default 9.99
         purchaseAvailable: true
       };
       
-      // If there are tracks in the album details
-      if (upload.details.tracks && Array.isArray(upload.details.tracks)) {
+      // Process tracklist - prefer tracklist over tracks for album uploads
+      if (upload.details.tracklist && Array.isArray(upload.details.tracklist)) {
+        processData.tracks = upload.details.tracklist.map(track => ({
+          title: track.title,
+          audioUrl: track.audioFile,
+          trackNumber: track.trackNumber,
+          duration: 180, // Default duration
+          price: 99, // Default price
+          explicit: false
+        }));
+      } else if (upload.details.tracks && Array.isArray(upload.details.tracks)) {
         processData.tracks = upload.details.tracks;
       } else {
         processData.tracks = []; // Default empty tracks array
       }
     }
+    
+    console.log("Process data:", JSON.stringify(processData, null, 2));
     
     // Process the upload
     processUploadMutation.mutate(processData);
