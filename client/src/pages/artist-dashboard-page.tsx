@@ -1679,7 +1679,7 @@ const ArtistDashboardPage = () => {
               
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="upload-title">{t('common.title')}</Label>
+                  <Label htmlFor="upload-title">{t('title')}</Label>
                   <Input
                     id="upload-title"
                     value={uploadFormData.title}
@@ -1690,7 +1690,7 @@ const ArtistDashboardPage = () => {
                 
                 {!editingUpload && (
                   <div className="grid gap-2">
-                    <Label>{t('common.uploadType')}</Label>
+                    <Label>{t('uploadType')}</Label>
                     <div className="flex gap-4">
                       <div className="flex items-center space-x-2">
                         <input
@@ -1701,7 +1701,7 @@ const ArtistDashboardPage = () => {
                           className="h-4 w-4"
                         />
                         <Label htmlFor="upload-type-track" className="font-normal">
-                          {t('common.track')}
+                          {t('track')}
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -1713,7 +1713,7 @@ const ArtistDashboardPage = () => {
                           className="h-4 w-4"
                         />
                         <Label htmlFor="upload-type-album" className="font-normal">
-                          {t('common.album')}
+                          {t('album')}
                         </Label>
                       </div>
                     </div>
@@ -1721,7 +1721,7 @@ const ArtistDashboardPage = () => {
                 )}
                 
                 <div className="grid gap-2">
-                  <Label htmlFor="upload-description">{t('common.description')}</Label>
+                  <Label htmlFor="upload-description">{t('description')}</Label>
                   <Textarea
                     id="upload-description"
                     value={uploadFormData.details.description}
@@ -1735,7 +1735,7 @@ const ArtistDashboardPage = () => {
                 </div>
                 
                 <div className="grid gap-2">
-                  <Label htmlFor="upload-genres">{t('common.genres')}</Label>
+                  <Label htmlFor="upload-genres">{t('genres')}</Label>
                   <Input
                     id="upload-genres"
                     value={uploadFormData.details.genres.join(', ')}
@@ -1745,11 +1745,11 @@ const ArtistDashboardPage = () => {
                     })}
                     placeholder={t('artistDashboard.genresPlaceholder')}
                   />
-                  <p className="text-xs text-muted-foreground">{t('artistDashboard.genresHelp')}</p>
+                  <p className="text-xs text-muted-foreground">{t('genresHelp')}</p>
                 </div>
                 
                 <div className="grid gap-2">
-                  <Label htmlFor="upload-cover">{t('common.coverImage')}</Label>
+                  <Label htmlFor="upload-cover">{t('coverImage')}</Label>
                   <div className="flex gap-4 items-start">
                     <div className="w-20 h-20 rounded overflow-hidden bg-accent flex-shrink-0">
                       {uploadFormData.details.coverImage ? (
@@ -1760,7 +1760,7 @@ const ArtistDashboardPage = () => {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-center p-1">
-                          {t('common.noCover')}
+                          {t('noCover')}
                         </div>
                       )}
                     </div>
@@ -1775,14 +1775,14 @@ const ArtistDashboardPage = () => {
                         placeholder="https://example.com/image.jpg"
                         className="mb-2"
                       />
-                      <p className="text-xs text-muted-foreground">{t('artistDashboard.coverImageHelp')}</p>
+                      <p className="text-xs text-muted-foreground">{t('coverImageHelp')}</p>
                     </div>
                   </div>
                 </div>
                 
                 {uploadFormData.uploadType === 'track' && (
                   <div className="grid gap-2">
-                    <Label htmlFor="upload-audio">{t('common.audioFile')}</Label>
+                    <Label htmlFor="upload-audio">{t('audioFile')}</Label>
                     <Input
                       id="upload-audio"
                       value={uploadFormData.details.audioFile}
@@ -1792,21 +1792,21 @@ const ArtistDashboardPage = () => {
                       })}
                       placeholder="https://example.com/track.mp3"
                     />
-                    <p className="text-xs text-muted-foreground">{t('artistDashboard.audioFileHelp')}</p>
+                    <p className="text-xs text-muted-foreground">{t('audioFileHelp')}</p>
                   </div>
                 )}
               </div>
               
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
-                  {t('common.cancel')}
+                  {t('cancel')}
                 </Button>
                 <Button 
                   onClick={handleSaveUpload}
                   disabled={!uploadFormData.title || isPendingUpload}
                 >
                   {isPendingUpload && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {editingUpload ? t('common.update') : t('common.create')}
+                  {editingUpload ? t('update') : t('create')}
                 </Button>
               </DialogFooter>
             </DialogContent>
