@@ -12,6 +12,8 @@ interface ArtistUpload {
   title: string;
   uploadType: string;
   status: string;
+  trackId?: number;
+  albumId?: number;
   details: {
     description?: string;
     genres?: string[];
@@ -2253,7 +2255,7 @@ const ArtistDashboardPage = () => {
                   </div>
                 </div>
                 
-                {uploadFormData.uploadType === 'track' && (
+                {uploadFormData.uploadType === 'track' ? (
                   <div className="grid gap-2">
                     <Label htmlFor="upload-audio">{t('audioFile')}</Label>
                     
