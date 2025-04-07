@@ -619,7 +619,7 @@ const ArtistDashboardPage = () => {
       
       {/* Upload Dialog */}
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-        <DialogContent className="max-w-2xl mx-auto max-h-[90vh] overflow-y-auto p-6">
+        <DialogContent className="max-w-2xl w-[95%] mx-auto max-h-[90vh] overflow-y-auto p-6 m-4">
           <DialogHeader className="mb-6">
             <DialogTitle className="text-xl">
               {editingUpload ? t('artistDashboard.editUpload') : t('artistDashboard.newUpload')}
@@ -1112,20 +1112,20 @@ const ArtistDashboardPage = () => {
       </Dialog>
       
       <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="overview" className="flex items-center gap-1">
+        <TabsList className="mb-6 flex flex-nowrap overflow-x-auto w-full pb-2 gap-1">
+          <TabsTrigger value="overview" className="flex-shrink-0 flex items-center gap-1 px-3">
             <TrendingUp className="h-4 w-4" /> {t('artistDashboard.overview')}
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-1">
+          <TabsTrigger value="analytics" className="flex-shrink-0 flex items-center gap-1 px-3">
             <Users className="h-4 w-4" /> {t('artistDashboard.analytics')}
           </TabsTrigger>
-          <TabsTrigger value="profile" className="flex items-center gap-1">
+          <TabsTrigger value="profile" className="flex-shrink-0 flex items-center gap-1 px-3">
             <User className="h-4 w-4" /> {t('artistDashboard.profile')}
           </TabsTrigger>
-          <TabsTrigger value="uploads" className="flex items-center gap-1">
+          <TabsTrigger value="uploads" className="flex-shrink-0 flex items-center gap-1 px-3">
             <Upload className="h-4 w-4" /> {t('artistDashboard.uploads')}
           </TabsTrigger>
-          <TabsTrigger value="royalties" className="flex items-center gap-1">
+          <TabsTrigger value="royalties" className="flex-shrink-0 flex items-center gap-1 px-3">
             <DollarSign className="h-4 w-4" /> {t('artistDashboard.royalties')}
           </TabsTrigger>
         </TabsList>
@@ -1299,7 +1299,7 @@ const ArtistDashboardPage = () => {
         {/* Profile Tab */}
         <TabsContent value="profile">
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="mb-6">
+            <TabsList className="mb-6 flex-nowrap overflow-x-auto w-full">
               <TabsTrigger value="general">{t('artistProfile.generalInfo')}</TabsTrigger>
               <TabsTrigger value="social">{t('artistProfile.socialMedia')}</TabsTrigger>
             </TabsList>
@@ -1698,7 +1698,7 @@ const ArtistDashboardPage = () => {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="all">
-                  <TabsList className="mb-4">
+                  <TabsList className="mb-4 flex-nowrap overflow-x-auto w-full">
                     <TabsTrigger value="all">{t('common.all')}</TabsTrigger>
                     <TabsTrigger value="tracks">{t('common.tracks')}</TabsTrigger>
                     <TabsTrigger value="albums">{t('common.albums')}</TabsTrigger>
