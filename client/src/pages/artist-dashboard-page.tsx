@@ -1347,12 +1347,22 @@ const ArtistDashboardPage = () => {
         <TabsContent value="uploads">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <Card className="md:col-span-2">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle>{t('artistDashboard.recentUploads')}</CardTitle>
-                <Upload className="h-5 w-5 text-muted-foreground" />
-                <CardDescription>
-                  {t('artistDashboard.manageYourMusic')}
-                </CardDescription>
+              <CardHeader>
+                <div className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>{t('artistDashboard.recentUploads')}</CardTitle>
+                    <CardDescription>
+                      {t('artistDashboard.manageYourMusic')}
+                    </CardDescription>
+                  </div>
+                  <Button 
+                    onClick={() => setShowUploadDialog(true)}
+                    className="flex gap-2 items-center"
+                  >
+                    <Upload className="h-4 w-4" />
+                    {t('artistDashboard.uploadMusic')}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="all">
