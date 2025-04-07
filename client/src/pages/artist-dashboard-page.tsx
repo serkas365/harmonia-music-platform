@@ -456,13 +456,48 @@ const ArtistDashboardPage = () => {
   // Function to publish the upload (convert it to a track/album in the catalog)
   const publishUpload = async (upload: ArtistUpload) => {
     try {
-      const response = await fetch(`/api/artist-dashboard/uploads/${upload.id}/publish`, {
+      console.log("Publishing upload:", upload.id, "with data:", JSON.stringify(upload, null, 2));
+      
+      // Ensure upload has a valid ID
+      if (!upload.id) {
+        console.error("Upload ID is missing");
+        throw new Error('Upload ID is missing');
+      }
+      
+      const response = await fetch(`/api/artist-dashboard/uploads/${upload.id}/process`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: upload.id,
+          // Add necessary data for processing
+          albumData: upload.uploadType === 'album' ? {
+            title: upload.title,
+            description: upload.details.description || '',
+            genres: upload.details.genres || [],
+            coverImage: upload.details.coverImage || ''
+          } : undefined,
+          trackData: upload.uploadType === 'track' ? {
+            title: upload.title,
+            description: upload.details.description || '',
+            genres: upload.details.genres || [],
+            imageUrl: upload.details.coverImage || '',
+            audioUrl: upload.details.audioFile || ''
+          } : undefined,
+          tracks: upload.uploadType === 'album' ? 
+            (upload.details.tracklist || []).map(track => ({
+              title: track.title,
+              audioUrl: track.audioFile,
+              trackNumber: track.trackNumber
+            })) : []
+        })
       });
       
+      console.log("Publish response status:", response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to publish upload');
+        const errorText = await response.text();
+        console.error("Server error response:", errorText);
+        throw new Error(`Failed to publish upload: ${response.status} ${errorText}`);
       }
       
       // Refresh uploads list
@@ -584,7 +619,7 @@ const ArtistDashboardPage = () => {
       
       {/* Upload Dialog */}
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl mx-auto max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingUpload ? t('artistDashboard.editUpload') : t('artistDashboard.newUpload')}
