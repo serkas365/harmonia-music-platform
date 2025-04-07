@@ -1081,6 +1081,22 @@ const ArtistDashboardPage = () => {
               </div>
             )}
           </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button 
+              onClick={() => handleSaveUpload()} 
+              disabled={isPendingUpload || !uploadFormData.title}
+            >
+              {isPendingUpload ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('common.processing')}</>
+              ) : editingUpload ? t('common.update') : t('common.create')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
         <TabsList className="mb-6 grid grid-cols-5 w-full overflow-visible">
