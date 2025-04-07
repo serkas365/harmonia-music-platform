@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Redirect } from 'wouter';
-import { ArtistAnalytics, ArtistFollower, Artist } from '@shared/schema';
+import { ArtistAnalytics, ArtistFollower, Artist, ArtistUpload } from '@shared/schema';
 import { 
   Loader2, TrendingUp, Users, User, Calendar, Save, Upload, DollarSign,
-  Globe, Instagram, Twitter, Youtube, Facebook, Link2 
+  Globe, Instagram, Twitter, Youtube, Facebook, Link2, 
+  Pencil, ExternalLink, Music, Album as AlbumIcon, MusicIcon
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
   Card,
   CardContent,
@@ -42,11 +44,41 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
+
+// Type for upload form data
+interface UploadFormData {
+  id?: number;
+  title: string;
+  uploadType: 'track' | 'album';
+  details: {
+    description: string;
+    genres: string[];
+    coverImage: string;
+    audioFile?: string;
+    releaseDate?: string;
+    duration?: number;
+    price?: number;
+    explicit?: boolean;
+    tracks?: any[];
+    errorMessage?: string;
+    tracklist?: { title: string; audioFile: string; trackNumber: number; }[];
+  };
+}
 
 const ArtistDashboardPage = () => {
   const { t } = useTranslation();
@@ -74,6 +106,21 @@ const ArtistDashboardPage = () => {
   const [twitter, setTwitter] = useState('');
   const [facebook, setFacebook] = useState('');
   const [youtube, setYoutube] = useState('');
+
+  // States for uploads tab
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [editingUpload, setEditingUpload] = useState<ArtistUpload | null>(null);
+  const [newUploadType, setNewUploadType] = useState<'track' | 'album'>('track');
+  const [uploadFormData, setUploadFormData] = useState<UploadFormData>({
+    title: '',
+    uploadType: 'track',
+    details: {
+      description: '',
+      genres: [],
+      coverImage: '',
+      audioFile: ''
+    }
+  });
 
   // Redirect if not an artist
   if (!user || user.role !== 'artist') {
@@ -118,6 +165,21 @@ const ArtistDashboardPage = () => {
     queryFn: async () => {
       const res = await fetch('/api/me/artist-profile');
       if (!res.ok) throw new Error('Failed to fetch artist profile');
+      return res.json();
+    }
+  });
+  
+  // Fetch artist uploads data
+  const {
+    data: uploads,
+    isLoading: isLoadingUploads,
+    error: uploadsError,
+    refetch: refetchUploads
+  } = useQuery<ArtistUpload[]>({
+    queryKey: ['/api/artist-dashboard/uploads'],
+    queryFn: async () => {
+      const res = await fetch('/api/artist-dashboard/uploads');
+      if (!res.ok) throw new Error('Failed to fetch uploads');
       return res.json();
     }
   });
@@ -182,6 +244,177 @@ const ArtistDashboardPage = () => {
       }
     });
   };
+  
+  // Create a new upload mutation
+  const createUploadMutation = useMutation({
+    mutationFn: async (uploadData: Omit<UploadFormData, 'id'>) => {
+      const res = await apiRequest('POST', '/api/artist-dashboard/uploads', uploadData);
+      return res.json();
+    },
+    onSuccess: () => {
+      setShowUploadDialog(false);
+      
+      // Refresh uploads list
+      refetchUploads();
+      
+      toast({
+        title: t('artistDashboard.uploadCreated'),
+        description: t('artistDashboard.uploadCreatedDescription'),
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t('artistDashboard.uploadError'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Update an existing upload mutation
+  const updateUploadMutation = useMutation({
+    mutationFn: async (data: { id: number, updates: Partial<UploadFormData> }) => {
+      const res = await apiRequest('PUT', `/api/artist-dashboard/uploads/${data.id}`, data.updates);
+      return res.json();
+    },
+    onSuccess: () => {
+      setShowUploadDialog(false);
+      setEditingUpload(null);
+      
+      // Refresh uploads list
+      refetchUploads();
+      
+      toast({
+        title: t('artistDashboard.uploadUpdated'),
+        description: t('artistDashboard.uploadUpdatedDescription'),
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t('artistDashboard.updateError'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Process upload mutation - converts pending upload to actual track/album
+  const processUploadMutation = useMutation({
+    mutationFn: async (data: { id: number, trackData?: any, albumData?: any, tracks?: any[] }) => {
+      const res = await apiRequest('POST', `/api/artist-dashboard/uploads/${data.id}/process`, data);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      // Refresh uploads list
+      refetchUploads();
+      
+      toast({
+        title: t('artistDashboard.uploadProcessed'),
+        description: t('artistDashboard.uploadProcessedDescription'),
+      });
+      
+      // Also invalidate artist tracks/albums
+      if (artistProfile?.id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/artists/${artistProfile.id}/tracks`] });
+        queryClient.invalidateQueries({ queryKey: [`/api/artists/${artistProfile.id}/albums`] });
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t('artistDashboard.processingError'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Handler functions for the uploads tab
+  const handleNewUpload = (type: 'track' | 'album') => {
+    setNewUploadType(type);
+    setEditingUpload(null);
+    setUploadFormData({
+      title: '',
+      uploadType: type,
+      details: {
+        description: '',
+        genres: [],
+        coverImage: '',
+        audioFile: type === 'track' ? '' : undefined
+      }
+    });
+    setShowUploadDialog(true);
+  };
+  
+  const handleEditUpload = (upload: ArtistUpload) => {
+    setEditingUpload(upload);
+    setUploadFormData({
+      id: upload.id,
+      title: upload.title,
+      uploadType: upload.uploadType as 'track' | 'album',
+      details: {
+        description: upload.details.description || '',
+        genres: upload.details.genres || [],
+        coverImage: upload.details.coverImage || '',
+        audioFile: upload.details.audioFile || ''
+      }
+    });
+    setShowUploadDialog(true);
+  };
+  
+  const handleSaveUpload = () => {
+    if (editingUpload) {
+      // Update existing upload
+      updateUploadMutation.mutate({
+        id: editingUpload.id,
+        updates: uploadFormData
+      });
+    } else {
+      // Create new upload
+      createUploadMutation.mutate(uploadFormData);
+    }
+  };
+  
+  const handleSubmitUpload = (upload: ArtistUpload) => {
+    const processData: any = { id: upload.id };
+    
+    if (upload.uploadType === 'track') {
+      // Prepare track data
+      processData.trackData = {
+        title: upload.title,
+        description: upload.details.description,
+        genres: upload.details.genres,
+        imageUrl: upload.details.coverImage,
+        audioUrl: upload.details.audioFile,
+        releaseDate: upload.details.releaseDate || new Date().toISOString(),
+        duration: upload.details.duration || 180, // Default 3 minutes
+        price: upload.details.price || 99, // Default 0.99
+        purchaseAvailable: true,
+        downloadAvailable: true,
+        explicit: upload.details.explicit || false
+      };
+    } else {
+      // Prepare album data
+      processData.albumData = {
+        title: upload.title,
+        description: upload.details.description,
+        genres: upload.details.genres,
+        coverImage: upload.details.coverImage,
+        releaseDate: upload.details.releaseDate || new Date().toISOString(),
+        price: upload.details.price || 999, // Default 9.99
+        purchaseAvailable: true
+      };
+      
+      // If there are tracks in the album details
+      if (upload.details.tracks && Array.isArray(upload.details.tracks)) {
+        processData.tracks = upload.details.tracks;
+      } else {
+        processData.tracks = []; // Default empty tracks array
+      }
+    }
+    
+    // Process the upload
+    processUploadMutation.mutate(processData);
+  };
 
   // Aggregate analytics data
   const aggregatedAnalytics = analytics?.reduce(
@@ -222,9 +455,174 @@ const ArtistDashboardPage = () => {
     );
   }
 
+  // States to manage pending upload operations (simulating upload process)
+  const [isPendingUpload, setIsPendingUpload] = useState(false);
+  
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">{t('common.artistDashboard')}</h1>
+      
+      {/* Upload Dialog */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingUpload ? t('artistDashboard.editUpload') : t('artistDashboard.newUpload')}
+            </DialogTitle>
+            <DialogDescription>
+              {editingUpload 
+                ? t('artistDashboard.editUploadDescription')
+                : t('artistDashboard.newUploadDescription')
+              }
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="upload-title">{t('artistDashboard.uploadTitle')}</Label>
+              <Input 
+                id="upload-title" 
+                value={uploadFormData.title} 
+                onChange={(e) => setUploadFormData({
+                  ...uploadFormData,
+                  title: e.target.value
+                })}
+                placeholder={t('artistDashboard.uploadTitlePlaceholder')}
+              />
+            </div>
+            
+            {!editingUpload && (
+              <div className="space-y-2">
+                <Label>{t('artistDashboard.uploadType')}</Label>
+                <div className="flex gap-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="type-track"
+                      checked={uploadFormData.uploadType === 'track'}
+                      onChange={() => setUploadFormData({
+                        ...uploadFormData,
+                        uploadType: 'track',
+                        details: {
+                          ...uploadFormData.details,
+                          audioFile: ''
+                        }
+                      })}
+                      className="h-4 w-4 text-primary"
+                    />
+                    <Label htmlFor="type-track" className="cursor-pointer">
+                      {t('artistDashboard.track')}
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="type-album"
+                      checked={uploadFormData.uploadType === 'album'}
+                      onChange={() => setUploadFormData({
+                        ...uploadFormData,
+                        uploadType: 'album',
+                        details: {
+                          ...uploadFormData.details,
+                          audioFile: undefined
+                        }
+                      })}
+                      className="h-4 w-4 text-primary"
+                    />
+                    <Label htmlFor="type-album" className="cursor-pointer">
+                      {t('artistDashboard.album')}
+                    </Label>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="upload-description">{t('artistDashboard.description')}</Label>
+              <Textarea 
+                id="upload-description" 
+                value={uploadFormData.details.description} 
+                onChange={(e) => setUploadFormData({
+                  ...uploadFormData,
+                  details: {
+                    ...uploadFormData.details,
+                    description: e.target.value
+                  }
+                })}
+                placeholder={t('artistDashboard.descriptionPlaceholder')}
+                rows={3}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="upload-genres">{t('artistDashboard.genres')}</Label>
+              <Input 
+                id="upload-genres" 
+                value={uploadFormData.details.genres.join(', ')} 
+                onChange={(e) => setUploadFormData({
+                  ...uploadFormData,
+                  details: {
+                    ...uploadFormData.details,
+                    genres: e.target.value.split(',').map(g => g.trim()).filter(g => g)
+                  }
+                })}
+                placeholder={t('artistDashboard.genresPlaceholder')}
+              />
+              <div className="text-xs text-muted-foreground">
+                {t('artistDashboard.genresHelp')}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="upload-cover">{t('artistDashboard.coverImage')}</Label>
+              <Input 
+                id="upload-cover" 
+                value={uploadFormData.details.coverImage} 
+                onChange={(e) => setUploadFormData({
+                  ...uploadFormData,
+                  details: {
+                    ...uploadFormData.details,
+                    coverImage: e.target.value
+                  }
+                })}
+                placeholder={t('artistDashboard.coverImagePlaceholder')}
+              />
+            </div>
+            
+            {uploadFormData.uploadType === 'track' && (
+              <div className="space-y-2">
+                <Label htmlFor="upload-audio">{t('artistDashboard.audioFile')}</Label>
+                <Input 
+                  id="upload-audio" 
+                  value={uploadFormData.details.audioFile || ''} 
+                  onChange={(e) => setUploadFormData({
+                    ...uploadFormData,
+                    details: {
+                      ...uploadFormData.details,
+                      audioFile: e.target.value
+                    }
+                  })}
+                  placeholder={t('artistDashboard.audioFilePlaceholder')}
+                />
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button 
+              onClick={() => handleSaveUpload()} 
+              disabled={isPendingUpload}
+            >
+              {isPendingUpload ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('common.processing')}</>
+              ) : editingUpload ? t('common.update') : t('common.create')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
         <TabsList className="mb-6">
@@ -792,26 +1190,627 @@ const ArtistDashboardPage = () => {
         
         {/* Uploads Tab */}
         <TabsContent value="uploads">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>{t('artistDashboard.uploads')}</CardTitle>
-              <Upload className="h-5 w-5 text-muted-foreground" />
-              <CardDescription>
-                Upload and manage your music
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">
-                  This feature is coming soon. You'll be able to upload tracks and albums directly.
-                </p>
-                <Button disabled>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload Music
-                </Button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <Card className="md:col-span-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle>{t('artistDashboard.recentUploads')}</CardTitle>
+                <Upload className="h-5 w-5 text-muted-foreground" />
+                <CardDescription>
+                  {t('artistDashboard.manageYourMusic')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="all">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="all">{t('common.all')}</TabsTrigger>
+                    <TabsTrigger value="tracks">{t('common.tracks')}</TabsTrigger>
+                    <TabsTrigger value="albums">{t('common.albums')}</TabsTrigger>
+                    <TabsTrigger value="pending">{t('common.pending')}</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="all">
+                    {isLoadingUploads ? (
+                      <div className="space-y-4">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <div key={i} className="flex items-center p-4 bg-background-elevated rounded-lg">
+                            <Skeleton className="h-12 w-12 rounded mr-4" />
+                            <div className="flex-1">
+                              <Skeleton className="h-4 w-3/4 mb-2" />
+                              <Skeleton className="h-3 w-1/2" />
+                            </div>
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : uploads && uploads.length > 0 ? (
+                      <div className="space-y-4">
+                        {uploads.map(upload => (
+                          <div
+                            key={upload.id}
+                            className={cn(
+                              "flex items-center p-4 bg-background-elevated rounded-lg",
+                              upload.status === 'failed' ? "border border-destructive/40" : "",
+                              upload.status === 'completed' ? "border border-green-500/40" : "",
+                              upload.status === 'processing' ? "border border-yellow-500/40" : "",
+                              upload.status === 'pending' ? "border border-slate-500/40" : ""
+                            )}
+                          >
+                            <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden bg-accent">
+                              {upload.details.coverImage ? (
+                                <img 
+                                  src={upload.details.coverImage} 
+                                  alt={upload.title}
+                                  className="w-full h-full object-cover"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-xs text-center p-1">
+                                  {upload.uploadType === 'track' ? 'Track' : 'Album'}
+                                </div>
+                              )}
+                            </div>
+                            <div className="ml-4 flex-1">
+                              <div className="flex items-center">
+                                <h3 className="font-medium">{upload.title}</h3>
+                                <Badge variant={
+                                  upload.status === 'completed' ? "success" :
+                                  upload.status === 'failed' ? "destructive" :
+                                  upload.status === 'processing' ? "outline" : "secondary"
+                                } className="ml-2">
+                                  {upload.status === 'completed' ? t('common.completed') :
+                                   upload.status === 'failed' ? t('common.failed') :
+                                   upload.status === 'processing' ? t('common.processing') : t('common.pending')}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center text-xs text-muted-foreground">
+                                <span>{upload.uploadType === 'track' ? t('common.track') : t('common.album')}</span>
+                                <span className="mx-1">•</span>
+                                <span>{new Date(upload.updatedAt).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleEditUpload(upload)}
+                                disabled={upload.status === 'processing'}
+                              >
+                                <Pencil className="h-4 w-4" />
+                                <span className="sr-only">{t('common.edit')}</span>
+                              </Button>
+                              {upload.status === 'pending' && (
+                                <Button 
+                                  variant="default" 
+                                  size="sm"
+                                  onClick={() => handleSubmitUpload(upload)}
+                                >
+                                  {t('common.submit')}
+                                </Button>
+                              )}
+                              {upload.status === 'completed' && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  onClick={() => {
+                                    if (upload.trackId) {
+                                      window.location.href = `/tracks/${upload.trackId}`;
+                                    } else if (upload.albumId) {
+                                      window.location.href = `/albums/${upload.albumId}`;
+                                    }
+                                  }}
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                  <span className="sr-only">{t('common.view')}</span>
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>{t('artistDashboard.noUploads')}</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="tracks">
+                    {isLoadingUploads ? (
+                      <div className="space-y-4">
+                        {Array.from({ length: 2 }).map((_, i) => (
+                          <div key={i} className="flex items-center p-4 bg-background-elevated rounded-lg">
+                            <Skeleton className="h-12 w-12 rounded mr-4" />
+                            <div className="flex-1">
+                              <Skeleton className="h-4 w-3/4 mb-2" />
+                              <Skeleton className="h-3 w-1/2" />
+                            </div>
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : uploads ? (
+                      <div className="space-y-4">
+                        {uploads
+                          .filter(upload => upload.uploadType === 'track')
+                          .map(upload => (
+                            <div
+                              key={upload.id}
+                              className={cn(
+                                "flex items-center p-4 bg-background-elevated rounded-lg",
+                                upload.status === 'failed' ? "border border-destructive/40" : "",
+                                upload.status === 'completed' ? "border border-green-500/40" : "",
+                                upload.status === 'processing' ? "border border-yellow-500/40" : "",
+                                upload.status === 'pending' ? "border border-slate-500/40" : ""
+                              )}
+                            >
+                              <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden bg-accent">
+                                {upload.details.coverImage ? (
+                                  <img 
+                                    src={upload.details.coverImage} 
+                                    alt={upload.title}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-xs text-center p-1">
+                                    Track
+                                  </div>
+                                )}
+                              </div>
+                              <div className="ml-4 flex-1">
+                                <div className="flex items-center">
+                                  <h3 className="font-medium">{upload.title}</h3>
+                                  <Badge variant={
+                                    upload.status === 'completed' ? "success" :
+                                    upload.status === 'failed' ? "destructive" :
+                                    upload.status === 'processing' ? "outline" : "secondary"
+                                  } className="ml-2">
+                                    {upload.status === 'completed' ? t('common.completed') :
+                                     upload.status === 'failed' ? t('common.failed') :
+                                     upload.status === 'processing' ? t('common.processing') : t('common.pending')}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center text-xs text-muted-foreground">
+                                  <span>{t('common.track')}</span>
+                                  <span className="mx-1">•</span>
+                                  <span>{new Date(upload.updatedAt).toLocaleDateString()}</span>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => handleEditUpload(upload)}
+                                  disabled={upload.status === 'processing'}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="sr-only">{t('common.edit')}</span>
+                                </Button>
+                                {upload.status === 'pending' && (
+                                  <Button 
+                                    variant="default" 
+                                    size="sm"
+                                    onClick={() => handleSubmitUpload(upload)}
+                                  >
+                                    {t('common.submit')}
+                                  </Button>
+                                )}
+                                {upload.status === 'completed' && upload.trackId && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => {
+                                      window.location.href = `/tracks/${upload.trackId}`;
+                                    }}
+                                  >
+                                    <ExternalLink className="h-4 w-4" />
+                                    <span className="sr-only">{t('common.view')}</span>
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                        ))}
+                        {uploads.filter(upload => upload.uploadType === 'track').length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <p>{t('artistDashboard.noTrackUploads')}</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>{t('artistDashboard.noUploads')}</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="albums">
+                    {isLoadingUploads ? (
+                      <div className="space-y-4">
+                        {Array.from({ length: 2 }).map((_, i) => (
+                          <div key={i} className="flex items-center p-4 bg-background-elevated rounded-lg">
+                            <Skeleton className="h-12 w-12 rounded mr-4" />
+                            <div className="flex-1">
+                              <Skeleton className="h-4 w-3/4 mb-2" />
+                              <Skeleton className="h-3 w-1/2" />
+                            </div>
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : uploads ? (
+                      <div className="space-y-4">
+                        {uploads
+                          .filter(upload => upload.uploadType === 'album')
+                          .map(upload => (
+                            <div
+                              key={upload.id}
+                              className={cn(
+                                "flex items-center p-4 bg-background-elevated rounded-lg",
+                                upload.status === 'failed' ? "border border-destructive/40" : "",
+                                upload.status === 'completed' ? "border border-green-500/40" : "",
+                                upload.status === 'processing' ? "border border-yellow-500/40" : "",
+                                upload.status === 'pending' ? "border border-slate-500/40" : ""
+                              )}
+                            >
+                              <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden bg-accent">
+                                {upload.details.coverImage ? (
+                                  <img 
+                                    src={upload.details.coverImage} 
+                                    alt={upload.title}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-xs text-center p-1">
+                                    Album
+                                  </div>
+                                )}
+                              </div>
+                              <div className="ml-4 flex-1">
+                                <div className="flex items-center">
+                                  <h3 className="font-medium">{upload.title}</h3>
+                                  <Badge variant={
+                                    upload.status === 'completed' ? "success" :
+                                    upload.status === 'failed' ? "destructive" :
+                                    upload.status === 'processing' ? "outline" : "secondary"
+                                  } className="ml-2">
+                                    {upload.status === 'completed' ? t('common.completed') :
+                                     upload.status === 'failed' ? t('common.failed') :
+                                     upload.status === 'processing' ? t('common.processing') : t('common.pending')}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center text-xs text-muted-foreground">
+                                  <span>{t('common.album')}</span>
+                                  <span className="mx-1">•</span>
+                                  <span>{new Date(upload.updatedAt).toLocaleDateString()}</span>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => handleEditUpload(upload)}
+                                  disabled={upload.status === 'processing'}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="sr-only">{t('common.edit')}</span>
+                                </Button>
+                                {upload.status === 'pending' && (
+                                  <Button 
+                                    variant="default" 
+                                    size="sm"
+                                    onClick={() => handleSubmitUpload(upload)}
+                                  >
+                                    {t('common.submit')}
+                                  </Button>
+                                )}
+                                {upload.status === 'completed' && upload.albumId && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => {
+                                      window.location.href = `/albums/${upload.albumId}`;
+                                    }}
+                                  >
+                                    <ExternalLink className="h-4 w-4" />
+                                    <span className="sr-only">{t('common.view')}</span>
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                        ))}
+                        {uploads.filter(upload => upload.uploadType === 'album').length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <p>{t('artistDashboard.noAlbumUploads')}</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>{t('artistDashboard.noUploads')}</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="pending">
+                    {isLoadingUploads ? (
+                      <div className="space-y-4">
+                        {Array.from({ length: 2 }).map((_, i) => (
+                          <div key={i} className="flex items-center p-4 bg-background-elevated rounded-lg">
+                            <Skeleton className="h-12 w-12 rounded mr-4" />
+                            <div className="flex-1">
+                              <Skeleton className="h-4 w-3/4 mb-2" />
+                              <Skeleton className="h-3 w-1/2" />
+                            </div>
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : uploads ? (
+                      <div className="space-y-4">
+                        {uploads
+                          .filter(upload => upload.status === 'pending')
+                          .map(upload => (
+                            <div
+                              key={upload.id}
+                              className="flex items-center p-4 bg-background-elevated rounded-lg border border-slate-500/40"
+                            >
+                              <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden bg-accent">
+                                {upload.details.coverImage ? (
+                                  <img 
+                                    src={upload.details.coverImage} 
+                                    alt={upload.title}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-xs text-center p-1">
+                                    {upload.uploadType === 'track' ? 'Track' : 'Album'}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="ml-4 flex-1">
+                                <div className="flex items-center">
+                                  <h3 className="font-medium">{upload.title}</h3>
+                                  <Badge variant="secondary" className="ml-2">
+                                    {t('common.pending')}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center text-xs text-muted-foreground">
+                                  <span>{upload.uploadType === 'track' ? t('common.track') : t('common.album')}</span>
+                                  <span className="mx-1">•</span>
+                                  <span>{new Date(upload.updatedAt).toLocaleDateString()}</span>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => handleEditUpload(upload)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="sr-only">{t('common.edit')}</span>
+                                </Button>
+                                <Button 
+                                  variant="default" 
+                                  size="sm"
+                                  onClick={() => handleSubmitUpload(upload)}
+                                >
+                                  {t('common.submit')}
+                                </Button>
+                              </div>
+                            </div>
+                        ))}
+                        {uploads.filter(upload => upload.status === 'pending').length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <p>{t('artistDashboard.noPendingUploads')}</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>{t('artistDashboard.noUploads')}</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle>{t('artistDashboard.uploadMusic')}</CardTitle>
+                <MusicIcon className="h-5 w-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <p className="text-muted-foreground mb-4">
+                      {t('artistDashboard.createNewUpload')}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <Button 
+                      className="w-full"
+                      onClick={() => handleNewUpload('track')}
+                    >
+                      <Music className="mr-2 h-4 w-4" />
+                      {t('artistDashboard.uploadTrack')}
+                    </Button>
+                    
+                    <Button 
+                      className="w-full"
+                      onClick={() => handleNewUpload('album')}
+                    >
+                      <AlbumIcon className="mr-2 h-4 w-4" />
+                      {t('artistDashboard.uploadAlbum')}
+                    </Button>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">{t('artistDashboard.uploadTips')}</h3>
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      <li>• {t('artistDashboard.uploadTip1')}</li>
+                      <li>• {t('artistDashboard.uploadTip2')}</li>
+                      <li>• {t('artistDashboard.uploadTip3')}</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Upload Dialogs */}
+          <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingUpload ? t('artistDashboard.editUpload') : (
+                    newUploadType === 'track' ? t('artistDashboard.uploadNewTrack') : t('artistDashboard.uploadNewAlbum')
+                  )}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingUpload ? t('artistDashboard.modifyUploadDetails') : t('artistDashboard.fillUploadDetails')}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="upload-title">{t('common.title')}</Label>
+                  <Input
+                    id="upload-title"
+                    value={uploadFormData.title}
+                    onChange={(e) => setUploadFormData({...uploadFormData, title: e.target.value})}
+                    placeholder={t('artistDashboard.titlePlaceholder')}
+                  />
+                </div>
+                
+                {!editingUpload && (
+                  <div className="grid gap-2">
+                    <Label>{t('common.uploadType')}</Label>
+                    <div className="flex gap-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          id="upload-type-track"
+                          checked={uploadFormData.uploadType === 'track'}
+                          onChange={() => setUploadFormData({...uploadFormData, uploadType: 'track'})}
+                          className="h-4 w-4"
+                        />
+                        <Label htmlFor="upload-type-track" className="font-normal">
+                          {t('common.track')}
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          id="upload-type-album"
+                          checked={uploadFormData.uploadType === 'album'}
+                          onChange={() => setUploadFormData({...uploadFormData, uploadType: 'album'})}
+                          className="h-4 w-4"
+                        />
+                        <Label htmlFor="upload-type-album" className="font-normal">
+                          {t('common.album')}
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="upload-description">{t('common.description')}</Label>
+                  <Textarea
+                    id="upload-description"
+                    value={uploadFormData.details.description}
+                    onChange={(e) => setUploadFormData({
+                      ...uploadFormData, 
+                      details: {...uploadFormData.details, description: e.target.value}
+                    })}
+                    placeholder={t('artistDashboard.descriptionPlaceholder')}
+                    rows={3}
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="upload-genres">{t('common.genres')}</Label>
+                  <Input
+                    id="upload-genres"
+                    value={uploadFormData.details.genres.join(', ')}
+                    onChange={(e) => setUploadFormData({
+                      ...uploadFormData, 
+                      details: {...uploadFormData.details, genres: e.target.value.split(',').map(g => g.trim())}
+                    })}
+                    placeholder={t('artistDashboard.genresPlaceholder')}
+                  />
+                  <p className="text-xs text-muted-foreground">{t('artistDashboard.genresHelp')}</p>
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="upload-cover">{t('common.coverImage')}</Label>
+                  <div className="flex gap-4 items-start">
+                    <div className="w-20 h-20 rounded overflow-hidden bg-accent flex-shrink-0">
+                      {uploadFormData.details.coverImage ? (
+                        <img 
+                          src={uploadFormData.details.coverImage} 
+                          alt={uploadFormData.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-center p-1">
+                          {t('common.noCover')}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <Input
+                        id="upload-cover"
+                        value={uploadFormData.details.coverImage}
+                        onChange={(e) => setUploadFormData({
+                          ...uploadFormData, 
+                          details: {...uploadFormData.details, coverImage: e.target.value}
+                        })}
+                        placeholder="https://example.com/image.jpg"
+                        className="mb-2"
+                      />
+                      <p className="text-xs text-muted-foreground">{t('artistDashboard.coverImageHelp')}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {uploadFormData.uploadType === 'track' && (
+                  <div className="grid gap-2">
+                    <Label htmlFor="upload-audio">{t('common.audioFile')}</Label>
+                    <Input
+                      id="upload-audio"
+                      value={uploadFormData.details.audioFile}
+                      onChange={(e) => setUploadFormData({
+                        ...uploadFormData, 
+                        details: {...uploadFormData.details, audioFile: e.target.value}
+                      })}
+                      placeholder="https://example.com/track.mp3"
+                    />
+                    <p className="text-xs text-muted-foreground">{t('artistDashboard.audioFileHelp')}</p>
+                  </div>
+                )}
               </div>
-            </CardContent>
-          </Card>
+              
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+                  {t('common.cancel')}
+                </Button>
+                <Button 
+                  onClick={handleSaveUpload}
+                  disabled={!uploadFormData.title || isPendingUpload}
+                >
+                  {isPendingUpload && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {editingUpload ? t('common.update') : t('common.create')}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
         
         {/* Royalties Tab */}

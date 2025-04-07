@@ -827,6 +827,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Artist Uploads Management
+  app.get("/api/artist-dashboard/uploads", ensureArtistRole, async (req, res) => {
+    try {
+      // Verify the user has an artist profile
+      if (!req.user!.artistId) {
+        return res.status(404).json({ message: "Artist profile not found" });
+      }
+      
+      const uploads = await storage.getArtistUploads(req.user!.artistId);
+      res.json(uploads);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch artist uploads" });
+    }
+  });
+  
+  app.get("/api/artist-dashboard/uploads/:id", ensureArtistRole, async (req, res) => {
+    try {
+      const uploadId = parseInt(req.params.id);
+      const upload = await storage.getArtistUpload(uploadId);
+      
+      if (!upload) {
+        return res.status(404).json({ message: "Upload not found" });
+      }
+      
+      // Verify the requesting artist is the owner of this upload
+      if (upload.artistId !== req.user!.artistId) {
+        return res.status(403).json({ message: "Not authorized to access this upload" });
+      }
+      
+      res.json(upload);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch upload details" });
+    }
+  });
+  
+  app.post("/api/artist-dashboard/uploads", ensureArtistRole, async (req, res) => {
+    try {
+      // Verify the user has an artist profile
+      if (!req.user!.artistId) {
+        return res.status(404).json({ message: "Artist profile not found" });
+      }
+      
+      const uploadData = {
+        ...req.body,
+        artistId: req.user!.artistId,
+        status: 'pending'
+      };
+      
+      const upload = await storage.createArtistUpload(uploadData);
+      res.status(201).json(upload);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create upload" });
+    }
+  });
+  
+  app.put("/api/artist-dashboard/uploads/:id", ensureArtistRole, async (req, res) => {
+    try {
+      const uploadId = parseInt(req.params.id);
+      const upload = await storage.getArtistUpload(uploadId);
+      
+      if (!upload) {
+        return res.status(404).json({ message: "Upload not found" });
+      }
+      
+      // Verify the requesting artist is the owner of this upload
+      if (upload.artistId !== req.user!.artistId) {
+        return res.status(403).json({ message: "Not authorized to modify this upload" });
+      }
+      
+      const updatedUpload = await storage.updateArtistUpload(uploadId, req.body);
+      res.json(updatedUpload);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update upload" });
+    }
+  });
+  
+  // Process a completed upload to create a track or album
+  app.post("/api/artist-dashboard/uploads/:id/process", ensureArtistRole, async (req, res) => {
+    const uploadId = parseInt(req.params.id);
+    let uploadRecord = null;
+    
+    try {
+      uploadRecord = await storage.getArtistUpload(uploadId);
+      
+      if (!uploadRecord) {
+        return res.status(404).json({ message: "Upload not found" });
+      }
+      
+      // Verify the requesting artist is the owner of this upload
+      if (uploadRecord.artistId !== req.user!.artistId) {
+        return res.status(403).json({ message: "Not authorized to process this upload" });
+      }
+      
+      // Update status to processing
+      await storage.updateArtistUpload(uploadId, { status: 'processing' });
+      
+      let result;
+      if (uploadRecord.uploadType === 'track') {
+        const trackData = req.body;
+        result = await storage.createTrackFromUpload(uploadRecord.artistId, trackData);
+        
+        // Update the upload with the new track ID and completed status
+        await storage.updateArtistUpload(uploadId, { 
+          trackId: result.id, 
+          status: 'completed',
+          updatedAt: new Date()
+        });
+      } else if (uploadRecord.uploadType === 'album') {
+        const { albumData, tracks } = req.body;
+        result = await storage.createAlbumFromUpload(uploadRecord.artistId, albumData, tracks);
+        
+        // Update the upload with the new album ID and completed status
+        await storage.updateArtistUpload(uploadId, { 
+          albumId: result.id, 
+          status: 'completed',
+          updatedAt: new Date()
+        });
+      } else {
+        return res.status(400).json({ message: "Invalid upload type" });
+      }
+      
+      res.json({ 
+        message: "Upload processed successfully", 
+        upload: await storage.getArtistUpload(uploadId),
+        result
+      });
+    } catch (error) {
+      // Update to failed status if we have an upload ID and record
+      if (uploadId && uploadRecord) {
+        await storage.updateArtistUpload(uploadId, { 
+          status: 'failed',
+          updatedAt: new Date()
+        });
+      }
+      res.status(500).json({ message: "Failed to process upload", error: (error as Error).message });
+    }
+  });
+  
   app.post("/api/artist-dashboard/events", ensureArtistRole, async (req, res) => {
     try {
       // Verify the user has an artist profile
