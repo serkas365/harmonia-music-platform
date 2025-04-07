@@ -282,7 +282,9 @@ const enTranslations = {
     fillUploadDetails: "Fill in the details for your upload",
     uploadNewTrack: "Upload New Track",
     uploadNewAlbum: "Upload New Album",
-    titlePlaceholder: "Enter the title"
+    titlePlaceholder: "Enter the title",
+    imageHelp: "Square images at least 1400x1400px recommended",
+    fileHelp: "Audio files in MP3 or WAV format"
   },
   artistProfile: {
     title: "Artist Profile",

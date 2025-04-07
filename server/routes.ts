@@ -904,6 +904,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Process a completed upload to create a track or album
+  app.post("/api/artist-dashboard/uploads/:id/publish", ensureArtistRole, async (req, res) => {
+    const uploadId = parseInt(req.params.id);
+    let uploadRecord = null;
+    
+    try {
+      uploadRecord = await storage.getArtistUpload(uploadId);
+      
+      if (!uploadRecord) {
+        return res.status(404).json({ message: "Upload not found" });
+      }
+      
+      // Verify the requesting artist is the owner of this upload
+      if (uploadRecord.artistId !== req.user!.artistId) {
+        return res.status(403).json({ message: "Not authorized to publish this upload" });
+      }
+      
+      // Update status to processing
+      await storage.updateArtistUpload(uploadId, { status: 'processing' });
+      
+      let result;
+      if (uploadRecord.uploadType === 'track') {
+        // Extract track data from the upload details
+        const trackData = {
+          title: uploadRecord.title,
+          artistId: uploadRecord.artistId,
+          artistName: '', // Will be populated by the storage layer
+          albumId: 0, // Solo track, not part of an album
+          albumTitle: '', // Solo track
+          trackNumber: 1,
+          description: uploadRecord.details.description || '',
+          genres: uploadRecord.details.genres || [],
+          imageUrl: uploadRecord.details.coverImage || '',
+          audioUrl: uploadRecord.details.audioFile || '',
+          releaseDate: new Date(), 
+          duration: 180, // Default 3 minutes
+          purchasePrice: 99, // Default $0.99
+          purchaseAvailable: true,
+          downloadAvailable: true,
+          explicit: false
+        };
+        
+        result = await storage.createTrackFromUpload(uploadRecord.artistId, trackData);
+        
+        // Update the upload with the new track ID and completed status
+        await storage.updateArtistUpload(uploadId, { 
+          trackId: result.id, 
+          status: 'completed',
+          updatedAt: new Date()
+        });
+      } else if (uploadRecord.uploadType === 'album') {
+        // Extract album data from the upload details
+        const albumData = {
+          title: uploadRecord.title,
+          artistId: uploadRecord.artistId,
+          artistName: '', // Will be populated by the storage layer
+          description: uploadRecord.details.description || '',
+          genres: uploadRecord.details.genres || [],
+          coverImage: uploadRecord.details.coverImage || '',
+          releaseDate: new Date(),
+          type: 'album'
+        };
+        
+        // If tracks are included in the upload details
+        const tracks = uploadRecord.details.tracklist?.map((track: any, index: number) => ({
+          title: track.title,
+          artistId: uploadRecord.artistId,
+          artistName: '', // Will be populated by the storage layer
+          albumId: 0, // Will be populated after album creation
+          albumTitle: uploadRecord.title,
+          audioUrl: track.audioFile,
+          imageUrl: uploadRecord.details.coverImage || '',
+          trackNumber: track.trackNumber || index + 1,
+          duration: 180,
+          purchasePrice: 99,
+          purchaseAvailable: true,
+          downloadAvailable: true,
+          explicit: false
+        })) || [];
+        
+        result = await storage.createAlbumFromUpload(uploadRecord.artistId, albumData, tracks);
+        
+        // Update the upload with the new album ID and completed status
+        await storage.updateArtistUpload(uploadId, { 
+          albumId: result.id, 
+          status: 'completed',
+          updatedAt: new Date()
+        });
+      } else {
+        return res.status(400).json({ message: "Invalid upload type" });
+      }
+      
+      res.json({ 
+        message: "Upload published successfully", 
+        upload: await storage.getArtistUpload(uploadId),
+        result
+      });
+    } catch (error) {
+      // Update to failed status if we have an upload ID and record
+      if (uploadId && uploadRecord) {
+        await storage.updateArtistUpload(uploadId, { 
+          status: 'failed',
+          updatedAt: new Date()
+        });
+      }
+      res.status(500).json({ message: "Failed to publish upload", error: (error as Error).message });
+    }
+  });
+  
   app.post("/api/artist-dashboard/uploads/:id/process", ensureArtistRole, async (req, res) => {
     const uploadId = parseInt(req.params.id);
     let uploadRecord = null;
