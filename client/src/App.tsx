@@ -23,6 +23,7 @@ import ProfilePage from "@/pages/profile-page";
 import CreatePlaylistPage from "@/pages/create-playlist-page";
 import PlaylistPage from "@/pages/playlist-page";
 import NotFound from "@/pages/not-found";
+import AlbumUploadDebug from "@/pages/AlbumUploadDebug";
 
 // Layout components
 import Sidebar from "@/components/layout/Sidebar";
@@ -155,6 +156,8 @@ function Router() {
           <ArtistPage />
         </AppLayout>
       )} />
+      
+      <Route path="/debug-album-upload" component={AlbumUploadDebug} />
       
       <Route>
         <NotFound />

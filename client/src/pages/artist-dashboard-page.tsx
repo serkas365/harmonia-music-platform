@@ -813,6 +813,7 @@ const ArtistDashboardPage = () => {
             )}
             
             {/* Album Tracklist Section - Only show for album upload type */}
+            {(() => { console.log("Upload form data:", JSON.stringify(uploadFormData, null, 2)); return null; })()}
             {uploadFormData.uploadType === 'album' && (
               <div className="space-y-4 mt-6 border-t pt-6">
                 <div className="flex justify-between items-center">
