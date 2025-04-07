@@ -1764,18 +1764,62 @@ const ArtistDashboardPage = () => {
                         </div>
                       )}
                     </div>
-                    <div className="flex-1">
-                      <Input
-                        id="upload-cover"
-                        value={uploadFormData.details.coverImage}
-                        onChange={(e) => setUploadFormData({
-                          ...uploadFormData, 
-                          details: {...uploadFormData.details, coverImage: e.target.value}
-                        })}
-                        placeholder="https://example.com/image.jpg"
-                        className="mb-2"
-                      />
-                      <p className="text-xs text-muted-foreground">{t('coverImageHelp')}</p>
+                    <div className="flex-1 space-y-4">
+                      <div>
+                        <Label className="mb-2 block">{t('uploadMethod')}</Label>
+                        <div className="flex gap-2">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = 'image/*';
+                              input.onchange = (e) => {
+                                const file = (e.target as HTMLInputElement).files?.[0];
+                                if (file) {
+                                  // In a real app, we'd upload this to storage
+                                  // For now, create an object URL as a placeholder
+                                  const imageUrl = URL.createObjectURL(file);
+                                  setUploadFormData({
+                                    ...uploadFormData,
+                                    details: {...uploadFormData.details, coverImage: imageUrl}
+                                  });
+                                }
+                              };
+                              input.click();
+                            }}
+                          >
+                            {t('uploadFromDevice')}
+                          </Button>
+                          <span className="flex items-center font-medium text-sm">OR</span>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1"
+                          >
+                            {t('selectFromLibrary')}
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="upload-cover" className="mb-2 block">{t('orEnterUrl')}</Label>
+                        <Input
+                          id="upload-cover"
+                          value={uploadFormData.details.coverImage}
+                          onChange={(e) => setUploadFormData({
+                            ...uploadFormData, 
+                            details: {...uploadFormData.details, coverImage: e.target.value}
+                          })}
+                          placeholder="https://example.com/image.jpg"
+                          className="mb-2"
+                        />
+                        <p className="text-xs text-muted-foreground">{t('coverImageHelp')}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1783,16 +1827,76 @@ const ArtistDashboardPage = () => {
                 {uploadFormData.uploadType === 'track' && (
                   <div className="grid gap-2">
                     <Label htmlFor="upload-audio">{t('audioFile')}</Label>
-                    <Input
-                      id="upload-audio"
-                      value={uploadFormData.details.audioFile}
-                      onChange={(e) => setUploadFormData({
-                        ...uploadFormData, 
-                        details: {...uploadFormData.details, audioFile: e.target.value}
-                      })}
-                      placeholder="https://example.com/track.mp3"
-                    />
-                    <p className="text-xs text-muted-foreground">{t('audioFileHelp')}</p>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="mb-2 block">{t('uploadMethod')}</Label>
+                        <div className="flex gap-2">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = 'audio/*';
+                              input.onchange = (e) => {
+                                const file = (e.target as HTMLInputElement).files?.[0];
+                                if (file) {
+                                  // In a real app, we'd upload this to storage
+                                  // For now, create an object URL as a placeholder
+                                  const audioUrl = URL.createObjectURL(file);
+                                  setUploadFormData({
+                                    ...uploadFormData,
+                                    details: {...uploadFormData.details, audioFile: audioUrl}
+                                  });
+                                }
+                              };
+                              input.click();
+                            }}
+                          >
+                            {t('uploadFromDevice')}
+                          </Button>
+                          <span className="flex items-center font-medium text-sm">OR</span>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1"
+                          >
+                            {t('recordAudio')}
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="upload-audio" className="mb-2 block">{t('orEnterUrl')}</Label>
+                        <Input
+                          id="upload-audio"
+                          value={uploadFormData.details.audioFile}
+                          onChange={(e) => setUploadFormData({
+                            ...uploadFormData, 
+                            details: {...uploadFormData.details, audioFile: e.target.value}
+                          })}
+                          placeholder="https://example.com/track.mp3"
+                        />
+                        <p className="text-xs text-muted-foreground">{t('audioFileHelp')}</p>
+                      </div>
+                      
+                      {uploadFormData.details.audioFile && (
+                        <div className="mt-2 p-2 border rounded bg-muted">
+                          <p className="text-sm font-medium mb-1">{t('selectedAudio')}</p>
+                          <audio 
+                            controls 
+                            className="w-full max-w-md" 
+                            src={uploadFormData.details.audioFile}
+                          >
+                            {t('audioNotSupported')}
+                          </audio>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
