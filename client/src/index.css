@@ -11,22 +11,3 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
-
-/* Custom dialog styles to fix positioning/scrolling */
-.dialog-override-styles {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  margin: 0 !important;
-  width: 95% !important;
-  max-width: 500px !important;
-  max-height: 95vh !important;
-  overflow-y: auto !important;
-  padding: 16px !important;
-  border-radius: 8px !important;
-  z-index: 999 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  box-sizing: border-box !important;
-}
